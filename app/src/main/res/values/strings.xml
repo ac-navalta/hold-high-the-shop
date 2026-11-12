@@ -49,4 +49,25 @@
 
     <string name="cd_notifications">Notifications</string>
     <string name="cd_item_photo">Item photo</string>
+
+    <!-- Market screen -->
+    <string name="market_title">Campus Market</string>
+    <string name="search_hint">Search uniforms, books, calculators\u2026</string>
+    <string name="chip_all">All</string>
+    <string name="items_near_you">126 items near you</string>
+    <string name="sort_newest">Newest</string>
+    <string name="fab_post">Post</string>
+    <string name="logo_uc">UC</string>
+
+    <string name="item5_price">\u20B1380</string>
+    <string name="item5_title">White Lab Gown</string>
+    <string name="item5_prog">CONAHS</string>
+
+    <string name="item6_price">\u20B1520</string>
+    <string name="item6_title">Data Structures Book</string>
+    <string name="item6_prog">CITCS</string>
+
+    <string name="cd_search">Search</string>
+    <string name="cd_filter">Filter</string>
+    <string name="cd_saved">Saved items</string>
 </resources>
