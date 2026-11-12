@@ -12,6 +12,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.HoldHighTheShop">
         <activity
+            android:name=".ListingDetailActivity"
+            android:exported="false"
+            android:parentActivityName=".MarketActivity" />
+
+        <activity
             android:name=".MarketActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity" />

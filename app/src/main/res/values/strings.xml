@@ -70,4 +70,31 @@
     <string name="cd_search">Search</string>
     <string name="cd_filter">Filter</string>
     <string name="cd_saved">Saved items</string>
+
+    <!-- Listing detail screen -->
+    <string name="photo_count">1 / 3</string>
+    <string name="detail_condition">GOOD CONDITION</string>
+    <string name="detail_title">Casio fx-991EX</string>
+    <string name="detail_price">\u20B11,200</string>
+    <string name="detail_desc">Fully working scientific calculator. Used for two semesters only. Comes with original hard case and manual.</string>
+
+    <string name="seller_initials">PM</string>
+    <string name="seller_name">Paolo Mendoza</string>
+    <string name="seller_verified">UC Verified</string>
+    <string name="seller_meta">CITCS \u2022 3rd Year</string>
+
+    <string name="stat_rating">4.6</string>
+    <string name="stat_rating_label">rating</string>
+    <string name="stat_ontime">92%</string>
+    <string name="stat_ontime_label">on time</string>
+    <string name="stat_completed">14</string>
+    <string name="stat_completed_label">completed</string>
+
+    <string name="meetup_kicker">SAFE MEETUP POINT</string>
+    <string name="meetup_place">UC Main Gate Security Desk</string>
+    <string name="meetup_hours">Mon\u2013Fri, 9:00 AM\u20134:00 PM</string>
+
+    <string name="btn_report">Report</string>
+    <string name="btn_reserve">Reserve for \u20B11,200</string>
+    <string name="cd_back">Back</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.nevergrowold.holdhightheshop
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.enableEdgeToEdge
@@ -17,5 +18,10 @@ class MarketActivity : AppCompatActivity() {
     /** Goes back to the dashboard. */
     fun openHome(view: View) {
         finish()
+    }
+
+    /** Opens the listing detail screen. */
+    fun openListing(view: View) {
+        startActivity(Intent(this, ListingDetailActivity::class.java))
     }
 }

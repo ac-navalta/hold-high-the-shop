@@ -258,7 +258,11 @@
                         app:cardElevation="5dp"
                         app:cardBackgroundColor="@color/white"
                         app:cardUseCompatPadding="true"
-                        app:strokeWidth="0dp">
+                        app:strokeWidth="0dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:onClick="openListing"
+                        android:foreground="?attr/selectableItemBackground">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -344,7 +348,11 @@
                         app:cardElevation="5dp"
                         app:cardBackgroundColor="@color/white"
                         app:cardUseCompatPadding="true"
-                        app:strokeWidth="0dp">
+                        app:strokeWidth="0dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:onClick="openListing"
+                        android:foreground="?attr/selectableItemBackground">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -439,7 +447,11 @@
                         app:cardElevation="5dp"
                         app:cardBackgroundColor="@color/white"
                         app:cardUseCompatPadding="true"
-                        app:strokeWidth="0dp">
+                        app:strokeWidth="0dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:onClick="openListing"
+                        android:foreground="?attr/selectableItemBackground">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -525,7 +537,11 @@
                         app:cardElevation="5dp"
                         app:cardBackgroundColor="@color/white"
                         app:cardUseCompatPadding="true"
-                        app:strokeWidth="0dp">
+                        app:strokeWidth="0dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:onClick="openListing"
+                        android:foreground="?attr/selectableItemBackground">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -620,7 +636,11 @@
                         app:cardElevation="5dp"
                         app:cardBackgroundColor="@color/white"
                         app:cardUseCompatPadding="true"
-                        app:strokeWidth="0dp">
+                        app:strokeWidth="0dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:onClick="openListing"
+                        android:foreground="?attr/selectableItemBackground">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -706,7 +726,11 @@
                         app:cardElevation="5dp"
                         app:cardBackgroundColor="@color/white"
                         app:cardUseCompatPadding="true"
-                        app:strokeWidth="0dp">
+                        app:strokeWidth="0dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:onClick="openListing"
+                        android:foreground="?attr/selectableItemBackground">
 
                         <LinearLayout
                             android:layout_width="match_parent"
