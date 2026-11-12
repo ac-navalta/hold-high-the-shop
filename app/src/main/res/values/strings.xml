@@ -1,3 +1,52 @@
 <resources>
     <string name="app_name">Hold High The Shop</string>
+
+    <string name="brand_kicker">HOLD HIGH THE SHOP</string>
+    <string name="greeting">Kumusta, Mika!</string>
+    <string name="greeting_sub">Ready to give something a second life?</string>
+
+    <string name="stat_exchanged_value">14</string>
+    <string name="stat_exchanged_label">items exchanged</string>
+    <string name="stat_listings_value">3</string>
+    <string name="stat_listings_label">active listings</string>
+
+    <string name="post_title">Post an item</string>
+    <string name="post_sub">Sell, rent, or swap in minutes</string>
+
+    <string name="browse_programs">Browse programs</string>
+    <string name="see_all">See all →</string>
+    <string name="prog_citcs">CITCS</string>
+    <string name="prog_conahs">CONAHS</string>
+    <string name="prog_cba">CBA</string>
+    <string name="prog_cea">CEA</string>
+
+    <string name="fresh_on_campus">Fresh on campus</string>
+    <string name="view_market">View market →</string>
+
+    <string name="cond_like_new">LIKE NEW</string>
+    <string name="cond_good">GOOD</string>
+
+    <string name="item1_price">₱850</string>
+    <string name="item1_title">Engineering Drawing Set</string>
+    <string name="item1_prog">CEA</string>
+
+    <string name="item2_price">₱1,200</string>
+    <string name="item2_title">Casio fx-991EX</string>
+    <string name="item2_prog">CITCS</string>
+
+    <string name="item3_price">₱650</string>
+    <string name="item3_title">Anatomy &amp; Physiology</string>
+    <string name="item3_prog">CONAHS</string>
+
+    <string name="item4_price">₱450</string>
+    <string name="item4_title">UC PE Uniform</string>
+    <string name="item4_prog">CBA</string>
+
+    <string name="nav_home">Home</string>
+    <string name="nav_market">Market</string>
+    <string name="nav_chats">Chats</string>
+    <string name="nav_profile">Profile</string>
+
+    <string name="cd_notifications">Notifications</string>
+    <string name="cd_item_photo">Item photo</string>
 </resources>
