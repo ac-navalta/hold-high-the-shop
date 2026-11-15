@@ -12,6 +12,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.HoldHighTheShop">
         <activity
+            android:name=".ReportListingActivity"
+            android:exported="false"
+            android:parentActivityName=".ListingDetailActivity" />
+
+        <activity
+            android:name=".ReportReceivedActivity"
+            android:exported="false"
+            android:parentActivityName=".ListingDetailActivity" />
+
+        <activity
             android:name=".ChatsActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity" />

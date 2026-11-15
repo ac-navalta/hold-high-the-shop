@@ -456,6 +456,7 @@
             android:paddingEnd="22dp"
             android:clickable="true"
             android:focusable="true"
+            android:onClick="openReport"
             android:foreground="?attr/selectableItemBackground">
 
             <ImageView

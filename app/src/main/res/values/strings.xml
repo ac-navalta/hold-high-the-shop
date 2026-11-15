@@ -190,4 +190,36 @@
     <string name="hint_message">Message Paolo\u2026</string>
     <string name="cd_send">Send</string>
     <string name="cd_attach">Attach</string>
+
+    <!-- Report listing -->
+    <string name="report_title">Report listing</string>
+    <string name="report_kicker">YOU\u2019RE REPORTING</string>
+    <string name="report_item">UC PE Uniform</string>
+    <string name="report_listed_by">Listed by Paolo Mendoza</string>
+
+    <string name="report_question">What\u2019s the issue?</string>
+    <string name="report_question_sub">Select the reason that best describes your concern.</string>
+    <string name="reason1">Misleading or incorrect details</string>
+    <string name="reason2">Prohibited or unsafe item</string>
+    <string name="reason3">Suspicious pricing or scam</string>
+    <string name="reason4">Duplicate or already sold</string>
+    <string name="reason5">Inappropriate content</string>
+    <string name="reason6">Other concern</string>
+
+    <string name="report_details">Additional details</string>
+    <string name="report_optional">Optional</string>
+    <string name="hint_report_details">Share anything that can help us review this report\u2026</string>
+
+    <string name="report_private_title">Your report is private</string>
+    <string name="report_private_sub">The seller won\u2019t see your name or report details.</string>
+    <string name="btn_submit_report">Submit report</string>
+    <string name="report_footer">Reports are reviewed against Hold High The Shop\u2019s community guidelines.</string>
+
+    <!-- Report received -->
+    <string name="received_title">Report received</string>
+    <string name="received_sub">Thank you for helping keep the UC marketplace safe. Our student support team will review this listing.</string>
+    <string name="received_ref_label">REPORT REFERENCE</string>
+    <string name="received_ref">HTS-24018</string>
+    <string name="btn_back_to_listing">Back to listing</string>
+    <string name="btn_return_to_market">Return to market</string>
 </resources>
