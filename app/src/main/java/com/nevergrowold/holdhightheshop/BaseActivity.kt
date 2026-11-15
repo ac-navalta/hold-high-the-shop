@@ -9,8 +9,8 @@ import androidx.appcompat.app.AppCompatActivity
  *
  * The bottom navigation appears on several layouts, so the handlers for it
  * live here instead of being copied into each Activity. Tab switches use
- * CLEAR_TOP so moving between Home, Market and Chats reuses the screen that
- * is already open rather than stacking another copy of it.
+ * CLEAR_TOP so moving between Home, Market, Chats and Profile reuses the
+ * screen that is already open rather than stacking another copy of it.
  */
 open class BaseActivity : AppCompatActivity() {
 
@@ -19,6 +19,8 @@ open class BaseActivity : AppCompatActivity() {
     fun openMarket(view: View) = switchTab(MarketActivity::class.java)
 
     fun openChats(view: View) = switchTab(ChatsActivity::class.java)
+
+    fun openProfile(view: View) = switchTab(ProfileActivity::class.java)
 
     /** Opens the Create listing form. */
     fun openCreateListing(view: View) {

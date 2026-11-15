@@ -12,6 +12,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.HoldHighTheShop">
         <activity
+            android:name=".ProfileActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
             android:name=".LandingActivity"
             android:exported="true">
             <intent-filter>

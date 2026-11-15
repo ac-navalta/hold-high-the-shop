@@ -235,4 +235,27 @@
     <string name="login_email_value">mika.dela-cruz@s.uc-bcf.edu.ph</string>
     <string name="btn_sign_in">Sign in securely</string>
     <string name="login_privacy">Your campus identity stays private</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profile</string>
+    <string name="me_initials">MD</string>
+    <string name="me_name">Mika Dela Cruz</string>
+    <string name="me_meta">BS Information Technology \u2022 3rd Year</string>
+
+    <string name="reliability_title">Reliability</string>
+    <string name="reliability_basis">Based on completed transactions</string>
+    <string name="reliability_rating_label">Rating</string>
+    <string name="reliability_ontime_label">On time</string>
+    <string name="reliability_completed_label">Completed</string>
+    <string name="reliability_note">Reliability is verified and cannot be edited</string>
+
+    <string name="tab_active">Active</string>
+    <string name="tab_active_count">3</string>
+    <string name="tab_completed">Completed</string>
+    <string name="tab_completed_count">14</string>
+    <string name="tab_saved">Saved</string>
+    <string name="tab_saved_count">8</string>
+
+    <string name="posted_days_ago">Posted 3 days ago</string>
+    <string name="cd_more">More options</string>
 </resources>
