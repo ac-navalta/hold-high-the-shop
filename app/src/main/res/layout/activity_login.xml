@@ -137,16 +137,21 @@
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp">
 
-                <TextView
+                <EditText
+                    android:id="@+id/inputEmail"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
+                    android:background="@android:color/transparent"
+                    android:gravity="center_vertical"
                     android:fontFamily="@font/poppins_regular"
                     android:text="@string/login_email_value"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp"
+                    android:inputType="textEmailAddress"
                     android:maxLines="1"
-                    android:ellipsize="end" />
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:autofillHints="emailAddress" />
 
                 <ImageView
                     android:layout_width="20dp"

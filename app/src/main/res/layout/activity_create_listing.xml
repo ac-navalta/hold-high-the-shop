@@ -217,7 +217,8 @@
                 android:textColor="@color/text_primary"
                 android:textSize="13sp" />
 
-            <TextView
+            <EditText
+                android:id="@+id/inputTitle"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
                 android:layout_marginTop="8dp"
@@ -226,9 +227,13 @@
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
                 android:fontFamily="@font/poppins_regular"
-                android:text="@string/hint_item_title"
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
+                android:hint="@string/hint_item_title"
+                android:inputType="text"
+                android:maxLines="1"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:textSize="14sp"
+                android:autofillHints="name" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -240,6 +245,11 @@
                 android:textSize="13sp" />
 
             <LinearLayout
+                android:id="@+id/rowProgram"
+                android:clickable="true"
+                android:focusable="true"
+                android:onClick="pickProgram"
+                android:foreground="?attr/selectableItemBackground"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
                 android:layout_marginTop="8dp"
@@ -250,6 +260,7 @@
                 android:paddingEnd="16dp">
 
                 <TextView
+                    android:id="@+id/rowProgramText"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -282,6 +293,7 @@
                 android:layout_marginTop="8dp">
 
                 <TextView
+                    android:id="@+id/condition1"
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
@@ -297,6 +309,7 @@
                     android:foreground="?attr/selectableItemBackground" />
 
                 <TextView
+                    android:id="@+id/condition2"
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
@@ -313,6 +326,7 @@
                     android:foreground="?attr/selectableItemBackground" />
 
                 <TextView
+                    android:id="@+id/condition3"
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
@@ -345,6 +359,7 @@
                 android:background="@drawable/bg_segment_track">
 
                 <TextView
+                    android:id="@+id/type1"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -357,6 +372,7 @@
                     android:textSize="13sp" />
 
                 <TextView
+                    android:id="@+id/type2"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -369,6 +385,7 @@
                     android:textSize="13sp" />
 
                 <TextView
+                    android:id="@+id/type3"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -408,15 +425,22 @@
                     android:textColor="@color/uc_green"
                     android:textSize="17sp" />
 
-                <TextView
+                <EditText
+                    android:id="@+id/inputPrice"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:layout_marginStart="16dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@android:color/transparent"
+                    android:gravity="center_vertical"
                     android:fontFamily="@font/poppins_regular"
-                    android:text="@string/hint_price"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp" />
+                    android:hint="@string/hint_price"
+                    android:inputType="number"
+                    android:maxLines="1"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:autofillHints="" />
             </LinearLayout>
 
             <TextView
@@ -428,7 +452,8 @@
                 android:textColor="@color/text_primary"
                 android:textSize="13sp" />
 
-            <TextView
+            <EditText
+                android:id="@+id/inputDescription"
                 android:layout_width="match_parent"
                 android:layout_height="112dp"
                 android:layout_marginTop="8dp"
@@ -436,10 +461,14 @@
                 android:gravity="top|start"
                 android:padding="18dp"
                 android:fontFamily="@font/poppins_regular"
-                android:text="@string/hint_description"
-                android:textColor="@color/text_secondary"
+                android:hint="@string/hint_description"
+                android:inputType="textMultiLine|textCapSentences"
+                android:maxLength="300"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
                 android:textSize="14sp"
-                android:lineSpacingExtra="3dp" />
+                android:lineSpacingExtra="3dp"
+                android:autofillHints="" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -447,6 +476,7 @@
                 android:layout_gravity="end"
                 android:layout_marginTop="6dp"
                 android:fontFamily="@font/poppins_regular"
+                android:id="@+id/counterDescription"
                 android:text="@string/char_counter"
                 android:textColor="@color/text_secondary"
                 android:textSize="11sp" />
@@ -461,6 +491,11 @@
                 android:textSize="13sp" />
 
             <LinearLayout
+                android:id="@+id/rowMeetup"
+                android:clickable="true"
+                android:focusable="true"
+                android:onClick="pickMeetup"
+                android:foreground="?attr/selectableItemBackground"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
                 android:layout_marginTop="8dp"
@@ -479,6 +514,7 @@
                     android:contentDescription="@null" />
 
                 <TextView
+                    android:id="@+id/rowMeetupText"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -527,8 +563,7 @@
             android:textSize="15sp"
             android:clickable="true"
             android:focusable="true"
-            android:foreground="?attr/selectableItemBackground" android:onClick="saveDraft"
-            />
+            android:foreground="?attr/selectableItemBackground" />
 
         <TextView
             android:layout_width="0dp"
@@ -543,8 +578,7 @@
             android:textSize="15sp"
             android:clickable="true"
             android:focusable="true"
-            android:foreground="?attr/selectableItemBackground" android:onClick="postItem"
-            />
+            android:foreground="?attr/selectableItemBackground" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -356,7 +356,8 @@
                 android:contentDescription="@string/cd_attach" />
         </FrameLayout>
 
-        <TextView
+        <EditText
+            android:id="@+id/inputMessage"
             android:layout_width="0dp"
             android:layout_height="46dp"
             android:layout_weight="1"
@@ -367,9 +368,13 @@
             android:paddingStart="18dp"
             android:paddingEnd="18dp"
             android:fontFamily="@font/poppins_regular"
-            android:text="@string/hint_message"
-            android:textColor="@color/text_secondary"
-            android:textSize="13sp" />
+            android:hint="@string/hint_message"
+            android:inputType="textCapSentences"
+            android:maxLines="1"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
+            android:textSize="13sp"
+            android:autofillHints="" />
 
         <FrameLayout
             android:layout_width="46dp"

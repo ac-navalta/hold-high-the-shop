@@ -284,4 +284,14 @@
     <string name="notif5_title">Report reviewed</string>
     <string name="notif5_sub">Thanks for reporting UC PE Uniform. Our team has acted on it.</string>
     <string name="notif5_time">Sat</string>
+
+    <!-- Pickers -->
+    <string name="pick_program">Choose a program</string>
+    <string name="pick_meetup">Choose a meetup point</string>
+    <string name="meetup1">UC Main Gate Security Desk</string>
+    <string name="meetup2">UC Library Lobby</string>
+    <string name="meetup3">CITCS Building Entrance</string>
+    <string name="meetup4">UC Canteen Area</string>
+    <string name="toast_select_reason">Select a reason first</string>
+    <string name="counter_format">%1$d / 300</string>
 </resources>

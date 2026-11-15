@@ -351,6 +351,10 @@
                 android:layout_marginEnd="16dp">
 
                 <com.google.android.material.card.MaterialCardView
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:onClick="openMarket"
+                    android:foreground="?attr/selectableItemBackground"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -388,6 +392,10 @@
                 </com.google.android.material.card.MaterialCardView>
 
                 <com.google.android.material.card.MaterialCardView
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:onClick="openMarket"
+                    android:foreground="?attr/selectableItemBackground"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -426,6 +434,10 @@
                 </com.google.android.material.card.MaterialCardView>
 
                 <com.google.android.material.card.MaterialCardView
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:onClick="openMarket"
+                    android:foreground="?attr/selectableItemBackground"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -464,6 +476,10 @@
                 </com.google.android.material.card.MaterialCardView>
 
                 <com.google.android.material.card.MaterialCardView
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:onClick="openMarket"
+                    android:foreground="?attr/selectableItemBackground"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -550,6 +566,10 @@
                     android:clipChildren="false">
 
                     <com.google.android.material.card.MaterialCardView
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:onClick="openListing"
+                        android:foreground="?attr/selectableItemBackground"
                         android:layout_width="172dp"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
@@ -635,6 +655,10 @@
                     </com.google.android.material.card.MaterialCardView>
 
                     <com.google.android.material.card.MaterialCardView
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:onClick="openListing"
+                        android:foreground="?attr/selectableItemBackground"
                         android:layout_width="172dp"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
@@ -720,6 +744,10 @@
                     </com.google.android.material.card.MaterialCardView>
 
                     <com.google.android.material.card.MaterialCardView
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:onClick="openListing"
+                        android:foreground="?attr/selectableItemBackground"
                         android:layout_width="172dp"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
@@ -805,6 +833,10 @@
                     </com.google.android.material.card.MaterialCardView>
 
                     <com.google.android.material.card.MaterialCardView
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:onClick="openListing"
+                        android:foreground="?attr/selectableItemBackground"
                         android:layout_width="172dp"
                         android:layout_height="wrap_content"
                         app:cardCornerRadius="16dp"

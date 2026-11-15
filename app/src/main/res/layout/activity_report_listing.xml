@@ -163,6 +163,7 @@
                 android:textSize="12sp" />
 
             <LinearLayout
+                android:id="@+id/reason1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -178,6 +179,7 @@
                 android:foreground="?attr/selectableItemBackground">
 
                 <ImageView
+                    android:id="@+id/reason1Icon"
                     android:layout_width="21dp"
                     android:layout_height="21dp"
                     android:src="@drawable/ic_radio_off"
@@ -196,6 +198,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/reason2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -211,6 +214,7 @@
                 android:foreground="?attr/selectableItemBackground">
 
                 <ImageView
+                    android:id="@+id/reason2Icon"
                     android:layout_width="21dp"
                     android:layout_height="21dp"
                     android:src="@drawable/ic_radio_off"
@@ -229,6 +233,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/reason3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -244,6 +249,7 @@
                 android:foreground="?attr/selectableItemBackground">
 
                 <ImageView
+                    android:id="@+id/reason3Icon"
                     android:layout_width="21dp"
                     android:layout_height="21dp"
                     android:src="@drawable/ic_radio_off"
@@ -262,6 +268,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/reason4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -277,6 +284,7 @@
                 android:foreground="?attr/selectableItemBackground">
 
                 <ImageView
+                    android:id="@+id/reason4Icon"
                     android:layout_width="21dp"
                     android:layout_height="21dp"
                     android:src="@drawable/ic_radio_off"
@@ -295,6 +303,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/reason5"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -310,6 +319,7 @@
                 android:foreground="?attr/selectableItemBackground">
 
                 <ImageView
+                    android:id="@+id/reason5Icon"
                     android:layout_width="21dp"
                     android:layout_height="21dp"
                     android:src="@drawable/ic_radio_off"
@@ -328,6 +338,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/reason6"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -343,6 +354,7 @@
                 android:foreground="?attr/selectableItemBackground">
 
                 <ImageView
+                    android:id="@+id/reason6Icon"
                     android:layout_width="21dp"
                     android:layout_height="21dp"
                     android:src="@drawable/ic_radio_off"
@@ -385,7 +397,8 @@
                     android:textSize="12sp" />
             </LinearLayout>
 
-            <TextView
+            <EditText
+                android:id="@+id/inputReportDetails"
                 android:layout_width="match_parent"
                 android:layout_height="112dp"
                 android:layout_marginTop="8dp"
@@ -393,10 +406,14 @@
                 android:gravity="top|start"
                 android:padding="18dp"
                 android:fontFamily="@font/poppins_regular"
-                android:text="@string/hint_report_details"
-                android:textColor="@color/text_secondary"
+                android:hint="@string/hint_report_details"
+                android:inputType="textMultiLine|textCapSentences"
+                android:maxLength="300"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
                 android:textSize="14sp"
-                android:lineSpacingExtra="3dp" />
+                android:lineSpacingExtra="3dp"
+                android:autofillHints="" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -404,6 +421,7 @@
                 android:layout_gravity="end"
                 android:layout_marginTop="6dp"
                 android:fontFamily="@font/poppins_regular"
+                android:id="@+id/counterReport"
                 android:text="@string/char_counter"
                 android:textColor="@color/text_secondary"
                 android:textSize="11sp" />

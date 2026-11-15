@@ -343,6 +343,7 @@
                 android:paddingEnd="12dp">
 
                 <LinearLayout
+                    android:id="@+id/tab1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -361,6 +362,7 @@
                         android:paddingBottom="10dp">
 
                         <TextView
+                            android:id="@+id/tab1Label"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/poppins_semibold"
@@ -384,12 +386,14 @@
                     </LinearLayout>
 
                     <View
+                        android:id="@+id/tab1Bar"
                         android:layout_width="match_parent"
                         android:layout_height="3dp"
                         android:background="@drawable/bg_tab_active" />
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/tab2"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -408,6 +412,7 @@
                         android:paddingBottom="10dp">
 
                         <TextView
+                            android:id="@+id/tab2Label"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/poppins_medium"
@@ -431,12 +436,14 @@
                     </LinearLayout>
 
                     <View
+                        android:id="@+id/tab2Bar"
                         android:layout_width="match_parent"
                         android:layout_height="3dp"
                         android:background="@android:color/transparent" />
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/tab3"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -455,6 +462,7 @@
                         android:paddingBottom="10dp">
 
                         <TextView
+                            android:id="@+id/tab3Label"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/poppins_medium"
@@ -478,6 +486,7 @@
                     </LinearLayout>
 
                     <View
+                        android:id="@+id/tab3Bar"
                         android:layout_width="match_parent"
                         android:layout_height="3dp"
                         android:background="@android:color/transparent" />
