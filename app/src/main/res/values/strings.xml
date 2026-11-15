@@ -146,4 +146,48 @@
     <string name="btn_view_listing">View listing</string>
     <string name="btn_back_to_market">Back to market</string>
     <string name="toast_draft_saved">Saved to your drafts</string>
+
+    <!-- Chats -->
+    <string name="chats_title">Messages</string>
+    <string name="chat_safety">Chat safely. Keep all transactions inside EcoSwap.</string>
+
+    <string name="chat1_initials">PM</string>
+    <string name="chat1_name">Paolo Mendoza</string>
+    <string name="chat1_prog">CITCS</string>
+    <string name="chat1_last">Yes, available pa! Meet tomorrow?</string>
+    <string name="chat1_time">10:42</string>
+
+    <string name="chat2_initials">JG</string>
+    <string name="chat2_name">Janelle Garcia</string>
+    <string name="chat2_prog">CONAHS</string>
+    <string name="chat2_last">Thank you ulit, Mika!</string>
+    <string name="chat2_time">Yesterday</string>
+
+    <string name="chat3_initials">MS</string>
+    <string name="chat3_name">Miguel Santos</string>
+    <string name="chat3_prog">CEA</string>
+    <string name="chat3_last">Can I see more photos of the gown?</string>
+    <string name="chat3_time">Mon</string>
+
+    <string name="chat4_initials">AV</string>
+    <string name="chat4_name">Aira Villanueva</string>
+    <string name="chat4_prog">CBA</string>
+    <string name="chat4_last">Transaction confirmed</string>
+    <string name="chat4_time">Sat</string>
+
+    <!-- Chat thread -->
+    <string name="thread_status">Active now \u2022 CITCS</string>
+    <string name="reserved_item">RESERVED ITEM</string>
+    <string name="day_today">TODAY</string>
+    <string name="msg1">Hi Mika! Available pa ang calculator. Complete pa with case.</string>
+    <string name="msg1_time">10:38 AM</string>
+    <string name="msg2">Nice! Pwede tomorrow after lunch sa Main Gate?</string>
+    <string name="msg2_time">10:40 AM \u00B7 Read</string>
+    <string name="msg3">Yes, available pa! 1:30 PM okay?</string>
+    <string name="sys_confirmed">Transaction confirmed</string>
+    <string name="sys_meetup_time">Meetup set for tomorrow, 1:30 PM</string>
+    <string name="sys_meetup_place">UC Main Gate Security Desk</string>
+    <string name="hint_message">Message Paolo\u2026</string>
+    <string name="cd_send">Send</string>
+    <string name="cd_attach">Attach</string>
 </resources>

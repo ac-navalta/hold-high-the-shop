@@ -5,20 +5,14 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 
-class CreateListingActivity : AppCompatActivity() {
+class CreateListingActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_create_listing)
         BarInsets.apply(this)
-    }
-
-    /** Closes the form without posting. */
-    fun goBack(view: View) {
-        finish()
     }
 
     /** Saves the listing as a draft and closes the form. */
