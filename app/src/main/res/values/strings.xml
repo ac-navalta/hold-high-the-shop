@@ -258,4 +258,30 @@
 
     <string name="posted_days_ago">Posted 3 days ago</string>
     <string name="cd_more">More options</string>
+
+    <!-- Notifications -->
+    <string name="notif_title">Notifications</string>
+    <string name="notif_mark_all">Mark all read</string>
+    <string name="notif_today">TODAY</string>
+    <string name="notif_earlier">EARLIER</string>
+
+    <string name="notif1_title">Paolo Mendoza reserved your item</string>
+    <string name="notif1_sub">Casio fx-991EX \u2022 Meet tomorrow, 1:30 PM</string>
+    <string name="notif1_time">10:42</string>
+
+    <string name="notif2_title">New message from Miguel Santos</string>
+    <string name="notif2_sub">Can I see more photos of the gown?</string>
+    <string name="notif2_time">09:15</string>
+
+    <string name="notif3_title">You received a new rating</string>
+    <string name="notif3_sub">Janelle Garcia rated your transaction 5 stars</string>
+    <string name="notif3_time">Yesterday</string>
+
+    <string name="notif4_title">Return reminder</string>
+    <string name="notif4_sub">White Lab Gown is due back on Friday</string>
+    <string name="notif4_time">Yesterday</string>
+
+    <string name="notif5_title">Report reviewed</string>
+    <string name="notif5_sub">Thanks for reporting UC PE Uniform. Our team has acted on it.</string>
+    <string name="notif5_time">Sat</string>
 </resources>
