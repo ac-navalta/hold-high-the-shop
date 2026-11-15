@@ -222,4 +222,17 @@
     <string name="received_ref">HTS-24018</string>
     <string name="btn_back_to_listing">Back to listing</string>
     <string name="btn_return_to_market">Return to market</string>
+
+    <!-- Landing and login -->
+    <string name="brand_line1">Hold High</string>
+    <string name="brand_line2">The Shop</string>
+    <string name="brand_tagline">Pass it on. Make campus greener.</string>
+
+    <string name="login_kicker">FOR UC STUDENTS ONLY</string>
+    <string name="login_welcome">Welcome, UCian</string>
+    <string name="login_desc">Sign in with your university email to join the verified campus marketplace.</string>
+    <string name="login_email_label">UC email address</string>
+    <string name="login_email_value">mika.dela-cruz@s.uc-bcf.edu.ph</string>
+    <string name="btn_sign_in">Sign in securely</string>
+    <string name="login_privacy">Your campus identity stays private</string>
 </resources>
