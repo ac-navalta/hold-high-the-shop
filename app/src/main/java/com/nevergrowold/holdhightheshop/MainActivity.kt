@@ -19,4 +19,9 @@ class MainActivity : AppCompatActivity() {
     fun openMarket(view: View) {
         startActivity(Intent(this, MarketActivity::class.java))
     }
+
+    /** Opens the Create listing form. */
+    fun openCreateListing(view: View) {
+        startActivity(Intent(this, CreateListingActivity::class.java))
+    }
 }

@@ -97,4 +97,53 @@
     <string name="btn_report">Report</string>
     <string name="btn_reserve">Reserve for \u20B11,200</string>
     <string name="cd_back">Back</string>
+
+    <!-- Create listing screen -->
+    <string name="create_title">Create listing</string>
+    <string name="create_cancel">Cancel</string>
+
+    <string name="lbl_add_photos">Add photos</string>
+    <string name="photo_counter">0 / 4</string>
+    <string name="add_cover">Add cover</string>
+
+    <string name="lbl_item_title">Item title *</string>
+    <string name="hint_item_title">e.g. UC Type A Uniform</string>
+
+    <string name="lbl_program">Program *</string>
+    <string name="hint_program">Select a program</string>
+
+    <string name="lbl_condition">Condition *</string>
+    <string name="opt_like_new">Like new</string>
+    <string name="opt_good">Good</string>
+    <string name="opt_fair">Fair</string>
+
+    <string name="lbl_listing_type">Listing type *</string>
+    <string name="opt_sell">Sell</string>
+    <string name="opt_rent">Rent</string>
+    <string name="opt_swap">Swap</string>
+
+    <string name="lbl_price">Price *</string>
+    <string name="peso_sign">\u20B1</string>
+    <string name="hint_price">0</string>
+
+    <string name="lbl_description">Description</string>
+    <string name="hint_description">Share details like size, inclusions, or any signs of use\u2026</string>
+    <string name="char_counter">0 / 300</string>
+
+    <string name="lbl_meetup">Preferred meetup point *</string>
+    <string name="hint_meetup">Select location</string>
+
+    <string name="btn_save_draft">Save draft</string>
+    <string name="btn_post_item">Post item</string>
+
+    <string name="cd_add_photo">Add photo</string>
+
+    <!-- Listing posted confirmation -->
+    <string name="posted_title">Listing posted</string>
+    <string name="posted_sub">Your item is now live on the Campus Market. Verified UC students can see it and reserve it.</string>
+    <string name="posted_ref_label">LISTING REFERENCE</string>
+    <string name="posted_ref">HTS-24019</string>
+    <string name="btn_view_listing">View listing</string>
+    <string name="btn_back_to_market">Back to market</string>
+    <string name="toast_draft_saved">Saved to your drafts</string>
 </resources>
