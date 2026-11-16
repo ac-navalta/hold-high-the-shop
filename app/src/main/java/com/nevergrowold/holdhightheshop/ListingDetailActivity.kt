@@ -122,6 +122,34 @@ class ListingDetailActivity : BaseActivity() {
         }
     }
 
+    /** Share button: send the listing to one of your chats (in-app only for now). */
+    fun shareListing(view: View) {
+        Sheets.show(this, R.layout.sheet_share) { sheet, dialog ->
+            sheet.findViewById<TextView>(R.id.shareItemTitle).text = listing.title
+            sheet.findViewById<TextView>(R.id.shareItemPrice).text = Listings.price(listing.price)
+            val people = sheet.findViewById<LinearLayout>(R.id.sharePeople)
+            Listings.SELLERS.filter { it != listing.seller }.forEach { person ->
+                val row = LayoutInflater.from(this).inflate(R.layout.item_share_person, people, false)
+                row.findViewById<TextView>(R.id.personInitials).text = person.initials
+                row.findViewById<TextView>(R.id.personName).text = person.name
+                row.findViewById<TextView>(R.id.personProgram).text = person.program
+                row.setOnClickListener {
+                    dialog.dismiss()
+                    Toast.makeText(this, getString(R.string.toast_shared, person.name), Toast.LENGTH_SHORT).show()
+                    startActivity(
+                        Intent(this, ChatThreadActivity::class.java)
+                            .putExtra(EXTRA_SELLER, person.name)
+                            .putExtra(
+                                ChatThreadActivity.EXTRA_SHARE_TEXT,
+                                getString(R.string.share_message_format, listing.title, Listings.price(listing.price))
+                            )
+                    )
+                }
+                people.addView(row)
+            }
+        }
+    }
+
     /** Seller card: opens the seller's profile, or your own on your listing. */
     fun openSellerProfile(view: View) {
         if (isMine) openProfile(view) else openSeller(listing.seller)

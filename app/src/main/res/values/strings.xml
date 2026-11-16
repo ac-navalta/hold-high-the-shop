@@ -528,4 +528,11 @@
     <string name="year_default">3rd Year</string>
     <string name="toast_profile_saved">Profile updated</string>
     <string name="toast_need_name">Add your name</string>
+
+    <!-- Share listing -->
+    <string name="cd_share">Share listing</string>
+    <string name="share_title">Share listing</string>
+    <string name="share_to_chat">Send to a chat</string>
+    <string name="share_message_format">Check out this listing: %1$s (%2$s)</string>
+    <string name="toast_shared">Sent to %1$s</string>
 </resources>

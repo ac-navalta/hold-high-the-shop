@@ -86,6 +86,7 @@ class ChatThreadActivity : BaseActivity() {
             messages.addView(card)
             scrollToEnd()
         }
+        intent.getStringExtra(EXTRA_SHARE_TEXT)?.let { addBubble(it, outgoing = true) }
     }
 
     /** Opens the listing this conversation is about. */
@@ -157,5 +158,8 @@ class ChatThreadActivity : BaseActivity() {
 
     companion object {
         const val EXTRA_RESERVED_DETAIL = "reserved_detail"
+
+        /** A listing shared from its detail screen, sent as the newest message. */
+        const val EXTRA_SHARE_TEXT = "share_text"
     }
 }
