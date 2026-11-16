@@ -132,7 +132,9 @@
                     android:layout_weight="1"
                     android:layout_marginEnd="@dimen/half_gap"
                     app:cardCornerRadius="18dp"
-                    app:cardElevation="5dp"
+                    app:cardElevation="2dp"
+                    android:outlineSpotShadowColor="@color/shadow_green"
+                    android:outlineAmbientShadowColor="@color/shadow_green"
                     app:cardBackgroundColor="@color/white"
                     app:cardUseCompatPadding="false"
                     app:strokeWidth="0dp">
@@ -197,7 +199,9 @@
                     android:layout_weight="1"
                     android:layout_marginStart="@dimen/half_gap"
                     app:cardCornerRadius="18dp"
-                    app:cardElevation="5dp"
+                    app:cardElevation="2dp"
+                    android:outlineSpotShadowColor="@color/shadow_green"
+                    android:outlineAmbientShadowColor="@color/shadow_green"
                     app:cardBackgroundColor="@color/white"
                     app:cardUseCompatPadding="false"
                     app:strokeWidth="0dp">
@@ -323,7 +327,9 @@
                 android:layout_marginStart="@dimen/screen_margin"
                 android:layout_marginEnd="@dimen/screen_margin"
                 app:cardCornerRadius="18dp"
-                app:cardElevation="5dp"
+                app:cardElevation="2dp"
+                android:outlineSpotShadowColor="@color/shadow_green"
+                android:outlineAmbientShadowColor="@color/shadow_green"
                 app:cardBackgroundColor="@color/white"
                 app:cardUseCompatPadding="false"
                 app:strokeWidth="0dp">
@@ -517,6 +523,7 @@
             <FrameLayout
                 android:layout_width="46dp"
                 android:layout_height="30dp"
+                android:id="@+id/navIndicator"
                 android:background="@drawable/bg_nav_active">
 
                 <ImageView

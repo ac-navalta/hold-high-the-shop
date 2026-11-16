@@ -388,7 +388,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
                     app:cardCornerRadius="18dp"
-                    app:cardElevation="5dp"
+                    app:cardElevation="2dp"
+                    android:outlineSpotShadowColor="@color/shadow_green"
+                    android:outlineAmbientShadowColor="@color/shadow_green"
                     app:cardBackgroundColor="@color/white"
                     app:cardUseCompatPadding="false"
                     app:strokeWidth="0dp">
@@ -459,7 +461,7 @@
                                         android:fontFamily="@font/poppins_semibold"
                                         android:text="@string/seller_verified"
                                         android:textColor="@color/white"
-                                        android:textSize="9sp" />
+                                        android:textSize="10sp" />
                                 </LinearLayout>
 
                                 <TextView
@@ -566,7 +568,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
                     app:cardCornerRadius="18dp"
-                    app:cardElevation="5dp"
+                    app:cardElevation="2dp"
+                    android:outlineSpotShadowColor="@color/shadow_green"
+                    android:outlineAmbientShadowColor="@color/shadow_green"
                     app:cardBackgroundColor="@color/white"
                     app:cardUseCompatPadding="false"
                     app:strokeWidth="0dp">
@@ -605,7 +609,7 @@
                                 android:fontFamily="@font/poppins_semibold"
                                 android:text="@string/meetup_kicker"
                                 android:textColor="@color/uc_green"
-                                android:textSize="9sp"
+                                android:textSize="10sp"
                                 android:letterSpacing="0.08" />
 
                             <TextView

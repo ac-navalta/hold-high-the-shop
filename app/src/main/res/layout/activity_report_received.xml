@@ -66,7 +66,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="26dp"
             app:cardCornerRadius="18dp"
-            app:cardElevation="5dp"
+            app:cardElevation="2dp"
+            android:outlineSpotShadowColor="@color/shadow_green"
+            android:outlineAmbientShadowColor="@color/shadow_green"
             app:cardBackgroundColor="@color/white"
             app:cardUseCompatPadding="false"
             app:strokeWidth="0dp">
@@ -85,7 +87,7 @@
                     android:fontFamily="@font/poppins_medium"
                     android:text="@string/received_ref_label"
                     android:textColor="@color/text_secondary"
-                    android:textSize="9sp"
+                    android:textSize="10sp"
                     android:letterSpacing="0.1" />
 
                 <TextView

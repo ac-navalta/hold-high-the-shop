@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- View tags: Motion (press animator set, running colour blend), Choice (toggle chip state), TouchTargets (checked). -->
+    <item name="motion_press" type="id" />
+    <item name="motion_color" type="id" />
+    <item name="choice_on" type="id" />
+    <item name="touch_target" type="id" />
+</resources>

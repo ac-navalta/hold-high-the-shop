@@ -654,6 +654,7 @@ class ListingDetailActivity : BaseActivity() {
         val nowSaved = !UserState.isSaved(listing.id)
         UserState.setSaved(listing.id, nowSaved)
         bindSaved()
+        Motion.pop(findViewById(R.id.saveIcon))
         if (nowSaved) {
             notify(getString(R.string.toast_saved), getString(R.string.action_view)) { openSaved(view) }
         } else {

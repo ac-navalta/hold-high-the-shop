@@ -9,7 +9,9 @@
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
     app:cardCornerRadius="16dp"
-    app:cardElevation="5dp"
+    app:cardElevation="2dp"
+    android:outlineSpotShadowColor="@color/shadow_green"
+    android:outlineAmbientShadowColor="@color/shadow_green"
     app:cardBackgroundColor="@color/white"
     app:cardUseCompatPadding="false"
     app:strokeWidth="0dp">
@@ -45,7 +47,7 @@
                 android:paddingBottom="4dp"
                 android:fontFamily="@font/poppins_semibold"
                 android:textColor="@color/white"
-                android:textSize="9sp"
+                android:textSize="10sp"
                 android:letterSpacing="0.06" />
 
             <TextView

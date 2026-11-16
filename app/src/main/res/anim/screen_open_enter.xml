@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:zAdjustment="top"
+    android:shareInterpolator="false">
+    <translate
+        android:fromXDelta="12%"
+        android:toXDelta="0"
+        android:duration="340"
+        android:interpolator="@interpolator/emphasized_decelerate" />
+    <alpha
+        android:fromAlpha="0"
+        android:toAlpha="1"
+        android:duration="200"
+        android:interpolator="@interpolator/ease_out" />
+</set>

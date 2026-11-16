@@ -19,6 +19,32 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
  */
 open class BaseActivity : AppCompatActivity() {
 
+    /**
+     * Every screen gets the shared press feedback ([Motion.installPress]) and
+     * 48dp touch areas for its small controls ([TouchTargets]).
+     */
+    override fun setContentView(layoutResID: Int) {
+        super.setContentView(layoutResID)
+        val content = findViewById<View>(android.R.id.content)
+        Motion.installPress(content)
+        TouchTargets.install(content)
+    }
+
+    override fun onPostCreate(savedInstanceState: android.os.Bundle?) {
+        super.onPostCreate(savedInstanceState)
+        growTabIndicator()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        growTabIndicator()
+    }
+
+    /** On tab screens, the green pill behind the current tab grows in as the screen arrives. */
+    private fun growTabIndicator() {
+        findViewById<View>(R.id.navIndicator)?.let { Motion.grow(it, delay = 60) }
+    }
+
     fun openHome(view: View) = switchTab(MainActivity::class.java)
 
     fun openMarket(view: View) = switchTab(MarketActivity::class.java)
@@ -95,6 +121,7 @@ open class BaseActivity : AppCompatActivity() {
         intent.extras()
         if (javaClass == target && intent.extras == null) return
         startActivity(intent)
+        Motion.tabSwitch(this)
     }
 
     /** A product card (photo, condition, price, title, program) that opens the listing. */

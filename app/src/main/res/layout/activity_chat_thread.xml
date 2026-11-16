@@ -146,7 +146,7 @@
                 android:fontFamily="@font/poppins_semibold"
                 android:text="@string/reserved_item"
                 android:textColor="@color/uc_green"
-                android:textSize="9sp"
+                android:textSize="10sp"
                 android:letterSpacing="0.08" />
 
             <TextView
@@ -233,7 +233,7 @@
                 android:fontFamily="@font/poppins_regular"
                 android:text="@string/msg1_time"
                 android:textColor="@color/text_secondary"
-                android:textSize="9sp" />
+                android:textSize="10sp" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -261,7 +261,7 @@
                 android:fontFamily="@font/poppins_regular"
                 android:text="@string/msg2_time"
                 android:textColor="@color/text_secondary"
-                android:textSize="9sp" />
+                android:textSize="10sp" />
 
             <TextView
                 android:layout_width="wrap_content"

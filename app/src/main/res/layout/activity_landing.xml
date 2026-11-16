@@ -11,6 +11,7 @@
 
     <LinearLayout
         android:id="@+id/brandRow"
+        android:transitionName="@string/transition_brand"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -73,6 +74,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="18dp"
         android:fontFamily="@font/poppins_regular"
+        android:id="@+id/brandTagline"
         android:text="@string/brand_tagline"
         android:textColor="@color/text_secondary"
         android:textSize="13sp"

@@ -7,6 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/uc_cream"
+    android:clipChildren="false"
     tools:context=".ListingPostedActivity">
 
     <View
@@ -16,10 +17,13 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
+        android:id="@+id/postedContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center_horizontal"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:paddingStart="28dp"
         android:paddingEnd="28dp"
         app:layout_constraintTop_toTopOf="parent"
@@ -27,18 +31,34 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- Badge with a ring that ripples out once when the screen opens. -->
         <FrameLayout
             android:layout_width="78dp"
             android:layout_height="78dp"
-            android:background="@drawable/bg_circle_mint">
+            android:clipChildren="false">
 
-            <ImageView
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_verified"
-                android:tint="@color/uc_green"
-                android:contentDescription="@null" />
+            <View
+                android:id="@+id/postedRing"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_ring_mint"
+                android:alpha="0" />
+
+            <FrameLayout
+                android:id="@+id/postedBadge"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_circle_mint">
+
+                <ImageView
+                    android:id="@+id/postedCheck"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_verified"
+                    android:tint="@color/uc_green"
+                    android:contentDescription="@null" />
+            </FrameLayout>
         </FrameLayout>
 
         <TextView
@@ -66,7 +86,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="26dp"
             app:cardCornerRadius="18dp"
-            app:cardElevation="5dp"
+            app:cardElevation="2dp"
+            android:outlineSpotShadowColor="@color/shadow_green"
+            android:outlineAmbientShadowColor="@color/shadow_green"
             app:cardBackgroundColor="@color/white"
             app:cardUseCompatPadding="false"
             app:strokeWidth="0dp">
@@ -85,7 +107,7 @@
                     android:fontFamily="@font/poppins_medium"
                     android:text="@string/posted_ref_label"
                     android:textColor="@color/text_secondary"
-                    android:textSize="9sp"
+                    android:textSize="10sp"
                     android:letterSpacing="0.1" />
 
                 <TextView

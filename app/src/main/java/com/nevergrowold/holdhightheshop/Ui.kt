@@ -106,6 +106,9 @@ object Dropdown {
         val height = minOf(listHeight, if (below) spaceBelow else spaceAbove)
         popup.height = height
 
+        // Grow out of the anchor: downward when below it, upward when above.
+        popup.animationStyle = if (below) R.style.DropdownBelow else R.style.DropdownAbove
+
         val x = loc[0] + if (alignEnd) anchor.width - width else 0
         val y = if (below) loc[1] + anchor.height + gap else loc[1] - gap - height
         popup.showAtLocation(anchor, Gravity.TOP or Gravity.START, x, y)

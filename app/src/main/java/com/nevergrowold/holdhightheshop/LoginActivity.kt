@@ -2,7 +2,10 @@ package com.nevergrowold.holdhightheshop
 
 import android.content.Intent
 import android.os.Bundle
+import android.transition.ChangeBounds
+import android.transition.Fade
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ScrollView
@@ -15,6 +18,7 @@ class LoginActivity : BaseActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_login)
         BarInsets.apply(this)
+        playEntrance()
 
         val email = findViewById<EditText>(R.id.inputEmail)
         email.setOnEditorActionListener { v, actionId, _ ->
@@ -33,6 +37,30 @@ class LoginActivity : BaseActivity() {
                 scroll.post { scroll.smoothScrollTo(0, scroll.getChildAt(0).height) }
             }
         }
+    }
+
+    /**
+     * Arriving from the splash, the brand row glides up into place (shared
+     * element) while the sign-in card rises from below, its contents a beat
+     * behind it. Opened any other way, only the card rises.
+     */
+    private fun playEntrance() {
+        if (!Motion.enabled(this)) return
+        window.sharedElementEnterTransition = ChangeBounds().apply {
+            duration = 560
+            interpolator = Motion.EMPHASIZED
+        }
+        window.enterTransition = Fade().setDuration(200).excludeTarget(R.id.loginCard, true)
+
+        val card = findViewById<ViewGroup>(R.id.loginCard)
+        val dp = resources.displayMetrics.density
+        card.alpha = 0f
+        card.translationY = 56 * dp
+        card.animate().alpha(1f).translationY(0f)
+            .setStartDelay(260).setDuration(520).setInterpolator(Motion.EMPHASIZED).start()
+
+        val content = card.getChildAt(0) as ViewGroup
+        Motion.enter((0 until content.childCount).map { content.getChildAt(it) }, delay = 340, rise = 10)
     }
 
     /**

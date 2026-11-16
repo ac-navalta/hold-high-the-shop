@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Hold High The Shop</string>
+    <string name="transition_brand" translatable="false">brand</string>
 
     <string name="brand_kicker">HOLD HIGH THE SHOP</string>
     <string name="greeting">Kumusta, Mika!</string>
@@ -120,7 +121,7 @@
 
     <!-- Chats -->
     <string name="chats_title">Messages</string>
-    <string name="chat_safety">Chat safely. Keep all transactions inside EcoSwap.</string>
+    <string name="chat_safety">Chat safely. Keep every deal inside the app.</string>
 
     <string name="chat1_initials">PM</string>
     <string name="chat1_name">Paolo Mendoza</string>

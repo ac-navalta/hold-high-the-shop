@@ -14,6 +14,9 @@ class ProfileActivity : BaseActivity() {
 
     private var tab = TAB_ACTIVE
 
+    /** The tab currently drawn as selected, so only a real change animates. -1 before the first draw. */
+    private var shownTab = -1
+
     /** Active tab: which group to show. One of the GROUP_ constants. */
     private var group = GROUP_ALL
 
@@ -60,12 +63,16 @@ class ProfileActivity : BaseActivity() {
         )
         val bars = listOf<View>(findViewById(R.id.tab1Bar), findViewById(R.id.tab2Bar), findViewById(R.id.tab3Bar))
 
+        val changed = selected != shownTab && shownTab >= 0
+        shownTab = selected
         rows.forEachIndexed { index, row ->
             row.setOnClickListener { selectTab(index) }
             val isOn = index == selected
-            labels[index].setTextColor(getColor(if (isOn) R.color.uc_green else R.color.text_secondary))
+            Motion.textColor(labels[index], getColor(if (isOn) R.color.uc_green else R.color.text_secondary), changed)
             if (isOn) {
                 bars[index].setBackgroundResource(R.drawable.bg_tab_active)
+                // The underline grows under the newly chosen tab.
+                if (changed) Motion.grow(bars[index])
             } else {
                 bars[index].setBackgroundColor(android.graphics.Color.TRANSPARENT)
             }
@@ -204,6 +211,8 @@ class ProfileActivity : BaseActivity() {
             }
         }
         findViewById<View>(R.id.profileEmpty).isVisible = selected == TAB_SAVED && saved.isEmpty()
+        // Switching tabs swaps the whole list: let the new one land so the change is visible.
+        if (changed) Motion.enter((0 until list.childCount).map { list.getChildAt(it) }, rise = 10)
     }
 
     /**

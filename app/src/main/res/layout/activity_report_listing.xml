@@ -83,7 +83,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="18dp"
-                app:cardElevation="5dp"
+                app:cardElevation="2dp"
+                android:outlineSpotShadowColor="@color/shadow_green"
+                android:outlineAmbientShadowColor="@color/shadow_green"
                 app:cardBackgroundColor="@color/white"
                 app:cardUseCompatPadding="false"
                 app:strokeWidth="0dp">
@@ -122,7 +124,7 @@
                             android:fontFamily="@font/poppins_semibold"
                             android:text="@string/report_kicker"
                             android:textColor="@color/uc_green"
-                            android:textSize="9sp"
+                            android:textSize="10sp"
                             android:letterSpacing="0.08" />
 
                         <TextView
