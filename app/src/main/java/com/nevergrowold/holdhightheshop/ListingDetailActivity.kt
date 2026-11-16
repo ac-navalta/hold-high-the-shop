@@ -159,7 +159,7 @@ class ListingDetailActivity : BaseActivity() {
                             .putExtra(EXTRA_SELLER, person.name)
                             .putExtra(
                                 ChatThreadActivity.EXTRA_SHARE_TEXT,
-                                getString(R.string.share_message_format, listing.title, Listings.priceLabel(this, listing))
+                                getString(R.string.share_message_format, listing.title, Listings.priceLabel(this, listing).toString())
                             )
                     )
                 }

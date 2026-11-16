@@ -1,6 +1,11 @@
 package com.nevergrowold.holdhightheshop
 
 import android.content.Context
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.AbsoluteSizeSpan
+import android.text.style.ForegroundColorSpan
+import android.util.TypedValue
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -360,11 +365,32 @@ object Listings {
      */
     fun open(): List<Listing> = ALL.filter { !isMine(it) && !UserState.isClosed(it.id) }
 
-    /** Price as shown on a listing: "₱850", "₱380 / week" for rent, "Swap" for swap. */
-    fun priceLabel(context: Context, listing: Listing): String = when {
-        listing.isSwap -> context.getString(R.string.price_swap)
-        listing.isRent -> context.getString(R.string.price_rent_format, price(listing.price))
-        else -> price(listing.price)
+    /**
+     * Price as shown on a listing: "₱850", "₱380 / week" for rent, "Swap" for
+     * swap. Only the amount keeps the big price size; "/ week" is small and
+     * grey, and "Swap" is a smaller amber word, whatever size the price is.
+     */
+    fun priceLabel(context: Context, listing: Listing): CharSequence {
+        fun sp(value: Float) = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_SP, value, context.resources.displayMetrics
+        ).toInt()
+        return when {
+            listing.isSwap -> SpannableString(context.getString(R.string.price_swap)).apply {
+                setSpan(AbsoluteSizeSpan(sp(15f)), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                setSpan(ForegroundColorSpan(context.getColor(R.color.swap_text)), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+            listing.isRent -> {
+                val amount = price(listing.price)
+                SpannableString(context.getString(R.string.price_rent_format, amount)).apply {
+                    setSpan(AbsoluteSizeSpan(sp(12f)), amount.length, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    setSpan(
+                        ForegroundColorSpan(context.getColor(R.color.text_secondary)),
+                        amount.length, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
+            }
+            else -> price(listing.price)
+        }
     }
 
     fun price(value: Int): String =

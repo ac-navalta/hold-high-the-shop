@@ -121,7 +121,7 @@ open class BaseActivity : AppCompatActivity() {
     protected fun addRow(
         list: LinearLayout,
         title: String,
-        price: String,
+        price: CharSequence,
         meta: String,
         showDivider: Boolean,
         badge: String? = null,
