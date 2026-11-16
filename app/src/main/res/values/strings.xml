@@ -545,6 +545,7 @@
     <!-- Swap -->
     <string name="price_swap">Swap</string>
     <string name="price_rent_format">%1$s / week</string>
+    <string name="tag_for_sale">FOR SALE</string>
     <string name="tag_for_rent">FOR RENT</string>
     <string name="tag_for_swap">FOR SWAP</string>
     <string name="swap_wants_kicker">LOOKING TO SWAP FOR</string>

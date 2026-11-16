@@ -104,11 +104,12 @@ open class BaseActivity : AppCompatActivity() {
         card.findViewById<TextView>(R.id.cardTitle).text = listing.title
         card.findViewById<TextView>(R.id.cardProgram).text = listing.program
         card.findViewById<TextView>(R.id.cardCondition).text = Listings.conditionLabel(this, listing.condition)
-        // Rent and swap listings are tagged on the photo; plain sales are not.
+        // Every card says how it is offered: FOR SALE (mint), FOR RENT (outline), FOR SWAP (amber).
         val type = card.findViewById<TextView>(R.id.cardType)
         when {
             listing.isSwap -> styleBadge(type, getString(R.string.tag_for_swap), giving = false, swap = true)
             listing.isRent -> styleBadge(type, getString(R.string.tag_for_rent), giving = true)
+            else -> styleBadge(type, getString(R.string.tag_for_sale), giving = false)
         }
         card.setOnClickListener { openListingById(listing.id) }
         return card
