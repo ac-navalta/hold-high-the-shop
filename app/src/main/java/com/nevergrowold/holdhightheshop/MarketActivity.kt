@@ -137,6 +137,11 @@ class MarketActivity : BaseActivity() {
                 clipToPadding = false
             }
             pair.forEachIndexed { index, listing -> row.addView(card(listing, index)) }
+            if (grid.childCount > 0) {
+                row.layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { topMargin = resources.getDimensionPixelSize(R.dimen.grid_gap) }
+            }
             if (pair.size == 1) {
                 row.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
             }
@@ -157,7 +162,9 @@ class MarketActivity : BaseActivity() {
     private fun card(listing: Listing, column: Int): View {
         val card = listingCard(grid, listing)
         val params = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        if (column == 0) params.marginEnd = dp(this, 4) else params.marginStart = dp(this, 4)
+        // Two columns, 12dp apart.
+        val half = resources.getDimensionPixelSize(R.dimen.half_gap)
+        if (column == 0) params.marginEnd = half else params.marginStart = half
         card.layoutParams = params
         return card
     }

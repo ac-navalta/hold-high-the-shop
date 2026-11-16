@@ -80,12 +80,12 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginStart="@dimen/screen_margin"
+                android:layout_marginEnd="@dimen/screen_margin"
                 app:cardCornerRadius="18dp"
                 app:cardElevation="4dp"
                 app:cardBackgroundColor="@color/white"
-                app:cardUseCompatPadding="true"
+                app:cardUseCompatPadding="false"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
@@ -178,12 +178,12 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginStart="@dimen/screen_margin"
+                android:layout_marginEnd="@dimen/screen_margin"
                 app:cardCornerRadius="18dp"
                 app:cardElevation="4dp"
                 app:cardBackgroundColor="@color/white"
-                app:cardUseCompatPadding="true"
+                app:cardUseCompatPadding="false"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
@@ -350,12 +350,12 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginStart="@dimen/screen_margin"
+                android:layout_marginEnd="@dimen/screen_margin"
                 app:cardCornerRadius="18dp"
                 app:cardElevation="4dp"
                 app:cardBackgroundColor="@color/white"
-                app:cardUseCompatPadding="true"
+                app:cardUseCompatPadding="false"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
@@ -435,12 +435,12 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginStart="@dimen/screen_margin"
+                android:layout_marginEnd="@dimen/screen_margin"
                 app:cardCornerRadius="18dp"
                 app:cardElevation="4dp"
                 app:cardBackgroundColor="@color/white"
-                app:cardUseCompatPadding="true"
+                app:cardUseCompatPadding="false"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
@@ -538,12 +538,12 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginStart="@dimen/screen_margin"
+                android:layout_marginEnd="@dimen/screen_margin"
                 app:cardCornerRadius="18dp"
                 app:cardElevation="4dp"
                 app:cardBackgroundColor="@color/white"
-                app:cardUseCompatPadding="true"
+                app:cardUseCompatPadding="false"
                 app:strokeWidth="0dp">
 
                 <LinearLayout

@@ -151,13 +151,13 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginStart="@dimen/screen_margin"
+                android:layout_marginEnd="@dimen/screen_margin"
                 android:layout_marginTop="20dp"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="5dp"
                 app:cardBackgroundColor="@color/white"
-                app:cardUseCompatPadding="true"
+                app:cardUseCompatPadding="false"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
@@ -365,8 +365,8 @@
         android:orientation="horizontal"
         android:background="@color/uc_cream"
         android:elevation="12dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+        android:paddingStart="@dimen/screen_margin"
+        android:paddingEnd="@dimen/screen_margin"
         android:paddingTop="12dp"
         android:paddingBottom="12dp"
         app:layout_constraintBottom_toBottomOf="parent"

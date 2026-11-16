@@ -161,13 +161,13 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginStart="@dimen/screen_margin"
+                android:layout_marginEnd="@dimen/screen_margin"
                 android:layout_marginTop="20dp"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="5dp"
                 app:cardBackgroundColor="@color/white"
-                app:cardUseCompatPadding="true"
+                app:cardUseCompatPadding="false"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
@@ -351,9 +351,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="14dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp">
+                android:layout_marginTop="@dimen/section_gap"
+                android:paddingStart="@dimen/screen_margin"
+                android:paddingEnd="@dimen/screen_margin">
 
                 <LinearLayout
                     android:id="@+id/tab1"
@@ -512,6 +512,8 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
+                android:layout_marginStart="@dimen/screen_margin"
+                android:layout_marginEnd="@dimen/screen_margin"
                 android:background="@color/divider" />
 
             <!-- TAB CONTENT, filled in by ProfileActivity -->

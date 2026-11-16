@@ -11,7 +11,7 @@
     app:cardCornerRadius="16dp"
     app:cardElevation="5dp"
     app:cardBackgroundColor="@color/white"
-    app:cardUseCompatPadding="true"
+    app:cardUseCompatPadding="false"
     app:strokeWidth="0dp">
 
     <LinearLayout

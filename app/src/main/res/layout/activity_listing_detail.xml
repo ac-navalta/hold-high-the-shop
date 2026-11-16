@@ -341,7 +341,7 @@
                     app:cardCornerRadius="18dp"
                     app:cardElevation="5dp"
                     app:cardBackgroundColor="@color/white"
-                    app:cardUseCompatPadding="true"
+                    app:cardUseCompatPadding="false"
                     app:strokeWidth="0dp">
 
                     <LinearLayout
@@ -519,7 +519,7 @@
                     app:cardCornerRadius="18dp"
                     app:cardElevation="5dp"
                     app:cardBackgroundColor="@color/white"
-                    app:cardUseCompatPadding="true"
+                    app:cardUseCompatPadding="false"
                     app:strokeWidth="0dp">
 
                     <LinearLayout
@@ -601,8 +601,8 @@
         android:gravity="center_vertical"
         android:background="@color/uc_cream"
         android:elevation="12dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+        android:paddingStart="@dimen/screen_margin"
+        android:paddingEnd="@dimen/screen_margin"
         android:paddingTop="12dp"
         android:paddingBottom="12dp"
         app:layout_constraintBottom_toBottomOf="parent"

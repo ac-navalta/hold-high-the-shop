@@ -25,6 +25,9 @@ class MainActivity : BaseActivity() {
             tile.findViewById<TextView>(R.id.programCode).text = program.code
             tile.tag = program.code
             tile.setOnClickListener { openProgram(it) }
+            if (row.childCount > 0) {
+                (tile.layoutParams as LinearLayout.LayoutParams).marginStart = resources.getDimensionPixelSize(R.dimen.grid_gap)
+            }
             row.addView(tile)
         }
     }
@@ -43,7 +46,7 @@ class MainActivity : BaseActivity() {
         Listings.open().sortedBy { it.postedDaysAgo }.take(FRESH_COUNT).forEach { listing ->
             val card = listingCard(fresh, listing)
             card.layoutParams = LinearLayout.LayoutParams(dp(this, 172), LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { marginEnd = dp(this@MainActivity, 4) }
+                .apply { if (fresh.childCount > 0) marginStart = resources.getDimensionPixelSize(R.dimen.grid_gap) }
             fresh.addView(card)
         }
     }

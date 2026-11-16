@@ -85,8 +85,8 @@
             android:clipChildren="false"
             android:descendantFocusability="beforeDescendants"
             android:focusableInTouchMode="true"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
+            android:paddingStart="@dimen/screen_margin"
+            android:paddingEnd="@dimen/screen_margin"
             android:paddingBottom="90dp">
 
             <!-- SEARCH BAR -->
@@ -179,10 +179,16 @@
             </LinearLayout>
 
             <!-- FILTER CHIPS -->
+            <!-- Full-bleed so chips scroll to the screen edge but start on the 20dp line. -->
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:layout_marginStart="-20dp"
+                android:layout_marginEnd="-20dp"
+                android:paddingStart="@dimen/screen_margin"
+                android:paddingEnd="@dimen/screen_margin"
+                android:clipToPadding="false"
                 android:scrollbars="none">
 
                 <!-- "All" plus one chip per college, filled in by MarketActivity. -->
@@ -251,7 +257,7 @@
                 android:orientation="vertical"
                 android:clipToPadding="false"
                 android:clipChildren="false"
-                android:layout_marginTop="8dp" />
+                android:layout_marginTop="@dimen/grid_gap" />
 
             <!-- EMPTY STATE -->
             <LinearLayout
