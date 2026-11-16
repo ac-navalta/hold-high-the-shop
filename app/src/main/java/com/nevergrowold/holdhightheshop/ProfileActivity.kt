@@ -82,27 +82,41 @@ class ProfileActivity : BaseActivity() {
             TAB_ACTIVE -> {
                 if (borrowing.isNotEmpty()) addSection(list, R.string.section_borrowing, R.string.section_borrowing_hint)
                 borrowing.forEachIndexed { i, (item, loan) ->
-                    val meta = getString(
-                        R.string.row_borrowed_meta, loan.partner.name.substringBefore(' '),
-                        Rentals.dateLabel(loan.dueMillis), Rentals.countdown(this, loan.dueMillis)
-                    )
+                    val meta = if (loan.returnPending) {
+                        getString(R.string.row_return_pending, loan.partner.name.substringBefore(' '))
+                    } else {
+                        getString(
+                            R.string.row_borrowed_meta, loan.partner.name.substringBefore(' '),
+                            Rentals.dateLabel(loan.dueMillis), Rentals.countdown(this, loan.dueMillis)
+                        )
+                    }
                     val row = addRow(
                         list, item.title, Listings.priceLabel(this, item), meta,
                         i < borrowing.size - 1, getString(R.string.role_borrowing), giving = false
                     ) { openListingById(item.id) }
-                    if (Rentals.isOverdue(loan.dueMillis)) row.findViewById<TextView>(R.id.rowMeta).setTextColor(getColor(R.color.danger))
+                    if (!loan.returnPending && Rentals.isOverdue(loan.dueMillis)) {
+                        row.findViewById<TextView>(R.id.rowMeta).setTextColor(getColor(R.color.danger))
+                    }
                 }
                 if (lending.isNotEmpty()) addSection(list, R.string.section_lent, R.string.section_lent_hint)
                 lending.forEachIndexed { i, (item, loan) ->
-                    val meta = getString(
-                        R.string.row_lent_meta, loan.partner.name.substringBefore(' '),
-                        Rentals.dateLabel(loan.dueMillis), Rentals.countdown(this, loan.dueMillis)
-                    )
+                    val meta = if (loan.returnPending) {
+                        getString(R.string.row_confirm_return, loan.partner.name.substringBefore(' '))
+                    } else {
+                        getString(
+                            R.string.row_lent_meta, loan.partner.name.substringBefore(' '),
+                            Rentals.dateLabel(loan.dueMillis), Rentals.countdown(this, loan.dueMillis)
+                        )
+                    }
                     val row = addRow(
                         list, item.title, Listings.priceLabel(this, item), meta,
                         i < lending.size - 1, getString(R.string.role_lent_out), giving = true
                     ) { openListingById(item.id) }
-                    if (Rentals.isOverdue(loan.dueMillis)) row.findViewById<TextView>(R.id.rowMeta).setTextColor(getColor(R.color.danger))
+                    val metaView = row.findViewById<TextView>(R.id.rowMeta)
+                    when {
+                        loan.returnPending -> metaView.setTextColor(getColor(R.color.swap_text))
+                        Rentals.isOverdue(loan.dueMillis) -> metaView.setTextColor(getColor(R.color.danger))
+                    }
                 }
                 if (reserved.isNotEmpty()) addSection(list, R.string.section_reserved, R.string.section_reserved_hint)
                 reserved.forEachIndexed { i, item ->

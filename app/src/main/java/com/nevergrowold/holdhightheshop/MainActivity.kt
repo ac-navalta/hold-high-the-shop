@@ -54,7 +54,7 @@ class MainActivity : BaseActivity() {
      */
     private fun bindReturnReminder() {
         val card = findViewById<View>(R.id.returnReminder)
-        val (item, loan) = UserState.borrowing().firstOrNull { Rentals.isDueSoon(it.second.dueMillis) }
+        val (item, loan) = UserState.borrowing().firstOrNull { !it.second.returnPending && Rentals.isDueSoon(it.second.dueMillis) }
             ?: run { card.isVisible = false; return }
         val overdue = Rentals.isOverdue(loan.dueMillis)
         card.isVisible = true

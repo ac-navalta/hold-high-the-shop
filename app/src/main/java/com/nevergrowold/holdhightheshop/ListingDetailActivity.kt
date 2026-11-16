@@ -105,8 +105,19 @@ class ListingDetailActivity : BaseActivity() {
         findViewById<View>(R.id.btnEdit).isVisible = isMine && !closed && !onLoan
         findViewById<View>(R.id.btnMarkDone).isVisible = isMine && !closed && !onLoan
         findViewById<View>(R.id.closedState).isVisible = isMine && closed
-        findViewById<View>(R.id.btnMessage).isVisible = onLoan || done
-        findViewById<View>(R.id.btnReturned).isVisible = onLoan
+        // Returns are the lender's call: the borrower can only report it, then waits.
+        val lenderToConfirm = rental?.lending == true && rental.returnPending
+        val borrowerWaiting = rental?.lending == false && rental.returnPending
+        findViewById<View>(R.id.btnMessage).isVisible = (onLoan && !lenderToConfirm) || done
+        findViewById<View>(R.id.btnReturned).isVisible = onLoan && !borrowerWaiting
+        findViewById<View>(R.id.btnNotReceived).isVisible = lenderToConfirm
+        findViewById<TextView>(R.id.btnReturned).setText(
+            when {
+                lenderToConfirm -> R.string.btn_confirm_returned
+                rental?.lending == true -> R.string.btn_mark_returned
+                else -> R.string.btn_ive_returned
+            }
+        )
         findViewById<View>(R.id.btnCancelReservation).isVisible = !isMine && reservation != null
         findViewById<TextView>(R.id.btnMarkDone).setText(
             when (listing.type) {
@@ -144,8 +155,20 @@ class ListingDetailActivity : BaseActivity() {
                 title.text = getString(if (rental.lending) R.string.loan_lent_title else R.string.loan_borrowed_title, who)
                 detail.text = getString(if (rental.lending) R.string.loan_lent_due else R.string.loan_borrowed_due, date)
                 due.isVisible = true
-                due.text = Rentals.countdown(this, rental.dueMillis)
-                due.setTextColor(getColor(if (Rentals.isOverdue(rental.dueMillis)) R.color.danger else R.color.uc_green))
+                when {
+                    lenderToConfirm -> {
+                        due.text = getString(R.string.loan_partner_says_returned, who.substringBefore(' '))
+                        due.setTextColor(getColor(R.color.swap_text))
+                    }
+                    borrowerWaiting -> {
+                        due.text = getString(R.string.loan_waiting_confirm, who.substringBefore(' '))
+                        due.setTextColor(getColor(R.color.text_secondary))
+                    }
+                    else -> {
+                        due.text = Rentals.countdown(this, rental.dueMillis)
+                        due.setTextColor(getColor(if (Rentals.isOverdue(rental.dueMillis)) R.color.danger else R.color.uc_green))
+                    }
+                }
                 findViewById<TextView>(R.id.btnMessage).text = getString(R.string.btn_message_seller, who.substringBefore(' '))
             }
             !isMine && reservation != null -> {
@@ -192,20 +215,50 @@ class ListingDetailActivity : BaseActivity() {
         openChatWith(UserState.rental(listing.id)?.partner ?: listing.seller, listing.id)
     }
 
-    /** On loan: confirm the item came back (or that you gave it back). */
+    /**
+     * On loan. Lender: confirm the item is back (it moves to Completed).
+     * Borrower: report that you gave it back; the lender then confirms.
+     */
     fun markReturned(view: View) {
         val rental = UserState.rental(listing.id) ?: return
         val first = rental.partner.name.substringBefore(' ')
+        if (!rental.lending) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.ive_returned_title)
+                .setMessage(getString(R.string.ive_returned_message, listing.title, first))
+                .setNegativeButton(R.string.return_not_yet, null)
+                .setPositiveButton(R.string.ive_returned_confirm) { _, _ ->
+                    UserState.reportReturned(listing)
+                    bindActions()
+                    notify(getString(R.string.toast_return_reported, first))
+                }
+                .show()
+            return
+        }
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.return_title)
-            .setMessage(
-                getString(if (rental.lending) R.string.return_lent_message else R.string.return_borrowed_message, first, listing.title)
-            )
+            .setMessage(getString(R.string.return_lent_message, first, listing.title))
             .setNegativeButton(R.string.return_not_yet, null)
             .setPositiveButton(R.string.return_confirm) { _, _ ->
                 UserState.markReturned(listing)
                 bindActions()
                 notify(getString(R.string.toast_returned))
+            }
+            .show()
+    }
+
+    /** Lender: the borrower said it was returned, but it was not. */
+    fun rejectReturn(view: View) {
+        val rental = UserState.rental(listing.id) ?: return
+        val first = rental.partner.name.substringBefore(' ')
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.not_received_title)
+            .setMessage(getString(R.string.not_received_message, first, listing.title))
+            .setNegativeButton(R.string.return_not_yet, null)
+            .setPositiveButton(R.string.not_received_confirm) { _, _ ->
+                UserState.rejectReturn(listing)
+                bindActions()
+                notify(getString(R.string.toast_not_received, first))
             }
             .show()
     }

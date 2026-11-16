@@ -614,7 +614,6 @@
     <string name="loan_borrowed_due">Return by %1$s</string>
     <string name="return_title">Mark as returned?</string>
     <string name="return_lent_message">Did %1$s give the %2$s back? It will move to Completed and you can lend it again.</string>
-    <string name="return_borrowed_message">Did you give the %2$s back to %1$s? It will move to Completed.</string>
     <string name="return_confirm">Yes, returned</string>
     <string name="return_not_yet">Not yet</string>
     <string name="toast_returned">Marked as returned</string>
@@ -649,4 +648,21 @@
     <string name="done_bought_title">You bought this from %1$s</string>
     <string name="done_swapped_title">You swapped with %1$s</string>
     <string name="done_detail">Completed today \u2022 see Profile, Completed</string>
+
+    <!-- Returns: borrower reports, lender confirms -->
+    <string name="btn_ive_returned">I\u2019ve returned it</string>
+    <string name="btn_confirm_returned">Confirm returned</string>
+    <string name="btn_not_received">Not received</string>
+    <string name="ive_returned_title">Gave it back?</string>
+    <string name="ive_returned_message">We\u2019ll ask %2$s to confirm they got the %1$s back. It moves to Completed once they do.</string>
+    <string name="ive_returned_confirm">Yes, I returned it</string>
+    <string name="toast_return_reported">Waiting for %1$s to confirm</string>
+    <string name="loan_waiting_confirm">Returned \u2022 waiting for %1$s to confirm</string>
+    <string name="loan_partner_says_returned">%1$s says it\u2019s returned \u2022 please confirm</string>
+    <string name="not_received_title">Not back yet?</string>
+    <string name="not_received_message">We\u2019ll tell %1$s you haven\u2019t got the %2$s back. The loan stays open and you can message or report them.</string>
+    <string name="not_received_confirm">Not received</string>
+    <string name="toast_not_received">%1$s has been told it\u2019s not back yet</string>
+    <string name="row_return_pending">Returned to %1$s \u2022 waiting for them to confirm</string>
+    <string name="row_confirm_return">%1$s says it\u2019s returned \u2022 tap to confirm</string>
 </resources>

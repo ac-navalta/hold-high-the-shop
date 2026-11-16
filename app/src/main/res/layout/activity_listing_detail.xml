@@ -672,6 +672,17 @@
             android:text="@string/btn_mark_returned"
             android:visibility="gone" />
 
+        <!-- Lender, after the borrower says it is back: "Not received" (red) beside "Confirm returned". -->
+        <TextView
+            android:id="@+id/btnNotReceived"
+            style="@style/DangerButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:onClick="rejectReturn"
+            android:text="@string/btn_not_received"
+            android:visibility="gone" />
+
         <!-- After reserving: cancel sits beside Message seller, same size, in red. -->
         <TextView
             android:id="@+id/btnCancelReservation"

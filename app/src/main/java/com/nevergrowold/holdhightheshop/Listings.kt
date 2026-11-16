@@ -472,7 +472,13 @@ object UserState {
      * An item that is out on loan. [lending] is true when Mika lent it to
      * [partner]; false when she borrowed it from them.
      */
-    data class Rental(val partner: Seller, val dueMillis: Long, val lending: Boolean)
+    data class Rental(
+        val partner: Seller,
+        val dueMillis: Long,
+        val lending: Boolean,
+        /** The borrower says they gave it back; the lender has not confirmed yet. */
+        val returnPending: Boolean = false
+    )
 
     private val reserved = mutableMapOf(
         "item2" to Reservation("UC Main Gate Security Desk \u2022 Tomorrow, 1:30 PM"),
@@ -485,7 +491,11 @@ object UserState {
         mutableMapOf(
             "item5" to Rental(Listings.byId("item5").seller, now + 4 * Rentals.DAY_MS, lending = false),
             "item10" to Rental(Listings.byId("item10").seller, now - 1 * Rentals.DAY_MS, lending = false),
-            "mine2" to Rental(Listings.sellerByName("Aira Villanueva"), now + 7 * Rentals.DAY_MS, lending = true)
+            // Aira already tapped "I've returned it", so Mika has a return to confirm.
+            "mine2" to Rental(
+                Listings.sellerByName("Aira Villanueva"), now + 2 * Rentals.DAY_MS,
+                lending = true, returnPending = true
+            )
         )
     }
 
@@ -542,6 +552,20 @@ object UserState {
      * Item handed back. Moves the loan to Completed. A lent item becomes
      * available to lend again; a borrowed one stays off the market.
      */
+    /**
+     * Borrower: "I've returned it". The loan stays open until the lender
+     * confirms, because only they know the item really came back.
+     */
+    fun reportReturned(listing: Listing) {
+        rentals[listing.id]?.let { rentals[listing.id] = it.copy(returnPending = true) }
+    }
+
+    /** Lender: "Not received". The loan carries on as before. */
+    fun rejectReturn(listing: Listing) {
+        rentals[listing.id]?.let { rentals[listing.id] = it.copy(returnPending = false) }
+    }
+
+    /** Lender confirms the item is back (with or without the borrower's report). */
     fun markReturned(listing: Listing) {
         val rental = rentals.remove(listing.id) ?: return
         finished.add(
