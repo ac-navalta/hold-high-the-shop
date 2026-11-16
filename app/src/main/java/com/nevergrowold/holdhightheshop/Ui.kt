@@ -3,6 +3,7 @@ package com.nevergrowold.holdhightheshop
 import android.app.Activity
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -19,7 +20,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.snackbar.Snackbar
 
 /**
- * Dropdown list that opens under the field or button that was tapped, styled
+ * Dropdown list that opens next to the field or button that was tapped, styled
  * like the dropdown components in the Figma file: a white card, one option
  * per row, and a green bar beside the selected option.
  */
@@ -75,10 +76,32 @@ object Dropdown {
             rows.addView(row)
         }
 
-        val xOff = if (alignEnd) anchor.width - width else 0
-        popup.showAsDropDown(anchor, xOff, dp(context, 6), Gravity.START)
+        // Open where there is room. Below the anchor when the whole list fits,
+        // otherwise above it (fields near the bottom of a form, the chat input),
+        // otherwise on whichever side is bigger, scrolling inside that space.
+        content.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        val listHeight = minOf(content.measuredHeight, dp(context, MAX_HEIGHT_DP))
+        val gap = dp(context, 6)
+        val edge = dp(context, 12)
+        val frame = Rect().also { anchor.getWindowVisibleDisplayFrame(it) }
+        val loc = IntArray(2).also { anchor.getLocationOnScreen(it) }
+        val spaceBelow = frame.bottom - (loc[1] + anchor.height) - gap - edge
+        val spaceAbove = loc[1] - frame.top - gap - edge
+        val below = listHeight <= spaceBelow || (listHeight > spaceAbove && spaceBelow >= spaceAbove)
+        val height = minOf(listHeight, if (below) spaceBelow else spaceAbove)
+        popup.height = height
+
+        val x = loc[0] + if (alignEnd) anchor.width - width else 0
+        val y = if (below) loc[1] + anchor.height + gap else loc[1] - gap - height
+        popup.showAtLocation(anchor, Gravity.TOP or Gravity.START, x, y)
         return popup
     }
+
+    /** About seven rows; longer lists scroll inside the card. */
+    private const val MAX_HEIGHT_DP = 46 * 7 + 12
 }
 
 /** Bottom sheets that share the cream, round-cornered look of the app. */
