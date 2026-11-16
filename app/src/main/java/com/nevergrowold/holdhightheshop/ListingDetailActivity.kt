@@ -94,16 +94,18 @@ class ListingDetailActivity : BaseActivity() {
         val rental = UserState.rental(listing.id)
         val reservation = UserState.reservation(listing.id)
         val onLoan = rental != null
+        // Bought or swapped for: finished, no more actions besides messaging.
+        val done = !isMine && !onLoan && reservation == null && UserState.isTaken(listing.id)
 
         // Bottom bar. One set of buttons per state:
         // own listing (edit / mark done), on loan (message / mark returned),
         // reserved (message / cancel), or open (report / reserve).
         findViewById<View>(R.id.btnReport).isVisible = !isMine
-        findViewById<View>(R.id.btnReserve).isVisible = !isMine && !onLoan
+        findViewById<View>(R.id.btnReserve).isVisible = !isMine && !onLoan && !done
         findViewById<View>(R.id.btnEdit).isVisible = isMine && !closed && !onLoan
         findViewById<View>(R.id.btnMarkDone).isVisible = isMine && !closed && !onLoan
         findViewById<View>(R.id.closedState).isVisible = isMine && closed
-        findViewById<View>(R.id.btnMessage).isVisible = onLoan
+        findViewById<View>(R.id.btnMessage).isVisible = onLoan || done
         findViewById<View>(R.id.btnReturned).isVisible = onLoan
         findViewById<View>(R.id.btnCancelReservation).isVisible = !isMine && reservation != null
         findViewById<TextView>(R.id.btnMarkDone).setText(
@@ -116,13 +118,24 @@ class ListingDetailActivity : BaseActivity() {
         findViewById<TextView>(R.id.btnCancelReservation).setText(
             if (listing.isSwap) R.string.btn_withdraw_short else R.string.btn_cancel_short
         )
-        if (!isMine && !onLoan) bindReserveButton()
+        if (!isMine && !onLoan && !done) bindReserveButton()
+        if (done) findViewById<TextView>(R.id.btnMessage).text =
+            getString(R.string.btn_message_seller, listing.seller.name.substringBefore(' '))
 
         // Status card above the seller: a loan with its due date, or a pending reservation.
         val card = findViewById<View>(R.id.reservationCard)
         val title = findViewById<TextView>(R.id.reservationTitle)
         val detail = findViewById<TextView>(R.id.reservationDetail)
         val due = findViewById<TextView>(R.id.reservationDue)
+        val received = findViewById<TextView>(R.id.btnReceived)
+        received.isVisible = !isMine && reservation != null
+        received.setText(
+            when {
+                listing.isSwap -> R.string.btn_swap_done
+                listing.isRent -> R.string.btn_picked_up
+                else -> R.string.btn_got_item
+            }
+        )
         when {
             rental != null -> {
                 card.isVisible = true
@@ -141,13 +154,42 @@ class ListingDetailActivity : BaseActivity() {
                 detail.text = reservation.summary
                 due.isVisible = false
             }
+            done -> {
+                card.isVisible = true
+                val who = listing.seller.name
+                title.text = getString(if (listing.isSwap) R.string.done_swapped_title else R.string.done_bought_title, who)
+                detail.setText(R.string.done_detail)
+                due.isVisible = false
+            }
             else -> card.isVisible = false
         }
     }
 
+    /** Reservation card: the meetup happened and you have the item. */
+    fun markReceived(view: View) {
+        val reservation = UserState.reservation(listing.id) ?: return
+        val first = listing.seller.name.substringBefore(' ')
+        val returnBy = Rentals.dateLabel(System.currentTimeMillis() + reservation.weeks.coerceAtLeast(1) * Rentals.WEEK_MS)
+        val message = when {
+            listing.isSwap -> getString(R.string.received_swap_message, first)
+            listing.isRent -> getString(R.string.received_rent_message, returnBy)
+            else -> getString(R.string.received_buy_message, first)
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.got_item_title, listing.title))
+            .setMessage(message)
+            .setNegativeButton(R.string.return_not_yet, null)
+            .setPositiveButton(R.string.received_confirm) { _, _ ->
+                UserState.markReceived(listing)
+                bindActions()
+                notify(if (listing.isRent) getString(R.string.toast_picked_up, returnBy) else getString(R.string.toast_received))
+            }
+            .show()
+    }
+
     /** On loan: chat with whoever has it, or whoever you borrowed it from. */
     fun messagePartner(view: View) {
-        UserState.rental(listing.id)?.let { openChatWith(it.partner, listing.id) }
+        openChatWith(UserState.rental(listing.id)?.partner ?: listing.seller, listing.id)
     }
 
     /** On loan: confirm the item came back (or that you gave it back). */

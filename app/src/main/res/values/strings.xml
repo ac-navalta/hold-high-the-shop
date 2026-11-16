@@ -636,4 +636,19 @@
     <string name="role_lent_out">LENT OUT</string>
     <string name="reminder_title">Return %1$s to %2$s</string>
     <string name="reminder_overdue_title">%1$s is overdue</string>
+
+    <!-- Finishing a deal -->
+    <string name="btn_got_item">I got the item</string>
+    <string name="btn_picked_up">I picked it up</string>
+    <string name="btn_swap_done">Swap done</string>
+    <string name="got_item_title">Got the %1$s?</string>
+    <string name="received_buy_message">This moves it to Completed. %1$s will be asked to rate the exchange.</string>
+    <string name="received_rent_message">Your return date starts today: %1$s.</string>
+    <string name="received_swap_message">Mark the swap with %1$s as done? It moves to Completed.</string>
+    <string name="received_confirm">Yes, got it</string>
+    <string name="toast_received">Moved to Completed</string>
+    <string name="toast_picked_up">Return by %1$s. We\u2019ll remind you.</string>
+    <string name="done_bought_title">You bought this from %1$s</string>
+    <string name="done_swapped_title">You swapped with %1$s</string>
+    <string name="done_detail">Completed today \u2022 see Profile, Completed</string>
 </resources>

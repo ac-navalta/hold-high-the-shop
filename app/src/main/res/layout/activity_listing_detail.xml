@@ -314,6 +314,18 @@
                                 android:visibility="gone" />
                         </LinearLayout>
                     </LinearLayout>
+
+                    <!-- After the meetup: "I got the item" / "I picked it up" / "Swap done". -->
+                    <TextView
+                        android:id="@+id/btnReceived"
+                        style="@style/OutlineButton"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="12dp"
+                        android:textColor="@color/uc_green"
+                        android:fontFamily="@font/poppins_semibold"
+                        android:textSize="14sp"
+                        android:onClick="markReceived"
+                        android:visibility="gone" />
                 </LinearLayout>
 
                 <!-- SELLER -->
