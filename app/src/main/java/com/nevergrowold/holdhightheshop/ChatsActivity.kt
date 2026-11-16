@@ -17,6 +17,9 @@ class ChatsActivity : BaseActivity() {
     private lateinit var dividers: List<View>
     private lateinit var search: EditText
 
+    /** 0 = All, 1 = Buying & borrowing, 2 = Selling & lending. */
+    private var roleFilter = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -27,8 +30,16 @@ class ChatsActivity : BaseActivity() {
         dividers = listOf(R.id.chatDivider1, R.id.chatDivider2, R.id.chatDivider3).map { findViewById(it) }
         search = findViewById(R.id.inputChatSearch)
 
+        // Tag each conversation with what you are doing in it.
+        val badges = listOf(R.id.chatBadge1, R.id.chatBadge2, R.id.chatBadge3, R.id.chatBadge4)
+        Listings.SELLERS.forEachIndexed { index, seller ->
+            val listing = Listings.byId(Listings.CHAT_LISTINGS[seller])
+            styleBadge(findViewById(badges[index]), Listings.role(this, listing), Listings.isMine(listing))
+        }
+        bindRoleChips()
+
         search.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) = filter(s?.toString().orEmpty())
+            override fun afterTextChanged(s: Editable?) = filter()
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
         })
@@ -55,11 +66,26 @@ class ChatsActivity : BaseActivity() {
         }
     }
 
-    /** Shows only the conversations whose name, program or last message match. */
-    private fun filter(query: String) {
-        val q = query.trim().lowercase()
-        val visible = rows.map { row ->
-            val match = q.isEmpty() || textOf(row).lowercase().contains(q)
+    private fun bindRoleChips() {
+        Choice.chips(
+            listOf(findViewById(R.id.chatFilterAll), findViewById(R.id.chatFilterGetting), findViewById(R.id.chatFilterGiving)),
+            roleFilter
+        ) {
+            roleFilter = it
+            filter()
+        }
+    }
+
+    /**
+     * Shows only the conversations that match the role chip and whose name,
+     * program, item or last message contain the search text.
+     */
+    private fun filter() {
+        val q = search.text.toString().trim().lowercase()
+        val visible = rows.mapIndexed { index, row ->
+            val giving = Listings.isMine(Listings.byId(Listings.CHAT_LISTINGS[Listings.SELLERS[index]]))
+            val roleOk = roleFilter == 0 || (roleFilter == 2) == giving
+            val match = roleOk && (q.isEmpty() || textOf(row).lowercase().contains(q))
             row.isVisible = match
             match
         }

@@ -87,6 +87,17 @@ object Listings {
 
     val SELLERS = listOf(paolo, janelle, miguel, aira)
 
+    /**
+     * What each conversation in Chats is about, in list order. Paolo and
+     * Janelle are giving to Mika; Miguel and Aira are getting from her.
+     */
+    val CHAT_LISTINGS = mapOf(
+        paolo to "item2",
+        janelle to "item5",
+        miguel to "item1",
+        aira to "mine2"
+    )
+
     val ALL = listOf(
         Listing(
             "item1", "Engineering Drawing Set", 850, "COE", 0, 0,
@@ -166,6 +177,15 @@ object Listings {
     )
 
     fun isMine(listing: Listing) = listing.seller == ME
+
+    /** Kicker for a chat or listing strip, e.g. YOU'RE BORROWING. */
+    fun roleKicker(listing: Listing): Int = when {
+        listing.type == 2 -> R.string.kicker_swap
+        isMine(listing) && listing.type == 1 -> R.string.kicker_you_lending
+        isMine(listing) -> R.string.kicker_you_selling
+        listing.type == 1 -> R.string.kicker_you_borrowing
+        else -> R.string.kicker_you_buying
+    }
 
     /**
      * What the student is doing with a listing, for the role badge:

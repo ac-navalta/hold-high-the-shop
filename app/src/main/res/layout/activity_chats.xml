@@ -143,6 +143,40 @@
                 </FrameLayout>
             </LinearLayout>
 
+            <!-- WHO IS GIVING / GETTING, filters the list -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:clipToPadding="false"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/chatFilterAll"
+                        style="@style/FilterChip"
+                        android:text="@string/chat_filter_all" />
+
+                    <TextView
+                        android:id="@+id/chatFilterGetting"
+                        style="@style/FilterChip"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/chat_filter_getting" />
+
+                    <TextView
+                        android:id="@+id/chatFilterGiving"
+                        style="@style/FilterChip"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/chat_filter_giving" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
             <!-- SAFETY BANNER -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -226,13 +260,26 @@
                         android:textColor="@color/text_primary"
                         android:textSize="15sp" />
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/poppins_regular"
-                        android:text="@string/chat1_prog"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="10sp" />
+                        android:layout_marginTop="2dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/chatBadge1"
+                            style="@style/RoleBadge"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_regular"
+                            android:text="@string/chat1_prog"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp" />
+                    </LinearLayout>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -322,13 +369,26 @@
                         android:textColor="@color/text_primary"
                         android:textSize="15sp" />
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/poppins_regular"
-                        android:text="@string/chat2_prog"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="10sp" />
+                        android:layout_marginTop="2dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/chatBadge2"
+                            style="@style/RoleBadge"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_regular"
+                            android:text="@string/chat2_prog"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp" />
+                    </LinearLayout>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -418,13 +478,26 @@
                         android:textColor="@color/text_primary"
                         android:textSize="15sp" />
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/poppins_regular"
-                        android:text="@string/chat3_prog"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="10sp" />
+                        android:layout_marginTop="2dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/chatBadge3"
+                            style="@style/RoleBadge"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_regular"
+                            android:text="@string/chat3_prog"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp" />
+                    </LinearLayout>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -514,13 +587,26 @@
                         android:textColor="@color/text_primary"
                         android:textSize="15sp" />
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/poppins_regular"
-                        android:text="@string/chat4_prog"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="10sp" />
+                        android:layout_marginTop="2dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/chatBadge4"
+                            style="@style/RoleBadge"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_regular"
+                            android:text="@string/chat4_prog"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp" />
+                    </LinearLayout>
 
                     <TextView
                         android:layout_width="match_parent"

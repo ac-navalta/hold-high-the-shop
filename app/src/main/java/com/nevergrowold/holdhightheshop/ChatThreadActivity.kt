@@ -33,6 +33,7 @@ class ChatThreadActivity : BaseActivity() {
 
         seller = Listings.sellerByName(intent.getStringExtra(EXTRA_SELLER))
         listing = intent.getStringExtra(EXTRA_LISTING)?.let { Listings.byId(it) }
+            ?: Listings.CHAT_LISTINGS[seller]?.let { Listings.byId(it) }
             ?: Listings.bySeller(seller).firstOrNull()
             ?: Listings.byId(null)
         messages = findViewById(R.id.messageList)
@@ -62,9 +63,8 @@ class ChatThreadActivity : BaseActivity() {
         )
         input.hint = getString(R.string.hint_message_format, seller.name.substringBefore(' '))
 
-        findViewById<TextView>(R.id.stripKicker).setText(
-            if (UserState.isReserved(listing.id) || isSampleThread()) R.string.reserved_item else R.string.about_item
-        )
+        // Say who is giving and who is getting, e.g. YOU'RE BORROWING.
+        findViewById<TextView>(R.id.stripKicker).setText(Listings.roleKicker(listing))
         findViewById<TextView>(R.id.stripTitle).text = listing.title
         findViewById<TextView>(R.id.stripPrice).text = Listings.price(listing.price)
     }

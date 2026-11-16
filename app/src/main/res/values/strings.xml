@@ -141,25 +141,25 @@
 
     <string name="chat1_initials">PM</string>
     <string name="chat1_name">Paolo Mendoza</string>
-    <string name="chat1_prog">CITCS</string>
+    <string name="chat1_prog">CITCS \u2022 Casio fx-991EX</string>
     <string name="chat1_last">Yes, available pa! Meet tomorrow?</string>
     <string name="chat1_time">10:42</string>
 
     <string name="chat2_initials">JG</string>
     <string name="chat2_name">Janelle Garcia</string>
-    <string name="chat2_prog">CONAHS</string>
+    <string name="chat2_prog">CONAHS \u2022 White Lab Gown</string>
     <string name="chat2_last">Thank you ulit, Mika!</string>
     <string name="chat2_time">Yesterday</string>
 
     <string name="chat3_initials">MS</string>
     <string name="chat3_name">Miguel Santos</string>
-    <string name="chat3_prog">CEA</string>
+    <string name="chat3_prog">COE \u2022 Engineering Drawing Set</string>
     <string name="chat3_last">Can I see more photos of the drawing set?</string>
     <string name="chat3_time">Mon</string>
 
     <string name="chat4_initials">AV</string>
     <string name="chat4_name">Aira Villanueva</string>
-    <string name="chat4_prog">CBA</string>
+    <string name="chat4_prog">CBA \u2022 Drafting Table Lamp</string>
     <string name="chat4_last">Transaction confirmed</string>
     <string name="chat4_time">Sat</string>
 
@@ -368,7 +368,6 @@
     <string name="status_active">Active now</string>
     <string name="status_away">Active today</string>
     <string name="msg_sent_now">Just now</string>
-    <string name="about_item">ABOUT THIS ITEM</string>
     <string name="actions_title">Share in chat</string>
     <string name="action_photo">Photo</string>
     <string name="action_photo_hint">Send a picture of the item</string>
@@ -445,4 +444,14 @@
     <string name="pick_time_title">Meetup time</string>
     <string name="toast_weekdays_only">Meetup points are open Monday to Friday</string>
     <string name="toast_office_hours">Pick a time between 9:00 AM and 4:00 PM</string>
+
+    <!-- Chats: giving vs getting -->
+    <string name="chat_filter_all">All</string>
+    <string name="chat_filter_getting">Buying &amp; borrowing</string>
+    <string name="chat_filter_giving">Selling &amp; lending</string>
+    <string name="kicker_you_buying">YOU\u2019RE BUYING</string>
+    <string name="kicker_you_borrowing">YOU\u2019RE BORROWING</string>
+    <string name="kicker_you_selling">YOU\u2019RE SELLING</string>
+    <string name="kicker_you_lending">YOU\u2019RE LENDING</string>
+    <string name="kicker_swap">SWAP</string>
 </resources>
