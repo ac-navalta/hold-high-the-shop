@@ -154,7 +154,7 @@
     <string name="chat3_initials">MS</string>
     <string name="chat3_name">Miguel Santos</string>
     <string name="chat3_prog">CEA</string>
-    <string name="chat3_last">Can I see more photos of the gown?</string>
+    <string name="chat3_last">Can I see more photos of the drawing set?</string>
     <string name="chat3_time">Mon</string>
 
     <string name="chat4_initials">AV</string>
@@ -257,7 +257,7 @@
     <string name="notif1_time">10:42</string>
 
     <string name="notif2_title">New message from Miguel Santos</string>
-    <string name="notif2_sub">Can I see more photos of the gown?</string>
+    <string name="notif2_sub">Can I see more photos of the drawing set?</string>
     <string name="notif2_time">09:15</string>
 
     <string name="notif3_title">You received a new rating</string>
@@ -401,4 +401,21 @@
     <string name="toast_need_meetup">Choose a meetup point</string>
     <string name="photo_counter_format">%1$d / 4</string>
 
+
+    <!-- Own listing -->
+    <string name="seller_you_format">%1$s (You)</string>
+    <string name="btn_edit_listing">Edit listing</string>
+    <string name="btn_mark_sold">Mark as sold</string>
+    <string name="btn_mark_rented">Mark as rented</string>
+    <string name="btn_mark_swapped">Mark as swapped</string>
+    <string name="mark_sold_title">Mark \u201C%1$s\u201D as done?</string>
+    <string name="mark_sold_message">It will leave the Campus Market and move to your Completed tab.</string>
+    <string name="mark_sold_confirm">Mark as done</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="state_closed">No longer listed \u2022 moved to Completed</string>
+    <string name="closed_summary">Marked as done \u2022 Today</string>
+    <string name="toast_marked_done">Moved to Completed</string>
+    <string name="edit_title">Edit listing</string>
+    <string name="btn_save_changes">Save changes</string>
+    <string name="toast_changes_saved">Changes saved</string>
 </resources>

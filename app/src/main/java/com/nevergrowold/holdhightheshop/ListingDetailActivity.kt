@@ -9,6 +9,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.core.view.isVisible
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -31,8 +33,10 @@ class ListingDetailActivity : BaseActivity() {
         super.onResume()
         // Saved or reserved state can change on other screens.
         bindSaved()
-        bindReserveButton()
+        bindActions()
     }
+
+    private val isMine get() = Listings.isMine(listing)
 
     private fun bind() {
         val seller = listing.seller
@@ -42,7 +46,10 @@ class ListingDetailActivity : BaseActivity() {
         findViewById<TextView>(R.id.detailPrice).text = Listings.price(listing.price)
         findViewById<TextView>(R.id.detailDesc).text = listing.description
         findViewById<TextView>(R.id.sellerInitials).text = seller.initials
-        findViewById<TextView>(R.id.sellerName).text = seller.name
+        findViewById<TextView>(R.id.sellerName).text =
+            if (isMine) getString(R.string.seller_you_format, seller.name) else seller.name
+        // Your own listing: nothing to save or report.
+        findViewById<View>(R.id.btnSave).isVisible = !isMine
         findViewById<TextView>(R.id.sellerMeta).text = getString(R.string.seller_meta_format, seller.program, seller.year)
         findViewById<TextView>(R.id.statRating).text = seller.rating
         findViewById<TextView>(R.id.statOnTime).text = seller.onTime
@@ -57,6 +64,27 @@ class ListingDetailActivity : BaseActivity() {
             setColorFilter(getColor(if (saved) R.color.uc_green else R.color.text_primary))
             contentDescription = getString(if (saved) R.string.cd_unsave else R.string.cd_save)
         }
+    }
+
+    /**
+     * Bottom bar. Other people's listings get Report and Reserve; the
+     * student's own listing gets Edit listing and Mark as sold instead.
+     */
+    private fun bindActions() {
+        val closed = UserState.isClosed(listing.id)
+        findViewById<View>(R.id.btnReport).isVisible = !isMine
+        findViewById<View>(R.id.btnReserve).isVisible = !isMine
+        findViewById<View>(R.id.btnEdit).isVisible = isMine && !closed
+        findViewById<View>(R.id.btnMarkDone).isVisible = isMine && !closed
+        findViewById<View>(R.id.closedState).isVisible = isMine && closed
+        findViewById<TextView>(R.id.btnMarkDone).setText(
+            when (listing.type) {
+                1 -> R.string.btn_mark_rented
+                2 -> R.string.btn_mark_swapped
+                else -> R.string.btn_mark_sold
+            }
+        )
+        if (!isMine) bindReserveButton()
     }
 
     private fun bindReserveButton() {
@@ -84,8 +112,29 @@ class ListingDetailActivity : BaseActivity() {
         }
     }
 
-    /** Seller card: opens the seller's profile. */
-    fun openSellerProfile(view: View) = openSeller(listing.seller)
+    /** Seller card: opens the seller's profile, or your own on your listing. */
+    fun openSellerProfile(view: View) {
+        if (isMine) openProfile(view) else openSeller(listing.seller)
+    }
+
+    /** Own listing: opens the form filled in with this listing. */
+    fun editListing(view: View) {
+        startActivity(Intent(this, CreateListingActivity::class.java).putExtra(EXTRA_LISTING, listing.id))
+    }
+
+    /** Own listing: confirm, then take it off the market. */
+    fun markDone(view: View) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.mark_sold_title, listing.title))
+            .setMessage(R.string.mark_sold_message)
+            .setNegativeButton(R.string.action_cancel, null)
+            .setPositiveButton(R.string.mark_sold_confirm) { _, _ ->
+                UserState.close(listing.id)
+                bindActions()
+                notify(getString(R.string.toast_marked_done))
+            }
+            .show()
+    }
 
     /** Opens the report form for this listing. */
     fun openReport(view: View) {
@@ -139,7 +188,7 @@ class ListingDetailActivity : BaseActivity() {
                     return@setOnClickListener
                 }
                 UserState.setReserved(listing.id, true)
-                bindReserveButton()
+                bindActions()
                 dialog.dismiss()
                 Toast.makeText(this, getString(R.string.toast_reserved, listing.seller.name), Toast.LENGTH_SHORT).show()
                 startActivity(

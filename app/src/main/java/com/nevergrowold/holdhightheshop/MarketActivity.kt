@@ -115,7 +115,7 @@ class MarketActivity : BaseActivity() {
         val query = search.text.toString().trim().lowercase()
         val programName = Listings.PROGRAMS.getOrNull(program)
 
-        var items = Listings.ALL.filter { listing ->
+        var items = Listings.open().filter { listing ->
             (programName == null || listing.program == programName) &&
                 filters.matches(listing) &&
                 (query.isEmpty() ||
@@ -210,7 +210,7 @@ class MarketActivity : BaseActivity() {
                 Choice.toggles(conditions, draft.conditions) { draft = draft.copy(conditions = it); refresh() }
                 Choice.toggles(types, draft.types) { draft = draft.copy(types = it); refresh() }
                 Choice.chips(prices, draft.price) { draft = draft.copy(price = it); refresh() }
-                val count = Listings.ALL.count {
+                val count = Listings.open().count {
                     draft.matches(it) && (program < 0 || it.program == Listings.PROGRAMS[program])
                 }
                 apply.text = resources.getQuantityString(R.plurals.filters_show_count, count, count)

@@ -49,6 +49,7 @@
             android:layout_weight="1"
             android:layout_marginStart="4dp"
             android:fontFamily="@font/poppins_bold"
+            android:id="@+id/createTitle"
             android:text="@string/create_title"
             android:textColor="@color/white"
             android:textSize="20sp" />
@@ -574,6 +575,7 @@
             android:background="@drawable/bg_btn_outline"
             android:gravity="center"
             android:fontFamily="@font/poppins_medium"
+            android:id="@+id/btnSaveDraft"
             android:text="@string/btn_save_draft"
             android:textColor="@color/text_primary"
             android:textSize="15sp"
@@ -590,6 +592,7 @@
             android:background="@drawable/bg_btn_green"
             android:gravity="center"
             android:fontFamily="@font/poppins_semibold"
+            android:id="@+id/btnPostItem"
             android:text="@string/btn_post_item"
             android:textColor="@color/white"
             android:textSize="15sp"

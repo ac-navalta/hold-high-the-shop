@@ -62,6 +62,12 @@ object Listings {
 
     val PROGRAMS = COLLEGES.map { it.code }
 
+    /** The signed-in student. */
+    val ME = Seller(
+        "Mika Dela Cruz", "MD", "CITCS", "3rd Year", "4.6", "92%", 14,
+        "", true
+    )
+
     private val paolo = Seller(
         "Paolo Mendoza", "PM", "CITCS", "3rd Year", "4.6", "92%", 14,
         "Yes, available pa! Meet tomorrow?", true
@@ -72,7 +78,7 @@ object Listings {
     )
     private val miguel = Seller(
         "Miguel Santos", "MS", "COE", "4th Year", "4.4", "88%", 9,
-        "Can I see more photos of the gown?", true
+        "Can I see more photos of the drawing set?", true
     )
     private val aira = Seller(
         "Aira Villanueva", "AV", "CBA", "1st Year", "4.8", "95%", 6,
@@ -85,7 +91,7 @@ object Listings {
         Listing(
             "item1", "Engineering Drawing Set", 850, "COE", 0, 0,
             "Complete drafting set with T-square, triangles and compass. Barely used, still in the original case.",
-            miguel, "UC Main Gate Security Desk", 1
+            ME, "UC Main Gate Security Desk", 1
         ),
         Listing(
             "item2", "Casio fx-991EX", 1200, "CITCS", 1, 0,
@@ -146,11 +152,23 @@ object Listings {
             "item13", "The 1987 Constitution, Annotated", 900, "COL", 0, 0,
             "Hardbound, latest printing. Like new with no highlights.",
             janelle, "UC Library Lobby", 12
+        ),
+        Listing(
+            "mine2", "Drafting Table Lamp", 150, "CAFA", 1, 1,
+            "LED desk lamp with an adjustable arm. Rent it for the week of your plates.",
+            ME, "CITCS Building Entrance", 3
+        ),
+        Listing(
+            "mine3", "Introduction to Psychology", 300, "CAS", 1, 0,
+            "Used for one semester. Clean pages, a few sticky notes inside.",
+            ME, "UC Library Lobby", 6
         )
     )
 
-    /** Mika's own listings, shown under Profile > Active. */
-    val MY_ACTIVE = listOf("item1", "item2", "item4")
+    fun isMine(listing: Listing) = listing.seller == ME
+
+    /** Mika's own listings that are still open, shown under Profile > Active. */
+    fun myActive(): List<Listing> = ALL.filter { isMine(it) && !UserState.isClosed(it.id) }
 
     /** Mika's finished exchanges, shown under Profile > Completed. */
     val COMPLETED = listOf(
@@ -185,6 +203,9 @@ object Listings {
 
     fun bySeller(seller: Seller): List<Listing> = ALL.filter { it.seller == seller }
 
+    /** What the market shows: everything not yet sold, rented out or swapped. */
+    fun open(): List<Listing> = ALL.filter { !UserState.isClosed(it.id) }
+
     fun price(value: Int): String =
         "₱" + NumberFormat.getIntegerInstance(Locale.US).format(value)
 
@@ -206,6 +227,7 @@ object UserState {
 
     private val saved = mutableSetOf("item3", "item5")
     private val reserved = mutableSetOf<String>()
+    private val closed = mutableSetOf<String>()
 
     fun saved(): List<Listing> = Listings.ALL.filter { it.id in saved }
 
@@ -219,5 +241,12 @@ object UserState {
 
     fun setReserved(id: String, on: Boolean) {
         if (on) reserved.add(id) else reserved.remove(id)
+    }
+
+    /** Own listings marked as sold, rented out or swapped. */
+    fun isClosed(id: String) = id in closed
+
+    fun close(id: String) {
+        closed.add(id)
     }
 }

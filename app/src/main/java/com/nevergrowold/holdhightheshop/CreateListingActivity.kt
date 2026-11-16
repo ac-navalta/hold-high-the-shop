@@ -23,6 +23,9 @@ class CreateListingActivity : BaseActivity() {
 
     private val programs by lazy { Listings.PROGRAMS }
 
+    /** Set when opened from "Edit listing" on one of the student's listings. */
+    private var editing: Listing? = null
+
     /** Which photo tiles show the "added" state. UI only for now. */
     private val photos = BooleanArray(MAX_PHOTOS)
 
@@ -31,6 +34,9 @@ class CreateListingActivity : BaseActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_create_listing)
         BarInsets.apply(this)
+
+        editing = intent.getStringExtra(EXTRA_LISTING)?.let { Listings.byId(it) }
+        editing?.let { prefill(it) }
 
         Choice.pills(
             listOf(findViewById(R.id.condition1), findViewById(R.id.condition2), findViewById(R.id.condition3)),
@@ -99,8 +105,36 @@ class CreateListingActivity : BaseActivity() {
         })
     }
 
-    /** Saves the listing as a draft and closes the form. */
+    /** Edit mode: same form, filled in, with Cancel / Save changes. */
+    private fun prefill(listing: Listing) {
+        findViewById<TextView>(R.id.createTitle).setText(R.string.edit_title)
+        findViewById<TextView>(R.id.btnSaveDraft).setText(R.string.action_cancel)
+        findViewById<TextView>(R.id.btnPostItem).setText(R.string.btn_save_changes)
+        findViewById<EditText>(R.id.inputTitle).setText(listing.title)
+        findViewById<EditText>(R.id.inputPrice).setText(listing.price.toString())
+        findViewById<EditText>(R.id.inputDescription).setText(listing.description)
+        program = programs.indexOf(listing.program)
+        if (program >= 0) setPicked(R.id.rowProgramText, listing.program)
+        meetup = Listings.MEETUP_POINTS.indexOf(listing.meetup)
+        if (meetup >= 0) setPicked(R.id.rowMeetupText, listing.meetup)
+        condition = listing.condition
+        Choice.pills(
+            listOf(findViewById(R.id.condition1), findViewById(R.id.condition2), findViewById(R.id.condition3)),
+            condition
+        ) { condition = it }
+        listingType = listing.type
+        Choice.segments(
+            listOf(findViewById(R.id.type1), findViewById(R.id.type2), findViewById(R.id.type3)),
+            listingType
+        ) { listingType = it }
+    }
+
+    /** Saves the listing as a draft and closes the form (Cancel in edit mode). */
     fun saveDraft(view: View) {
+        if (editing != null) {
+            finish()
+            return
+        }
         Toast.makeText(this, R.string.toast_draft_saved, Toast.LENGTH_SHORT).show()
         finish()
     }
@@ -115,6 +149,11 @@ class CreateListingActivity : BaseActivity() {
             condition < 0 -> missing(R.string.toast_need_condition, findViewById(R.id.condition1))
             listingType != 2 && price.text.isBlank() -> missing(R.string.toast_need_price, price)
             meetup < 0 -> missing(R.string.toast_need_meetup, findViewById(R.id.rowMeetup))
+            editing != null -> {
+                hideKeyboard(view)
+                Toast.makeText(this, R.string.toast_changes_saved, Toast.LENGTH_SHORT).show()
+                finish()
+            }
             else -> {
                 hideKeyboard(view)
                 startActivity(Intent(this, ListingPostedActivity::class.java))

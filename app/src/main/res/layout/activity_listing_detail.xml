@@ -472,6 +472,7 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
+            android:id="@+id/btnReport"
             android:layout_width="wrap_content"
             android:layout_height="52dp"
             android:orientation="horizontal"
@@ -521,6 +522,35 @@
             android:focusable="true"
             android:onClick="reserve"
             android:foreground="?attr/selectableItemBackground" />
+
+        <!-- Shown instead of Report / Reserve on the student's own listing. -->
+        <TextView
+            android:id="@+id/btnEdit"
+            style="@style/OutlineButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:onClick="editListing"
+            android:text="@string/btn_edit_listing"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/btnMarkDone"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:onClick="markDone"
+            android:visibility="gone" />
+
+        <!-- Own listing already marked as done. -->
+        <TextView
+            android:id="@+id/closedState"
+            style="@style/OutlineButton"
+            android:clickable="false"
+            android:foreground="@null"
+            android:textColor="@color/text_secondary"
+            android:text="@string/state_closed"
+            android:visibility="gone" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -66,24 +66,26 @@ class ProfileActivity : BaseActivity() {
         }
 
         val saved = UserState.saved()
-        findViewById<TextView>(R.id.tab1Count).text = Listings.MY_ACTIVE.size.toString()
-        findViewById<TextView>(R.id.tab2Count).text = Listings.COMPLETED.size.toString()
+        val mine = Listings.myActive()
+        val completed = closedExchanges() + Listings.COMPLETED
+        findViewById<TextView>(R.id.tab1Count).text = mine.size.toString()
+        findViewById<TextView>(R.id.tab2Count).text = completed.size.toString()
         findViewById<TextView>(R.id.tab3Count).text = saved.size.toString()
 
         val list = findViewById<LinearLayout>(R.id.profileList)
         list.removeAllViews()
         when (selected) {
-            TAB_ACTIVE -> Listings.MY_ACTIVE.map { Listings.byId(it) }.forEachIndexed { i, item ->
+            TAB_ACTIVE -> mine.forEachIndexed { i, item ->
                 addRow(
                     list, item.title, Listings.price(item.price),
                     getString(R.string.posted_days_format, item.postedDaysAgo + 2),
-                    i < Listings.MY_ACTIVE.size - 1
+                    i < mine.size - 1
                 ) { openListingById(item.id) }
             }
-            TAB_COMPLETED -> Listings.COMPLETED.forEachIndexed { i, exchange ->
+            TAB_COMPLETED -> completed.forEachIndexed { i, exchange ->
                 addRow(
                     list, exchange.title, Listings.price(exchange.price), exchange.summary,
-                    i < Listings.COMPLETED.size - 1, null
+                    i < completed.size - 1, null
                 )
             }
             else -> saved.forEachIndexed { i, item ->
@@ -96,6 +98,10 @@ class ProfileActivity : BaseActivity() {
         }
         findViewById<View>(R.id.profileEmpty).isVisible = selected == TAB_SAVED && saved.isEmpty()
     }
+
+    /** Own listings marked as done this session, newest first. */
+    private fun closedExchanges() = Listings.ALL.filter { Listings.isMine(it) && UserState.isClosed(it.id) }
+        .map { Exchange(it.title, it.price, getString(R.string.closed_summary)) }
 
     /** The "..." button in the header. */
     fun openMenu(view: View) {
