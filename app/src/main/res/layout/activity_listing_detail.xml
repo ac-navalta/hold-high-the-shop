@@ -288,6 +288,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/poppins_semibold"
+                                android:id="@+id/reservationTitle"
                                 android:text="@string/reservation_card_title"
                                 android:textColor="@color/uc_green"
                                 android:textSize="13sp" />

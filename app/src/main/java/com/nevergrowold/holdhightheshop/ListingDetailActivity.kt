@@ -105,6 +105,12 @@ class ListingDetailActivity : BaseActivity() {
 
         val reservation = UserState.reservation(listing.id)
         findViewById<View>(R.id.btnCancelReservation).isVisible = !isMine && reservation != null
+        findViewById<TextView>(R.id.btnCancelReservation).setText(
+            if (listing.isSwap) R.string.btn_withdraw_short else R.string.btn_cancel_short
+        )
+        findViewById<TextView>(R.id.reservationTitle).setText(
+            if (listing.isSwap) R.string.swap_card_title else R.string.reservation_card_title
+        )
         findViewById<View>(R.id.reservationCard).isVisible = !isMine && reservation != null
         findViewById<TextView>(R.id.reservationDetail).text = reservation
     }
@@ -207,6 +213,10 @@ class ListingDetailActivity : BaseActivity() {
     fun reserve(view: View) {
         if (UserState.isReserved(listing.id)) {
             openChatWith(listing.seller, listing.id)
+            return
+        }
+        if (listing.isSwap) {
+            offerSwap()
             return
         }
 
@@ -340,16 +350,63 @@ class ListingDetailActivity : BaseActivity() {
 
     /** "Cancel reservation" on the reservation card. */
     fun cancelReservation(view: View) {
+        val first = listing.seller.name.substringBefore(' ')
+        val swap = listing.isSwap
         MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.cancel_reservation_title)
-            .setMessage(getString(R.string.cancel_reservation_message, listing.seller.name.substringBefore(' ')))
+            .setTitle(if (swap) R.string.cancel_swap_title else R.string.cancel_reservation_title)
+            .setMessage(getString(if (swap) R.string.cancel_swap_message else R.string.cancel_reservation_message, first))
             .setNegativeButton(R.string.cancel_reservation_keep, null)
-            .setPositiveButton(R.string.cancel_reservation_confirm) { _, _ ->
+            .setPositiveButton(if (swap) R.string.cancel_swap_confirm else R.string.cancel_reservation_confirm) { _, _ ->
                 UserState.cancelReservation(listing.id)
                 bindActions()
-                notify(getString(R.string.toast_reservation_cancelled))
+                notify(getString(if (swap) R.string.toast_swap_withdrawn else R.string.toast_reservation_cancelled))
             }
             .show()
+    }
+
+    /** "Offer a swap": pick one of your items to trade for this one. */
+    private fun offerSwap() {
+        val mine = Listings.myActive()
+        val first = listing.seller.name.substringBefore(' ')
+        var picked = -1
+        Sheets.show(this, R.layout.sheet_swap) { sheet, dialog ->
+            sheet.findViewById<TextView>(R.id.swapTheirTitle).text = listing.title
+            sheet.findViewById<TextView>(R.id.swapTheirWants).apply {
+                text = getString(R.string.swap_wants_format, listing.wants ?: "")
+                isVisible = listing.wants != null
+            }
+            sheet.findViewById<TextView>(R.id.swapNote).text = getString(R.string.swap_note_format, first)
+
+            val box = sheet.findViewById<LinearLayout>(R.id.swapOptions)
+            val rows = mine.map { item ->
+                val row = LayoutInflater.from(this).inflate(R.layout.item_swap_option, box, false)
+                row.findViewById<TextView>(R.id.optionTitle).text = item.title
+                row.findViewById<TextView>(R.id.optionMeta).text =
+                    getString(R.string.saved_meta_format, item.program, Listings.conditionLabel(this, item.condition))
+                box.addView(row)
+                row
+            }
+            Choice.rows(rows, rows.map { it.findViewById(R.id.optionRadio) }, picked) { picked = it }
+
+            sheet.findViewById<View>(R.id.swapSend).setOnClickListener {
+                if (picked < 0) {
+                    Toast.makeText(this, R.string.toast_pick_swap_item, Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                val summary = getString(R.string.swap_summary_format, mine[picked].title, listing.title)
+                UserState.setReserved(listing.id, summary)
+                bindActions()
+                dialog.dismiss()
+                Toast.makeText(this, getString(R.string.toast_swap_sent, listing.seller.name), Toast.LENGTH_SHORT).show()
+                startActivity(
+                    Intent(this, ChatThreadActivity::class.java)
+                        .putExtra(EXTRA_SELLER, listing.seller.name)
+                        .putExtra(EXTRA_LISTING, listing.id)
+                        .putExtra(EXTRA_RESERVED, true)
+                        .putExtra(ChatThreadActivity.EXTRA_RESERVED_DETAIL, summary)
+                )
+            }
+        }
     }
 
     private fun addChips(container: LinearLayout, labels: List<String>): List<TextView> =

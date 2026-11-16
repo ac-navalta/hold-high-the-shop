@@ -81,7 +81,9 @@ class ChatThreadActivity : BaseActivity() {
         val detail = intent.getStringExtra(EXTRA_RESERVED_DETAIL)
         if (intent.getBooleanExtra(EXTRA_RESERVED, false) && detail != null) {
             val card = LayoutInflater.from(this).inflate(R.layout.item_system_card, messages, false)
-            card.findViewById<TextView>(R.id.systemTitle).setText(R.string.sys_reserved)
+            card.findViewById<TextView>(R.id.systemTitle).setText(
+                if (listing.isSwap) R.string.sys_swap_offered else R.string.sys_reserved
+            )
             card.findViewById<TextView>(R.id.systemDetail).text = detail
             messages.addView(card)
             scrollToEnd()

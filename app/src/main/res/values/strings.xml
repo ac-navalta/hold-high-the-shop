@@ -549,4 +549,20 @@
     <string name="tag_for_rent">FOR RENT</string>
     <string name="tag_for_swap">FOR SWAP</string>
     <string name="swap_wants_kicker">LOOKING TO SWAP FOR</string>
+    <string name="swap_kicker">OFFER A SWAP</string>
+    <string name="swap_title">What will you trade?</string>
+    <string name="swap_wants_format">Looking for: %1$s</string>
+    <string name="swap_offer_label">Offer one of your items</string>
+    <string name="swap_note_format">If %1$s accepts, you\u2019ll agree on a meetup in chat. No money changes hands.</string>
+    <string name="btn_send_swap">Send swap offer</string>
+    <string name="toast_pick_swap_item">Pick an item to offer</string>
+    <string name="toast_swap_sent">Swap offer sent to %1$s</string>
+    <string name="swap_summary_format">Your %1$s for their %2$s</string>
+    <string name="swap_card_title">You offered a swap</string>
+    <string name="sys_swap_offered">Swap offer sent</string>
+    <string name="cancel_swap_title">Withdraw this swap offer?</string>
+    <string name="cancel_swap_message">%1$s will be told you withdrew the offer. You can offer again later.</string>
+    <string name="cancel_swap_confirm">Withdraw offer</string>
+    <string name="toast_swap_withdrawn">Swap offer withdrawn</string>
+    <string name="btn_withdraw_short">Withdraw</string>
 </resources>
