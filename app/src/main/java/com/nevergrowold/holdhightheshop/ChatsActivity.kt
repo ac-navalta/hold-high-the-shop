@@ -17,7 +17,7 @@ class ChatsActivity : BaseActivity() {
     private lateinit var dividers: List<View>
     private lateinit var search: EditText
 
-    /** 0 = All, 1 = Buying & borrowing, 2 = Selling & lending. */
+    /** 0 = All, 1 = Buying & borrowing, 2 = Selling & lending, 3 = Swaps. */
     private var roleFilter = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,12 +26,12 @@ class ChatsActivity : BaseActivity() {
         setContentView(R.layout.activity_chats)
         BarInsets.apply(this, hideBottomOnKeyboard = true)
 
-        rows = listOf(R.id.chatRow1, R.id.chatRow2, R.id.chatRow3, R.id.chatRow4).map { findViewById(it) }
-        dividers = listOf(R.id.chatDivider1, R.id.chatDivider2, R.id.chatDivider3).map { findViewById(it) }
+        rows = listOf(R.id.chatRow1, R.id.chatRow2, R.id.chatRow3, R.id.chatRow4, R.id.chatRow5).map { findViewById(it) }
+        dividers = listOf(R.id.chatDivider1, R.id.chatDivider2, R.id.chatDivider3, R.id.chatDivider4).map { findViewById(it) }
         search = findViewById(R.id.inputChatSearch)
 
         // Tag each conversation with what you are doing in it.
-        val badges = listOf(R.id.chatBadge1, R.id.chatBadge2, R.id.chatBadge3, R.id.chatBadge4)
+        val badges = listOf(R.id.chatBadge1, R.id.chatBadge2, R.id.chatBadge3, R.id.chatBadge4, R.id.chatBadge5)
         Listings.SELLERS.forEachIndexed { index, seller ->
             val listing = Listings.byId(Listings.CHAT_LISTINGS[seller])
             styleBadge(findViewById(badges[index]), Listings.role(this, listing), Listings.isMine(listing), listing.isSwap)
@@ -68,7 +68,10 @@ class ChatsActivity : BaseActivity() {
 
     private fun bindRoleChips() {
         Choice.chips(
-            listOf(findViewById(R.id.chatFilterAll), findViewById(R.id.chatFilterGetting), findViewById(R.id.chatFilterGiving)),
+            listOf(
+                findViewById(R.id.chatFilterAll), findViewById(R.id.chatFilterGetting),
+                findViewById(R.id.chatFilterGiving), findViewById(R.id.chatFilterSwaps)
+            ),
             roleFilter
         ) {
             roleFilter = it
@@ -83,8 +86,13 @@ class ChatsActivity : BaseActivity() {
     private fun filter() {
         val q = search.text.toString().trim().lowercase()
         val visible = rows.mapIndexed { index, row ->
-            val giving = Listings.isMine(Listings.byId(Listings.CHAT_LISTINGS[Listings.SELLERS[index]]))
-            val roleOk = roleFilter == 0 || (roleFilter == 2) == giving
+            val listing = Listings.byId(Listings.CHAT_LISTINGS[Listings.SELLERS[index]])
+            val roleOk = when (roleFilter) {
+                1 -> !listing.isSwap && !Listings.isMine(listing)
+                2 -> !listing.isSwap && Listings.isMine(listing)
+                3 -> listing.isSwap
+                else -> true
+            }
             val match = roleOk && (q.isEmpty() || textOf(row).lowercase().contains(q))
             row.isVisible = match
             match

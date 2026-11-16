@@ -162,7 +162,13 @@ object Listings {
         "Transaction confirmed", false
     )
 
-    val SELLERS = listOf(paolo, janelle, miguel, aira)
+    private val carlo = Seller(
+        "Carlo Reyes", "CR", "COE", "2nd Year", "4.7", "94%", 11,
+        "Deal! Your calculus reviewer for my Arduino kit?", true
+    )
+
+    /** Everyone Mika chats with, in Chats list order. */
+    val SELLERS = listOf(paolo, janelle, miguel, aira, carlo)
 
     /**
      * What each conversation in Chats is about, in list order. Paolo and
@@ -172,7 +178,8 @@ object Listings {
         paolo to "item2",
         janelle to "item5",
         miguel to "item1",
-        aira to "mine2"
+        aira to "mine2",
+        carlo to "item14"
     )
 
     val ALL = listOf(
@@ -257,6 +264,19 @@ object Listings {
             "mine3", "Introduction to Psychology", 300, "CAS", 1, 0,
             "Used for one semester. Clean pages, a few sticky notes inside.",
             ME, "UC Library Lobby", 6
+        ),
+        Listing(
+            "item14", "Arduino Starter Kit", 900, "COE", 1, 2,
+            "Uno board, breadboard, jumper wires and a box of sensors. All parts tested.",
+            carlo, "CITCS Building Entrance", 2,
+            Availability(setOf(0, 1, 3), 10 * 60, 14 * 60),
+            wants = "A Calculus or Physics reviewer"
+        ),
+        Listing(
+            "mine4", "Calculus Reviewer", 350, "CAS", 1, 2,
+            "Complete reviewer with worked examples for Calculus 1 and 2. A few notes in pencil.",
+            ME, "UC Library Lobby", 4,
+            wants = "An electronics or Arduino kit"
         )
     )
 
@@ -370,7 +390,8 @@ object UserState {
     /** Listing id to meetup summary. Starts with the sample reservations. */
     private val reserved = mutableMapOf(
         "item2" to "UC Main Gate Security Desk \u2022 Tomorrow, 1:30 PM",
-        "item5" to "UC Library Lobby \u2022 Return by Friday"
+        "item5" to "UC Library Lobby \u2022 Return by Friday",
+        "item14" to "Your Calculus Reviewer for their Arduino Starter Kit"
     )
     private val closed = mutableSetOf<String>()
 

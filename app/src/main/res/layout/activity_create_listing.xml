@@ -413,6 +413,7 @@
             </LinearLayout>
 
             <TextView
+                android:id="@+id/labelPrice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
@@ -422,6 +423,7 @@
                 android:textSize="13sp" />
 
             <LinearLayout
+                android:id="@+id/rowPrice"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
                 android:layout_marginTop="8dp"
@@ -459,6 +461,38 @@
                     android:textSize="14sp"
                     android:autofillHints="" />
             </LinearLayout>
+
+            <!-- Shown instead of Price when the listing type is Swap. -->
+            <TextView
+                android:id="@+id/labelWants"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:fontFamily="@font/poppins_semibold"
+                android:text="@string/lbl_wants"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
+            <EditText
+                android:id="@+id/inputWants"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:fontFamily="@font/poppins_regular"
+                android:hint="@string/hint_wants"
+                android:inputType="textCapSentences"
+                android:imeOptions="actionNext"
+                android:maxLength="80"
+                android:maxLines="1"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:textSize="14sp"
+                android:autofillHints=""
+                android:visibility="gone" />
 
             <TextView
                 android:layout_width="wrap_content"

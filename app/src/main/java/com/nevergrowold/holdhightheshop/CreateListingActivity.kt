@@ -58,7 +58,7 @@ class CreateListingActivity : BaseActivity() {
         Choice.segments(
             listOf(findViewById(R.id.type1), findViewById(R.id.type2), findViewById(R.id.type3)),
             listingType
-        ) { listingType = it }
+        ) { listingType = it; bindType() }
 
         countCharacters(findViewById(R.id.inputDescription), findViewById(R.id.counterDescription))
     }
@@ -187,7 +187,16 @@ class CreateListingActivity : BaseActivity() {
         Choice.segments(
             listOf(findViewById(R.id.type1), findViewById(R.id.type2), findViewById(R.id.type3)),
             listingType
-        ) { listingType = it }
+        ) { listingType = it; bindType() }
+        findViewById<EditText>(R.id.inputWants).setText(listing.wants)
+        bindType()
+    }
+
+    /** Swap listings ask what you want in exchange instead of a price. */
+    private fun bindType() {
+        val swap = listingType == 2
+        listOf(R.id.labelPrice, R.id.rowPrice).forEach { findViewById<View>(it).isVisible = !swap }
+        listOf(R.id.labelWants, R.id.inputWants).forEach { findViewById<View>(it).isVisible = swap }
     }
 
     /** Saves the listing as a draft and closes the form (Cancel in edit mode). */
@@ -209,6 +218,8 @@ class CreateListingActivity : BaseActivity() {
             program < 0 -> missing(R.string.toast_need_program, findViewById(R.id.rowProgram))
             condition < 0 -> missing(R.string.toast_need_condition, findViewById(R.id.condition1))
             listingType != 2 && price.text.isBlank() -> missing(R.string.toast_need_price, price)
+            listingType == 2 && findViewById<EditText>(R.id.inputWants).text.isBlank() ->
+                missing(R.string.toast_need_wants, findViewById(R.id.inputWants))
             meetup < 0 -> missing(R.string.toast_need_meetup, findViewById(R.id.rowMeetup))
             freeDays.isEmpty() -> missing(R.string.toast_need_days, findViewById(R.id.freeDay0))
             editing != null -> {

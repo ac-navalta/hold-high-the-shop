@@ -147,6 +147,12 @@
     <string name="chat4_last">Transaction confirmed</string>
     <string name="chat4_time">Sat</string>
 
+    <string name="chat5_initials">CR</string>
+    <string name="chat5_name">Carlo Reyes</string>
+    <string name="chat5_prog">COE \u2022 Arduino Starter Kit</string>
+    <string name="chat5_last">Deal! Your calculus reviewer for my Arduino kit?</string>
+    <string name="chat5_time">Fri</string>
+
     <!-- Chat thread -->
     <string name="thread_status">Active now \u2022 CITCS</string>
     <string name="reserved_item">RESERVED ITEM</string>
@@ -405,9 +411,9 @@
     <string name="role_borrowing">BORROWING</string>
     <string name="role_swapping">SWAPPING</string>
     <string name="section_mine">Your listings</string>
-    <string name="section_mine_hint">Things you\u2019re selling or lending to others</string>
+    <string name="section_mine_hint">Things you\u2019re selling, lending or swapping</string>
     <string name="section_reserved">Reserved by you</string>
-    <string name="section_reserved_hint">Things you\u2019re buying or borrowing from others</string>
+    <string name="section_reserved_hint">Things you\u2019re buying, borrowing or swapping for</string>
     <string name="reserved_from_format">From %1$s</string>
 
     <!-- Reservation -->
@@ -431,7 +437,7 @@
     <string name="kicker_you_borrowing">YOU\u2019RE BORROWING</string>
     <string name="kicker_you_selling">YOU\u2019RE SELLING</string>
     <string name="kicker_you_lending">YOU\u2019RE LENDING</string>
-    <string name="kicker_swap">SWAP</string>
+    <string name="kicker_swap">YOU\u2019RE SWAPPING</string>
 
     <!-- Completed exchanges -->
     <string name="ex_sold_to">Sold to %1$s</string>
@@ -565,4 +571,8 @@
     <string name="cancel_swap_confirm">Withdraw offer</string>
     <string name="toast_swap_withdrawn">Swap offer withdrawn</string>
     <string name="btn_withdraw_short">Withdraw</string>
+    <string name="chat_filter_swaps">Swaps</string>
+    <string name="lbl_wants">Looking for *</string>
+    <string name="hint_wants">e.g. A Physics reviewer or a lab kit</string>
+    <string name="toast_need_wants">Say what you\u2019d like in exchange</string>
 </resources>
