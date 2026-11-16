@@ -10,10 +10,16 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.isVisible
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.DateValidatorPointForward
+import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import java.util.TimeZone
 
 class ListingDetailActivity : BaseActivity() {
 
@@ -85,6 +91,10 @@ class ListingDetailActivity : BaseActivity() {
             }
         )
         if (!isMine) bindReserveButton()
+
+        val reservation = UserState.reservation(listing.id)
+        findViewById<View>(R.id.reservationCard).isVisible = !isMine && reservation != null
+        findViewById<TextView>(R.id.reservationDetail).text = reservation
     }
 
     private fun bindReserveButton() {
@@ -159,8 +169,8 @@ class ListingDetailActivity : BaseActivity() {
         val days = upcomingDays()
         val times = listOf("9:00 AM", "10:30 AM", "1:30 PM", "3:00 PM")
         var place = Listings.MEETUP_POINTS.indexOf(listing.meetup).coerceAtLeast(0)
-        var day = 0
-        var time = -1
+        var dayLabel: String? = days[0]
+        var timeLabel: String? = null
 
         Sheets.show(this, R.layout.sheet_reserve) { sheet, dialog ->
             sheet.findViewById<TextView>(R.id.reserveItemTitle).text = listing.title
@@ -177,20 +187,56 @@ class ListingDetailActivity : BaseActivity() {
                 }
             }
 
-            val dayChips = addChips(sheet.findViewById(R.id.reserveDays), days)
-            Choice.chips(dayChips, day) { day = it }
-            val timeChips = addChips(sheet.findViewById(R.id.reserveTimes), times)
-            Choice.chips(timeChips, time) { time = it }
+            // Quick picks, plus a last chip that opens the full date or time picker.
+            val dayChips = addChips(sheet.findViewById(R.id.reserveDays), days + getString(R.string.chip_pick_date))
+            var day = 0
+            fun bindDays() {
+                Choice.chips(dayChips, day) { picked ->
+                    if (picked < days.size) {
+                        day = picked
+                        dayLabel = days[picked]
+                    } else {
+                        bindDays() // keep the old choice until a date is confirmed
+                        pickDate { label ->
+                            dayChips.last().text = label
+                            day = days.size
+                            dayLabel = label
+                            bindDays()
+                        }
+                    }
+                }
+            }
+            bindDays()
+
+            val timeChips = addChips(sheet.findViewById(R.id.reserveTimes), times + getString(R.string.chip_pick_time))
+            var time = -1
+            fun bindTimes() {
+                Choice.chips(timeChips, time) { picked ->
+                    if (picked < times.size) {
+                        time = picked
+                        timeLabel = times[picked]
+                    } else {
+                        bindTimes()
+                        pickTime { label ->
+                            timeChips.last().text = label
+                            time = times.size
+                            timeLabel = label
+                            bindTimes()
+                        }
+                    }
+                }
+            }
+            bindTimes()
 
             sheet.findViewById<View>(R.id.reserveConfirm).setOnClickListener {
-                if (time < 0) {
+                val pickedDay = dayLabel
+                val pickedTime = timeLabel
+                if (pickedDay == null || pickedTime == null) {
                     Toast.makeText(this, R.string.toast_pick_day_time, Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
-                UserState.setReserved(
-                    listing.id,
-                    getString(R.string.sys_reserved_detail, Listings.MEETUP_POINTS[place], days[day], times[time])
-                )
+                val summary = getString(R.string.sys_reserved_detail, Listings.MEETUP_POINTS[place], pickedDay, pickedTime)
+                UserState.setReserved(listing.id, summary)
                 bindActions()
                 dialog.dismiss()
                 Toast.makeText(this, getString(R.string.toast_reserved, listing.seller.name), Toast.LENGTH_SHORT).show()
@@ -199,13 +245,65 @@ class ListingDetailActivity : BaseActivity() {
                         .putExtra(EXTRA_SELLER, listing.seller.name)
                         .putExtra(EXTRA_LISTING, listing.id)
                         .putExtra(EXTRA_RESERVED, true)
-                        .putExtra(
-                            ChatThreadActivity.EXTRA_RESERVED_DETAIL,
-                            getString(R.string.sys_reserved_detail, Listings.MEETUP_POINTS[place], days[day], times[time])
-                        )
+                        .putExtra(ChatThreadActivity.EXTRA_RESERVED_DETAIL, summary)
                 )
             }
         }
+    }
+
+    /** Calendar for any future weekday. Weekends are refused with a short note. */
+    private fun pickDate(onPicked: (String) -> Unit) {
+        val picker = MaterialDatePicker.Builder.datePicker()
+            .setTitleText(R.string.pick_date_title)
+            .setCalendarConstraints(
+                CalendarConstraints.Builder().setValidator(DateValidatorPointForward.now()).build()
+            )
+            .build()
+        picker.addOnPositiveButtonClickListener { millis ->
+            val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = millis }
+            val weekday = cal.get(Calendar.DAY_OF_WEEK)
+            if (weekday == Calendar.SATURDAY || weekday == Calendar.SUNDAY) {
+                Toast.makeText(this, R.string.toast_weekdays_only, Toast.LENGTH_SHORT).show()
+            } else {
+                val format = SimpleDateFormat("EEE, MMM d", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }
+                onPicked(format.format(cal.time))
+            }
+        }
+        picker.show(supportFragmentManager, "date")
+    }
+
+    /** Clock picker limited to the meetup desks' hours, 9:00 AM to 4:00 PM. */
+    private fun pickTime(onPicked: (String) -> Unit) {
+        val picker = MaterialTimePicker.Builder()
+            .setTimeFormat(TimeFormat.CLOCK_12H)
+            .setHour(13)
+            .setMinute(30)
+            .setTitleText(R.string.pick_time_title)
+            .build()
+        picker.addOnPositiveButtonClickListener {
+            val minutes = picker.hour * 60 + picker.minute
+            if (minutes < 9 * 60 || minutes > 16 * 60) {
+                Toast.makeText(this, R.string.toast_office_hours, Toast.LENGTH_SHORT).show()
+            } else {
+                val hour12 = if (picker.hour % 12 == 0) 12 else picker.hour % 12
+                onPicked("%d:%02d %s".format(hour12, picker.minute, if (picker.hour < 12) "AM" else "PM"))
+            }
+        }
+        picker.show(supportFragmentManager, "time")
+    }
+
+    /** "Cancel reservation" on the reservation card. */
+    fun cancelReservation(view: View) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.cancel_reservation_title)
+            .setMessage(getString(R.string.cancel_reservation_message, listing.seller.name.substringBefore(' ')))
+            .setNegativeButton(R.string.cancel_reservation_keep, null)
+            .setPositiveButton(R.string.cancel_reservation_confirm) { _, _ ->
+                UserState.cancelReservation(listing.id)
+                bindActions()
+                notify(getString(R.string.toast_reservation_cancelled))
+            }
+            .show()
     }
 
     private fun addChips(container: LinearLayout, labels: List<String>): List<TextView> =

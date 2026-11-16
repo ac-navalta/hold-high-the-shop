@@ -430,4 +430,19 @@
     <string name="section_reserved">Reserved by you</string>
     <string name="section_reserved_hint">Things you\u2019re buying or borrowing from others</string>
     <string name="reserved_from_format">From %1$s</string>
+
+    <!-- Reservation -->
+    <string name="reservation_card_title">You reserved this item</string>
+    <string name="btn_cancel_reservation">Cancel reservation</string>
+    <string name="cancel_reservation_title">Cancel this reservation?</string>
+    <string name="cancel_reservation_message">%1$s will be told the item is free again. You can reserve it later if it\u2019s still available.</string>
+    <string name="cancel_reservation_confirm">Cancel reservation</string>
+    <string name="cancel_reservation_keep">Keep it</string>
+    <string name="toast_reservation_cancelled">Reservation cancelled</string>
+    <string name="chip_pick_date">Pick a date\u2026</string>
+    <string name="chip_pick_time">Other time\u2026</string>
+    <string name="pick_date_title">Meetup date</string>
+    <string name="pick_time_title">Meetup time</string>
+    <string name="toast_weekdays_only">Meetup points are open Monday to Friday</string>
+    <string name="toast_office_hours">Pick a time between 9:00 AM and 4:00 PM</string>
 </resources>
