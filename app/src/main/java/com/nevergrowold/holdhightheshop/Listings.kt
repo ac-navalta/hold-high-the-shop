@@ -400,9 +400,12 @@ object Listings {
 
     /**
      * What the market shows: other students' listings that are still open.
-     * Your own listings live under Profile > Active instead.
+     * Your own listings live under Profile > Active instead, and anything you
+     * reserved, borrowed, bought or offered a swap for is hidden too.
      */
-    fun open(): List<Listing> = ALL.filter { !isMine(it) && !UserState.isClosed(it.id) }
+    fun open(): List<Listing> = ALL.filter {
+        !isMine(it) && !UserState.isClosed(it.id) && !UserState.isTaken(it.id)
+    }
 
     /**
      * Price as shown on a listing: "₱850", "₱380 / week" for rent, "Swap" for
