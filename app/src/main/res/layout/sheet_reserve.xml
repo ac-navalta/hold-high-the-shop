@@ -127,6 +127,12 @@
         style="@style/SheetLabel"
         android:text="@string/reserve_day" />
 
+    <TextView
+        android:id="@+id/reserveAvailability"
+        style="@style/ActionHint"
+        android:layout_marginTop="2dp"
+        android:textColor="@color/uc_green" />
+
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.isVisible
 import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.CompositeDateValidator
 import com.google.android.material.datepicker.DateValidatorPointForward
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -61,6 +62,14 @@ class ListingDetailActivity : BaseActivity() {
         findViewById<TextView>(R.id.statOnTime).text = seller.onTime
         findViewById<TextView>(R.id.statCompleted).text = seller.completed.toString()
         findViewById<TextView>(R.id.meetupPlace).text = listing.meetup
+        findViewById<TextView>(R.id.meetupAvailability).text = freeLabel()
+    }
+
+    /** "Paolo is free Mon, Wed, Fri • 1:00–4:00 PM", or "You're free …" on your own listing. */
+    private fun freeLabel(): String = if (isMine) {
+        getString(R.string.you_free_format, listing.availability.label())
+    } else {
+        getString(R.string.seller_free_format, listing.seller.name.substringBefore(' '), listing.availability.label())
     }
 
     private fun bindSaved() {
@@ -199,16 +208,18 @@ class ListingDetailActivity : BaseActivity() {
             return
         }
 
+        // Only the days and times the seller said they are free.
         val days = upcomingDays()
-        val times = listOf("9:00 AM", "10:30 AM", "1:30 PM", "3:00 PM")
+        val times = listing.availability.slots().map { Availability.time(it) }
         var place = Listings.MEETUP_POINTS.indexOf(listing.meetup).coerceAtLeast(0)
-        var dayLabel: String? = days[0]
+        var dayLabel: String? = days.firstOrNull()
         var timeLabel: String? = null
 
         Sheets.show(this, R.layout.sheet_reserve) { sheet, dialog ->
             sheet.findViewById<TextView>(R.id.reserveItemTitle).text = listing.title
             sheet.findViewById<TextView>(R.id.reserveItemSeller).text = listing.seller.name
             sheet.findViewById<TextView>(R.id.reserveItemPrice).text = Listings.price(listing.price)
+            sheet.findViewById<TextView>(R.id.reserveAvailability).text = freeLabel()
 
             val placeText = sheet.findViewById<TextView>(R.id.reservePlace)
             placeText.text = Listings.MEETUP_POINTS[place]
@@ -284,42 +295,42 @@ class ListingDetailActivity : BaseActivity() {
         }
     }
 
-    /** Calendar for any future weekday. Weekends are refused with a short note. */
+    /** Calendar limited to future days the seller is free. */
     private fun pickDate(onPicked: (String) -> Unit) {
+        val free = listing.availability
         val picker = MaterialDatePicker.Builder.datePicker()
             .setTitleText(R.string.pick_date_title)
             .setCalendarConstraints(
-                CalendarConstraints.Builder().setValidator(DateValidatorPointForward.now()).build()
+                // Days the seller is not free are greyed out.
+                CalendarConstraints.Builder().setValidator(
+                    CompositeDateValidator.allOf(
+                        listOf(DateValidatorPointForward.now(), FreeDaysValidator(free.days.toIntArray()))
+                    )
+                ).build()
             )
             .build()
         picker.addOnPositiveButtonClickListener { millis ->
-            val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = millis }
-            val weekday = cal.get(Calendar.DAY_OF_WEEK)
-            if (weekday == Calendar.SATURDAY || weekday == Calendar.SUNDAY) {
-                Toast.makeText(this, R.string.toast_weekdays_only, Toast.LENGTH_SHORT).show()
-            } else {
-                val format = SimpleDateFormat("EEE, MMM d", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }
-                onPicked(format.format(cal.time))
-            }
+            val format = SimpleDateFormat("EEE, MMM d", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }
+            onPicked(format.format(millis))
         }
         picker.show(supportFragmentManager, "date")
     }
 
-    /** Clock picker limited to the meetup desks' hours, 9:00 AM to 4:00 PM. */
+    /** Clock picker; times outside the seller's window are refused with a note. */
     private fun pickTime(onPicked: (String) -> Unit) {
+        val free = listing.availability
         val picker = MaterialTimePicker.Builder()
             .setTimeFormat(TimeFormat.CLOCK_12H)
-            .setHour(13)
-            .setMinute(30)
+            .setHour(free.from / 60)
+            .setMinute(free.from % 60)
             .setTitleText(R.string.pick_time_title)
             .build()
         picker.addOnPositiveButtonClickListener {
             val minutes = picker.hour * 60 + picker.minute
-            if (minutes < 9 * 60 || minutes > 16 * 60) {
-                Toast.makeText(this, R.string.toast_office_hours, Toast.LENGTH_SHORT).show()
+            if (!free.isFreeAt(minutes)) {
+                Toast.makeText(this, freeLabel(), Toast.LENGTH_SHORT).show()
             } else {
-                val hour12 = if (picker.hour % 12 == 0) 12 else picker.hour % 12
-                onPicked("%d:%02d %s".format(hour12, picker.minute, if (picker.hour < 12) "AM" else "PM"))
+                onPicked(Availability.time(minutes))
             }
         }
         picker.show(supportFragmentManager, "time")
@@ -348,14 +359,14 @@ class ListingDetailActivity : BaseActivity() {
         }
 
     /** The next five weekdays, since the meetup points are open Mon–Fri. */
+    /** The next five days the seller is free (up to four weeks ahead). */
     private fun upcomingDays(): List<String> {
         val format = SimpleDateFormat("EEE d", Locale.US)
         val cal = Calendar.getInstance()
         val out = mutableListOf<String>()
         var offset = 0
-        while (out.size < 5) {
-            val weekday = cal.get(Calendar.DAY_OF_WEEK)
-            if (weekday != Calendar.SATURDAY && weekday != Calendar.SUNDAY) {
+        while (out.size < 5 && offset < 28) {
+            if (listing.availability.isFreeOn(Availability.weekdayOf(cal.get(Calendar.DAY_OF_WEEK)))) {
                 out += when (offset) {
                     0 -> getString(R.string.day_today_label)
                     1 -> getString(R.string.day_tomorrow_label)

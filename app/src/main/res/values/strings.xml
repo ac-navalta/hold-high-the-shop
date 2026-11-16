@@ -422,8 +422,6 @@
     <string name="chip_pick_time">Other time\u2026</string>
     <string name="pick_date_title">Meetup date</string>
     <string name="pick_time_title">Meetup time</string>
-    <string name="toast_weekdays_only">Meetup points are open Monday to Friday</string>
-    <string name="toast_office_hours">Pick a time between 9:00 AM and 4:00 PM</string>
 
     <!-- Chats: giving vs getting -->
     <string name="chat_filter_all">All</string>
@@ -532,4 +530,16 @@
         <item quantity="other">From Main Gate \u2022 about %1$d min walk</item>
     </plurals>
     <string name="map_disclaimer">Illustrative campus map, not to scale</string>
+
+    <!-- Seller availability -->
+    <string name="seller_free_format">%1$s is free %2$s</string>
+    <string name="you_free_format">You\u2019re free %1$s</string>
+    <string name="toast_seller_not_free">%1$s is free %2$s</string>
+    <string name="lbl_availability">When are you free to meet? *</string>
+    <string name="availability_hint">Buyers can only pick times inside this window.</string>
+    <string name="lbl_from">From</string>
+    <string name="lbl_to">To</string>
+    <string name="toast_need_days">Pick at least one day you\u2019re free</string>
+    <string name="toast_desk_hours">Meetup desks are open 9:00 AM to 4:00 PM</string>
+    <string name="toast_time_order">The end time must be after the start time</string>
 </resources>

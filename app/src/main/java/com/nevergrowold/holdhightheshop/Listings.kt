@@ -34,8 +34,51 @@ data class Listing(
     val seller: Seller,
     val meetup: String,
     /** Lower is newer. Used by the "Newest" sort. */
-    val postedDaysAgo: Int
+    val postedDaysAgo: Int,
+    /** When the seller is free to meet. Reserving only offers these times. */
+    val availability: Availability = Availability.OFFICE_HOURS
 )
+
+/**
+ * When a seller can meet, set on the Create listing form.
+ *
+ * @param days weekdays, 0 = Monday ... 4 = Friday (meetup desks are closed on weekends).
+ * @param from start of the window, in minutes after midnight.
+ * @param to end of the window, in minutes after midnight.
+ */
+data class Availability(val days: Set<Int>, val from: Int, val to: Int) {
+
+    fun isFreeOn(weekday: Int) = weekday in days
+
+    fun isFreeAt(minutes: Int) = minutes in from..to
+
+    /** Hourly start times inside the window, at least 30 minutes before it ends. */
+    fun slots(): List<Int> = (from..to - 30 step 60).toList().ifEmpty { listOf(from) }
+
+    /** "Mon, Wed, Fri • 1:00–4:00 PM" */
+    fun label(): String {
+        val names = if (days.size == 5) "Mon\u2013Fri" else days.sorted().joinToString(", ") { DAY_NAMES[it] }
+        return "$names \u2022 ${time(from, withMeridiem = (from < 720) != (to < 720))}\u2013${time(to)}"
+    }
+
+    companion object {
+        val DAY_NAMES = listOf("Mon", "Tue", "Wed", "Thu", "Fri")
+        const val DESK_OPENS = 9 * 60
+        const val DESK_CLOSES = 16 * 60
+        val OFFICE_HOURS = Availability(setOf(0, 1, 2, 3, 4), DESK_OPENS, DESK_CLOSES)
+
+        /** "1:30 PM", or "1:30" when the AM/PM is shown once for a range. */
+        fun time(minutes: Int, withMeridiem: Boolean = true): String {
+            val h = minutes / 60
+            val hour12 = if (h % 12 == 0) 12 else h % 12
+            val base = "%d:%02d".format(hour12, minutes % 60)
+            return if (withMeridiem) "$base ${if (h < 12) "AM" else "PM"}" else base
+        }
+
+        /** java.util.Calendar day of week to 0 = Monday ... 6 = Sunday. */
+        fun weekdayOf(calendarDay: Int) = (calendarDay + 5) % 7
+    }
+}
 
 /** A college, shown as a Home tile, a Market chip and a Create listing option. */
 data class Program(val code: String, val icon: Int)
@@ -136,27 +179,32 @@ object Listings {
         Listing(
             "item2", "Casio fx-991EX", 1200, "CITCS", 1, 0,
             "Fully working scientific calculator. Used for two semesters only. Comes with original hard case and manual.",
-            paolo, "UC Main Gate Security Desk", 0
+            paolo, "UC Main Gate Security Desk", 0,
+            Availability(setOf(0, 2, 4), 13 * 60, 16 * 60)
         ),
         Listing(
             "item3", "Anatomy & Physiology", 650, "CONAHS", 1, 0,
             "Latest edition. A few highlighted pages but no torn or missing pages.",
-            janelle, "UC Library Lobby", 2
+            janelle, "UC Library Lobby", 2,
+            Availability(setOf(1, 3), 9 * 60, 12 * 60)
         ),
         Listing(
             "item4", "UC PE Uniform", 450, "CBA", 0, 1,
             "Size M shirt and jogging pants. Washed and ironed. Available to rent for the semester.",
-            aira, "UC Canteen Area", 3
+            aira, "UC Canteen Area", 3,
+            Availability(setOf(0, 1, 2), 10 * 60, 15 * 60)
         ),
         Listing(
             "item5", "White Lab Gown", 380, "CONAHS", 1, 1,
             "Size S, long sleeves. Clean and without stains. Rent for a week or the whole term.",
-            janelle, "UC Library Lobby", 4
+            janelle, "UC Library Lobby", 4,
+            Availability(setOf(1, 3), 9 * 60, 12 * 60)
         ),
         Listing(
             "item6", "Data Structures Book", 520, "CITCS", 2, 2,
             "Some notes in pencil on the early chapters. Open to swapping for an Algorithms book.",
-            paolo, "CITCS Building Entrance", 5
+            paolo, "CITCS Building Entrance", 5,
+            Availability(setOf(0, 2, 4), 13 * 60, 16 * 60)
         ),
         Listing(
             "item7", "Fundamentals of Accounting", 400, "COA", 1, 0,

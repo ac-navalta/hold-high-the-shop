@@ -13,6 +13,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.isVisible
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
 
 class CreateListingActivity : BaseActivity() {
 
@@ -22,6 +24,11 @@ class CreateListingActivity : BaseActivity() {
     private var meetup = -1
 
     private val programs by lazy { Listings.PROGRAMS }
+
+    /** When the seller is free to meet. Starts at the meetup desks' hours. */
+    private var freeDays = Availability.OFFICE_HOURS.days
+    private var freeFrom = Availability.DESK_OPENS
+    private var freeTo = Availability.DESK_CLOSES
 
     /** Set when opened from "Edit listing" on one of the student's listings. */
     private var editing: Listing? = null
@@ -36,6 +43,8 @@ class CreateListingActivity : BaseActivity() {
         BarInsets.apply(this)
 
         editing = intent.getStringExtra(EXTRA_LISTING)?.let { Listings.byId(it) }
+        bindFreeDays()
+        bindFreeTimes()
         editing?.let { prefill(it) } ?: run {
             meetup = UserState.defaultMeetup
             setPicked(R.id.rowMeetupText, Listings.MEETUP_POINTS[meetup])
@@ -108,6 +117,50 @@ class CreateListingActivity : BaseActivity() {
         })
     }
 
+    private fun bindFreeDays() {
+        val chips = listOf(R.id.freeDay0, R.id.freeDay1, R.id.freeDay2, R.id.freeDay3, R.id.freeDay4)
+            .map { findViewById<TextView>(it) }
+        chips.forEachIndexed { index, chip ->
+            val on = index in freeDays
+            chip.setBackgroundResource(if (on) R.drawable.bg_chip_active else R.drawable.bg_input)
+            chip.setTextColor(getColor(if (on) R.color.white else R.color.text_primary))
+            chip.setOnClickListener {
+                freeDays = if (on) freeDays - index else freeDays + index
+                bindFreeDays()
+            }
+        }
+    }
+
+    private fun bindFreeTimes() {
+        findViewById<TextView>(R.id.rowFreeFromText).text = Availability.time(freeFrom)
+        findViewById<TextView>(R.id.rowFreeToText).text = Availability.time(freeTo)
+    }
+
+    /** From / To rows: clock picker kept inside the meetup desks' hours. */
+    fun pickFreeTime(view: View) {
+        val isFrom = view.id == R.id.rowFreeFrom
+        val current = if (isFrom) freeFrom else freeTo
+        val picker = MaterialTimePicker.Builder()
+            .setTimeFormat(TimeFormat.CLOCK_12H)
+            .setHour(current / 60)
+            .setMinute(current % 60)
+            .setTitleText(if (isFrom) R.string.lbl_from else R.string.lbl_to)
+            .build()
+        picker.addOnPositiveButtonClickListener {
+            val minutes = picker.hour * 60 + picker.minute
+            when {
+                minutes < Availability.DESK_OPENS || minutes > Availability.DESK_CLOSES ->
+                    Toast.makeText(this, R.string.toast_desk_hours, Toast.LENGTH_SHORT).show()
+                (isFrom && minutes >= freeTo) || (!isFrom && minutes <= freeFrom) ->
+                    Toast.makeText(this, R.string.toast_time_order, Toast.LENGTH_SHORT).show()
+                isFrom -> freeFrom = minutes
+                else -> freeTo = minutes
+            }
+            bindFreeTimes()
+        }
+        picker.show(supportFragmentManager, "free")
+    }
+
     /** Edit mode: same form, filled in, with Cancel / Save changes. */
     private fun prefill(listing: Listing) {
         findViewById<TextView>(R.id.createTitle).setText(R.string.edit_title)
@@ -125,6 +178,11 @@ class CreateListingActivity : BaseActivity() {
             listOf(findViewById(R.id.condition1), findViewById(R.id.condition2), findViewById(R.id.condition3)),
             condition
         ) { condition = it }
+        freeDays = listing.availability.days
+        freeFrom = listing.availability.from
+        freeTo = listing.availability.to
+        bindFreeDays()
+        bindFreeTimes()
         listingType = listing.type
         Choice.segments(
             listOf(findViewById(R.id.type1), findViewById(R.id.type2), findViewById(R.id.type3)),
@@ -152,6 +210,7 @@ class CreateListingActivity : BaseActivity() {
             condition < 0 -> missing(R.string.toast_need_condition, findViewById(R.id.condition1))
             listingType != 2 && price.text.isBlank() -> missing(R.string.toast_need_price, price)
             meetup < 0 -> missing(R.string.toast_need_meetup, findViewById(R.id.rowMeetup))
+            freeDays.isEmpty() -> missing(R.string.toast_need_days, findViewById(R.id.freeDay0))
             editing != null -> {
                 hideKeyboard(view)
                 Toast.makeText(this, R.string.toast_changes_saved, Toast.LENGTH_SHORT).show()
