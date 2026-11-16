@@ -195,7 +195,6 @@ class MarketActivity : BaseActivity() {
 
     /** Filters sheet: condition, listing type and price range. */
     fun openFilters(view: View) {
-        hideKeyboard(view)
         var draft = filters
         Sheets.show(this, R.layout.sheet_filters) { sheet, dialog ->
             val conditions = listOf<TextView>(sheet.findViewById(R.id.fCond0), sheet.findViewById(R.id.fCond1), sheet.findViewById(R.id.fCond2))

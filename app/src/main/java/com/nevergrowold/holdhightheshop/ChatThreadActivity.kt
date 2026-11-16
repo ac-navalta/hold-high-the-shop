@@ -121,7 +121,6 @@ class ChatThreadActivity : BaseActivity() {
 
     /** The + button: things you can share besides text. */
     fun openChatActions(view: View) {
-        hideKeyboard(view)
         Sheets.show(this, R.layout.sheet_chat_actions) { sheet, dialog ->
             sheet.findViewById<View>(R.id.actionPhoto).setOnClickListener {
                 dialog.dismiss()
