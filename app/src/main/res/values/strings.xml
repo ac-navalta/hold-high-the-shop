@@ -542,7 +542,6 @@
     <string name="lbl_from">From</string>
     <string name="lbl_to">To</string>
     <string name="toast_need_days">Pick at least one day for each available time</string>
-    <string name="toast_desk_hours">Meetup points are open 7:00 AM to 7:00 PM</string>
     <string name="toast_time_order">The end time must be after the start time</string>
 
     <!-- Swap -->

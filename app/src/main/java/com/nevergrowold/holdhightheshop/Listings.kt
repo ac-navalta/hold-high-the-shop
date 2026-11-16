@@ -98,9 +98,8 @@ data class Availability(val times: List<FreeTime>) {
     companion object {
         val DAY_NAMES = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
-        /** Meetup points are open daily from 7:00 AM to 7:00 PM. */
-        const val CAMPUS_OPENS = 7 * 60
-        const val CAMPUS_CLOSES = 19 * 60
+        /** Where the clock picker starts when a day has no free time to suggest. */
+        const val DEFAULT_START = 9 * 60
 
         val OFFICE_HOURS = Availability(FreeTime(setOf(0, 1, 2, 3, 4), 9 * 60, 16 * 60))
 

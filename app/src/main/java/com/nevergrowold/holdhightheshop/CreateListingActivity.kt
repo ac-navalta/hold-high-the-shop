@@ -158,7 +158,7 @@ class CreateListingActivity : BaseActivity() {
         bindFreeTimes()
     }
 
-    /** From / To: clock picker kept inside the meetup points' opening hours. */
+    /** From / To: any time of day; only the end has to come after the start. */
     private fun pickBlockTime(block: Block, isFrom: Boolean) {
         val current = if (isFrom) block.from else block.to
         val picker = MaterialTimePicker.Builder()
@@ -170,8 +170,6 @@ class CreateListingActivity : BaseActivity() {
         picker.addOnPositiveButtonClickListener {
             val minutes = picker.hour * 60 + picker.minute
             when {
-                minutes < Availability.CAMPUS_OPENS || minutes > Availability.CAMPUS_CLOSES ->
-                    Toast.makeText(this, R.string.toast_desk_hours, Toast.LENGTH_SHORT).show()
                 (isFrom && minutes >= block.to) || (!isFrom && minutes <= block.from) ->
                     Toast.makeText(this, R.string.toast_time_order, Toast.LENGTH_SHORT).show()
                 isFrom -> block.from = minutes

@@ -501,7 +501,7 @@ class ListingDetailActivity : BaseActivity() {
 
     /** Clock picker; times outside the seller's free time that day are refused with a note. */
     private fun pickTime(weekday: Int, onPicked: (String) -> Unit) {
-        val start = listing.availability.slots(weekday).firstOrNull() ?: Availability.CAMPUS_OPENS
+        val start = listing.availability.slots(weekday).firstOrNull() ?: Availability.DEFAULT_START
         val picker = MaterialTimePicker.Builder()
             .setTimeFormat(TimeFormat.CLOCK_12H)
             .setHour(start / 60)
