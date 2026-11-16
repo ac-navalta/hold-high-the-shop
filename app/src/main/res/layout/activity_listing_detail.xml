@@ -26,8 +26,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:clipToPadding="false"
-            android:clipChildren="false"
-            android:descendantFocusability="blocksDescendants">
+            android:clipChildren="false">
 
             <!-- PHOTO -->
             <FrameLayout
@@ -79,18 +78,45 @@
                         android:layout_weight="1" />
 
                     <FrameLayout
+                        android:id="@+id/btnShare"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:layout_marginEnd="10dp"
+                        android:background="@drawable/bg_circle_white"
+                        android:elevation="3dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:onClick="shareListing"
+                        android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_share"
+                            android:tint="@color/text_primary"
+                            android:contentDescription="@string/cd_share" />
+                    </FrameLayout>
+
+                    <FrameLayout
+                        android:id="@+id/btnSave"
                         android:layout_width="44dp"
                         android:layout_height="44dp"
                         android:background="@drawable/bg_circle_white"
-                        android:elevation="3dp">
+                        android:elevation="3dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:onClick="toggleSave"
+                        android:foreground="?attr/selectableItemBackgroundBorderless">
 
                         <ImageView
+                            android:id="@+id/saveIcon"
                             android:layout_width="21dp"
                             android:layout_height="21dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_bookmark"
                             android:tint="@color/text_primary"
-                            android:contentDescription="@string/cd_saved" />
+                            android:contentDescription="@string/cd_save" />
                     </FrameLayout>
                 </LinearLayout>
 
@@ -126,6 +152,7 @@
                 android:paddingBottom="24dp">
 
                 <TextView
+                    android:id="@+id/detailCondition"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_badge_mint"
@@ -147,6 +174,7 @@
                     android:layout_marginTop="12dp">
 
                     <TextView
+                        android:id="@+id/detailTitle"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -156,6 +184,7 @@
                         android:textSize="25sp" />
 
                     <TextView
+                        android:id="@+id/detailPrice"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
@@ -166,6 +195,7 @@
                 </LinearLayout>
 
                 <TextView
+                    android:id="@+id/detailDesc"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
@@ -175,21 +205,192 @@
                     android:textSize="13sp"
                     android:lineSpacingExtra="4dp" />
 
+                <!-- SWAP: what the seller wants in exchange -->
+                <LinearLayout
+                    android:id="@+id/swapWantsCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_badge_swap"
+                    android:padding="14dp"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_swap"
+                        android:tint="@color/swap_text"
+                        android:contentDescription="@null" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Kicker"
+                            android:textColor="@color/swap_text"
+                            android:text="@string/swap_wants_kicker" />
+
+                        <TextView
+                            android:id="@+id/swapWants"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:fontFamily="@font/poppins_semibold"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginTop="20dp"
                     android:background="@color/divider" />
 
+                <!-- YOUR RESERVATION, shown once you reserve this item -->
+                <LinearLayout
+                    android:id="@+id/reservationCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_system_card"
+                    android:padding="14dp"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:src="@drawable/ic_verified"
+                            android:tint="@color/uc_green"
+                            android:contentDescription="@null" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/poppins_semibold"
+                                android:id="@+id/reservationTitle"
+                                android:text="@string/reservation_card_title"
+                                android:textColor="@color/uc_green"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:id="@+id/reservationDetail"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:fontFamily="@font/poppins_regular"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp" />
+
+                            <!-- Loans only: "4 days left", red when overdue. -->
+                            <TextView
+                                android:id="@+id/reservationDue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:fontFamily="@font/poppins_semibold"
+                                android:textColor="@color/uc_green"
+                                android:textSize="12sp"
+                                android:visibility="gone" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!--
+                        Your handover code, when you are the one receiving. The
+                        other student types it in on their phone to prove you met.
+                    -->
+                    <LinearLayout
+                        android:id="@+id/codeBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/bg_code_box"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:paddingTop="10dp"
+                        android:paddingBottom="10dp"
+                        android:visibility="gone">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/Kicker"
+                                android:text="@string/code_your_kicker" />
+
+                            <TextView
+                                android:id="@+id/codeHint"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:fontFamily="@font/poppins_regular"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/codeValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/grid_gap"
+                            android:fontFamily="@font/poppins_bold"
+                            android:letterSpacing="0.25"
+                            android:textColor="@color/uc_green"
+                            android:textSize="22sp" />
+                    </LinearLayout>
+
+                    <!-- After the meetup: "I got the item" / "I picked it up" / "Swap done". -->
+                    <TextView
+                        android:id="@+id/btnReceived"
+                        style="@style/OutlineButton"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="12dp"
+                        android:textColor="@color/uc_green"
+                        android:fontFamily="@font/poppins_semibold"
+                        android:textSize="14sp"
+                        android:onClick="markReceived"
+                        android:visibility="gone" />
+                </LinearLayout>
+
                 <!-- SELLER -->
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/sellerCard"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:onClick="openSellerProfile"
+                    android:foreground="?attr/selectableItemBackground"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
                     app:cardCornerRadius="18dp"
                     app:cardElevation="5dp"
                     app:cardBackgroundColor="@color/white"
-                    app:cardUseCompatPadding="true"
+                    app:cardUseCompatPadding="false"
                     app:strokeWidth="0dp">
 
                     <LinearLayout
@@ -200,6 +401,7 @@
                         android:padding="14dp">
 
                         <TextView
+                            android:id="@+id/sellerInitials"
                             android:layout_width="46dp"
                             android:layout_height="46dp"
                             android:background="@drawable/bg_avatar_mint"
@@ -217,6 +419,7 @@
                             android:orientation="vertical">
 
                             <TextView
+                                android:id="@+id/sellerName"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/poppins_semibold"
@@ -260,6 +463,7 @@
                                 </LinearLayout>
 
                                 <TextView
+                                    android:id="@+id/sellerMeta"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginStart="8dp"
@@ -295,6 +499,7 @@
                         android:contentDescription="@null" />
 
                     <TextView
+                        android:id="@+id/statRating"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="5dp"
@@ -313,6 +518,7 @@
                         android:textSize="12sp" />
 
                     <TextView
+                        android:id="@+id/statOnTime"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
@@ -331,6 +537,7 @@
                         android:textSize="12sp" />
 
                     <TextView
+                        android:id="@+id/statCompleted"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
@@ -351,13 +558,17 @@
 
                 <!-- MEETUP -->
                 <com.google.android.material.card.MaterialCardView
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:onClick="openMeetup"
+                    android:foreground="?attr/selectableItemBackground"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
                     app:cardCornerRadius="18dp"
                     app:cardElevation="5dp"
                     app:cardBackgroundColor="@color/white"
-                    app:cardUseCompatPadding="true"
+                    app:cardUseCompatPadding="false"
                     app:strokeWidth="0dp">
 
                     <LinearLayout
@@ -398,6 +609,7 @@
                                 android:letterSpacing="0.08" />
 
                             <TextView
+                                android:id="@+id/meetupPlace"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="3dp"
@@ -407,12 +619,12 @@
                                 android:textSize="14sp" />
 
                             <TextView
+                                android:id="@+id/meetupAvailability"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:fontFamily="@font/poppins_regular"
-                                android:text="@string/meetup_hours"
-                                android:textColor="@color/text_secondary"
+                                android:fontFamily="@font/poppins_medium"
+                                android:textColor="@color/uc_green"
                                 android:textSize="11sp" />
                         </LinearLayout>
 
@@ -438,45 +650,84 @@
         android:gravity="center_vertical"
         android:background="@color/uc_cream"
         android:elevation="12dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+        android:paddingStart="@dimen/screen_margin"
+        android:paddingEnd="@dimen/screen_margin"
         android:paddingTop="12dp"
         android:paddingBottom="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <!-- Report: icon only, so the main actions get the room. -->
+        <FrameLayout
+            android:id="@+id/btnReport"
+            android:layout_width="52dp"
             android:layout_height="52dp"
-            android:orientation="horizontal"
-            android:gravity="center"
             android:background="@drawable/bg_btn_outline"
-            android:paddingStart="20dp"
-            android:paddingEnd="22dp"
             android:clickable="true"
             android:focusable="true"
             android:onClick="openReport"
-            android:foreground="?attr/selectableItemBackground">
+            android:contentDescription="@string/btn_report"
+            android:tooltipText="@string/btn_report"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
 
             <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
                 android:src="@drawable/ic_flag"
                 android:tint="@color/text_secondary"
                 android:contentDescription="@null" />
+        </FrameLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="7dp"
-                android:fontFamily="@font/poppins_medium"
-                android:text="@string/btn_report"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp" />
-        </LinearLayout>
+        <!-- Your listing promised to someone: call it off. Red, and it asks first. -->
+        <FrameLayout
+            android:id="@+id/btnCancelDeal"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_btn_danger"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="cancelDeal"
+            android:contentDescription="@string/btn_cancel_deal"
+            android:tooltipText="@string/btn_cancel_deal"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_close"
+                android:tint="@color/danger"
+                android:contentDescription="@null" />
+        </FrameLayout>
+
+        <!-- Something you lent is overdue: report it to student support. -->
+        <FrameLayout
+            android:id="@+id/btnProblem"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_btn_outline"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="reportLoanProblem"
+            android:contentDescription="@string/btn_report_problem"
+            android:tooltipText="@string/btn_report_problem"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_flag"
+                android:tint="@color/danger"
+                android:contentDescription="@null" />
+        </FrameLayout>
 
         <TextView
+            android:id="@+id/btnReserve"
             android:layout_width="0dp"
             android:layout_height="52dp"
             android:layout_weight="1"
@@ -487,9 +738,105 @@
             android:text="@string/btn_reserve"
             android:textColor="@color/white"
             android:textSize="15sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
             android:clickable="true"
             android:focusable="true"
+            android:onClick="reserve"
             android:foreground="?attr/selectableItemBackground" />
+
+        <!-- While an item is out on loan: Message the other person, Mark as returned. -->
+        <TextView
+            android:id="@+id/btnMessage"
+            style="@style/OutlineButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:onClick="messagePartner"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/btnReturned"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:onClick="markReturned"
+            android:text="@string/btn_mark_returned"
+            android:visibility="gone" />
+
+        <!-- Lender, after the borrower says it is back: "Not received" (red) beside "Confirm returned". -->
+        <TextView
+            android:id="@+id/btnNotReceived"
+            style="@style/DangerButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:onClick="rejectReturn"
+            android:text="@string/btn_not_received"
+            android:visibility="gone" />
+
+        <!-- After reserving: cancel sits beside Message seller, same size, in red. -->
+        <TextView
+            android:id="@+id/btnCancelReservation"
+            style="@style/DangerButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:onClick="cancelReservation"
+            android:text="@string/btn_cancel_short"
+            android:visibility="gone" />
+
+        <!-- Shown instead of Report / Reserve on the student's own listing. -->
+        <TextView
+            android:id="@+id/btnEdit"
+            style="@style/OutlineButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:onClick="editListing"
+            android:text="@string/btn_edit_listing"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/btnMarkDone"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:onClick="markDone"
+            android:visibility="gone" />
+
+        <!-- Your listing, promised to someone: type in their code at the meetup. -->
+        <TextView
+            android:id="@+id/btnHandover"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:onClick="handOver"
+            android:visibility="gone" />
+
+        <!-- Your listing with requests waiting: answer them. -->
+        <TextView
+            android:id="@+id/btnRequests"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:onClick="reviewRequests"
+            android:visibility="gone" />
+
+        <!-- Own listing already marked as done. -->
+        <TextView
+            android:id="@+id/closedState"
+            style="@style/OutlineButton"
+            android:clickable="false"
+            android:foreground="@null"
+            android:textColor="@color/text_secondary"
+            android:text="@string/state_closed"
+            android:visibility="gone" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

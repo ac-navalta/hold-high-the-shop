@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Phone-only, portrait layouts (as designed in Figma). Every screen is locked to portrait. -->
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -13,16 +14,19 @@
         android:theme="@style/Theme.HoldHighTheShop">
         <activity
             android:name=".NotificationsActivity"
+            android:screenOrientation="portrait"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
 
         <activity
             android:name=".ProfileActivity"
+            android:screenOrientation="portrait"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
 
         <activity
             android:name=".LandingActivity"
+            android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -33,50 +37,96 @@
 
         <activity
             android:name=".LoginActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
 
         <activity
             android:name=".ReportListingActivity"
+            android:screenOrientation="portrait"
             android:exported="false"
             android:parentActivityName=".ListingDetailActivity" />
 
         <activity
             android:name=".ReportReceivedActivity"
+            android:screenOrientation="portrait"
             android:exported="false"
             android:parentActivityName=".ListingDetailActivity" />
 
         <activity
             android:name=".ChatsActivity"
+            android:screenOrientation="portrait"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
 
         <activity
             android:name=".ChatThreadActivity"
+            android:screenOrientation="portrait"
             android:exported="false"
             android:parentActivityName=".ChatsActivity" />
 
         <activity
             android:name=".ListingPostedActivity"
+            android:screenOrientation="portrait"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
 
         <activity
             android:name=".CreateListingActivity"
+            android:screenOrientation="portrait"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
 
         <activity
             android:name=".ListingDetailActivity"
+            android:screenOrientation="portrait"
             android:exported="false"
             android:parentActivityName=".MarketActivity" />
 
         <activity
             android:name=".MarketActivity"
+            android:screenOrientation="portrait"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
 
         <activity
+            android:name=".SavedActivity"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            android:parentActivityName=".MarketActivity" />
+
+        <activity
+            android:name=".SellerProfileActivity"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            android:parentActivityName=".ListingDetailActivity" />
+
+        <activity
+            android:name=".ExchangeDetailActivity"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            android:parentActivityName=".ProfileActivity" />
+
+        <activity
+            android:name=".SettingsActivity"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            android:parentActivityName=".ProfileActivity" />
+
+        <activity
+            android:name=".EditProfileActivity"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            android:parentActivityName=".ProfileActivity" />
+
+        <activity
+            android:name=".MapActivity"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            android:parentActivityName=".ListingDetailActivity" />
+
+        <activity
             android:name=".MainActivity"
+            android:screenOrientation="portrait"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
     </application>

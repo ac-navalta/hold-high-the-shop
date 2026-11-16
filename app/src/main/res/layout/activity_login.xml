@@ -9,12 +9,30 @@
     android:background="@color/uc_cream"
     tools:context=".LoginActivity">
 
+    <!-- Scrolls so the card can sit above the keyboard on short screens. -->
+    <ScrollView
+        android:id="@+id/loginScroll"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
     <LinearLayout
         android:id="@+id/brandRow"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
+        android:layout_marginTop="48dp"
+        android:layout_marginBottom="24dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/loginCard"
         app:layout_constraintStart_toStartOf="parent"
@@ -78,7 +96,7 @@
         app:cardCornerRadius="24dp"
         app:cardElevation="6dp"
         app:cardBackgroundColor="@color/white"
-        app:cardUseCompatPadding="true"
+        app:cardUseCompatPadding="false"
         app:strokeWidth="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -147,6 +165,7 @@
                     android:fontFamily="@font/poppins_regular"
                     android:text="@string/login_email_value"
                     android:inputType="textEmailAddress"
+                    android:imeOptions="actionGo"
                     android:maxLines="1"
                     android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_secondary"
@@ -219,5 +238,8 @@
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

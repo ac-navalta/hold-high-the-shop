@@ -80,7 +80,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:descendantFocusability="blocksDescendants"
+            android:descendantFocusability="beforeDescendants"
             android:paddingBottom="24dp">
 
             <TextView
@@ -96,6 +96,7 @@
                 android:letterSpacing="0.1" />
 
             <LinearLayout
+                android:id="@+id/notifRow1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -107,6 +108,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:onClick="openListing"
+                android:tag="item2"
                 android:foreground="?attr/selectableItemBackground">
 
                 <FrameLayout
@@ -165,6 +167,7 @@
                         android:textSize="10sp" />
 
                     <View
+                        android:id="@+id/notifDot1"
                         android:layout_width="9dp"
                         android:layout_height="9dp"
                         android:layout_marginTop="7dp"
@@ -179,6 +182,7 @@
                 android:background="@color/divider" />
 
             <LinearLayout
+                android:id="@+id/notifRow2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -189,7 +193,7 @@
                 android:paddingBottom="14dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:onClick="openChats"
+                android:onClick="openMessageNotification"
                 android:foreground="?attr/selectableItemBackground">
 
                 <FrameLayout
@@ -248,6 +252,7 @@
                         android:textSize="10sp" />
 
                     <View
+                        android:id="@+id/notifDot2"
                         android:layout_width="9dp"
                         android:layout_height="9dp"
                         android:layout_marginTop="7dp"
@@ -278,7 +283,7 @@
                 android:paddingBottom="14dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:onClick="openProfile"
+                android:onClick="openRatings"
                 android:foreground="?attr/selectableItemBackground">
 
                 <FrameLayout
@@ -355,7 +360,8 @@
                 android:paddingBottom="14dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:onClick="openProfile"
+                android:onClick="openListing"
+                android:tag="item5"
                 android:foreground="?attr/selectableItemBackground">
 
                 <FrameLayout

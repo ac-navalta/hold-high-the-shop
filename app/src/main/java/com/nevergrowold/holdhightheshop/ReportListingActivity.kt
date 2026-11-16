@@ -20,6 +20,10 @@ class ReportListingActivity : BaseActivity() {
         setContentView(R.layout.activity_report_listing)
         BarInsets.apply(this)
 
+        val listing = Listings.byId(intent.getStringExtra(EXTRA_LISTING))
+        findViewById<TextView>(R.id.reportItem).text = listing.title
+        findViewById<TextView>(R.id.reportListedBy).text = getString(R.string.report_listed_by_format, listing.seller.name)
+
         Choice.rows(
             listOf(
                 findViewById(R.id.reason1), findViewById(R.id.reason2), findViewById(R.id.reason3),
@@ -50,6 +54,7 @@ class ReportListingActivity : BaseActivity() {
             Toast.makeText(this, R.string.toast_select_reason, Toast.LENGTH_SHORT).show()
             return
         }
+        hideKeyboard(view)
         startActivity(Intent(this, ReportReceivedActivity::class.java))
         finish()
     }

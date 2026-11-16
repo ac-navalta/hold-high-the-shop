@@ -71,7 +71,8 @@
             android:orientation="vertical"
             android:clipToPadding="false"
             android:clipChildren="false"
-            android:descendantFocusability="blocksDescendants"
+            android:descendantFocusability="beforeDescendants"
+            android:focusableInTouchMode="true"
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
             android:paddingTop="16dp"
@@ -84,7 +85,7 @@
                 app:cardCornerRadius="18dp"
                 app:cardElevation="5dp"
                 app:cardBackgroundColor="@color/white"
-                app:cardUseCompatPadding="true"
+                app:cardUseCompatPadding="false"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
@@ -129,6 +130,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:fontFamily="@font/poppins_bold"
+                            android:id="@+id/reportItem"
                             android:text="@string/report_item"
                             android:textColor="@color/text_primary"
                             android:textSize="15sp" />
@@ -137,6 +139,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/poppins_regular"
+                            android:id="@+id/reportListedBy"
                             android:text="@string/report_listed_by"
                             android:textColor="@color/text_secondary"
                             android:textSize="11sp" />

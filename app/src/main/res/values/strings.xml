@@ -11,36 +11,16 @@
     <string name="stat_listings_label">active listings</string>
 
     <string name="post_title">Post an item</string>
-    <string name="post_sub">Sell, rent, or swap in minutes</string>
+    <string name="post_sub">Sell, lend, or swap in minutes</string>
 
     <string name="browse_programs">Browse programs</string>
     <string name="see_all">See all →</string>
-    <string name="prog_citcs">CITCS</string>
-    <string name="prog_conahs">CONAHS</string>
-    <string name="prog_cba">CBA</string>
-    <string name="prog_cea">CEA</string>
 
     <string name="fresh_on_campus">Fresh on campus</string>
     <string name="view_market">View market →</string>
 
     <string name="cond_like_new">LIKE NEW</string>
     <string name="cond_good">GOOD</string>
-
-    <string name="item1_price">₱850</string>
-    <string name="item1_title">Engineering Drawing Set</string>
-    <string name="item1_prog">CEA</string>
-
-    <string name="item2_price">₱1,200</string>
-    <string name="item2_title">Casio fx-991EX</string>
-    <string name="item2_prog">CITCS</string>
-
-    <string name="item3_price">₱650</string>
-    <string name="item3_title">Anatomy &amp; Physiology</string>
-    <string name="item3_prog">CONAHS</string>
-
-    <string name="item4_price">₱450</string>
-    <string name="item4_title">UC PE Uniform</string>
-    <string name="item4_prog">CBA</string>
 
     <string name="nav_home">Home</string>
     <string name="nav_market">Market</string>
@@ -58,14 +38,6 @@
     <string name="sort_newest">Newest</string>
     <string name="fab_post">Post</string>
     <string name="logo_uc">UC</string>
-
-    <string name="item5_price">\u20B1380</string>
-    <string name="item5_title">White Lab Gown</string>
-    <string name="item5_prog">CONAHS</string>
-
-    <string name="item6_price">\u20B1520</string>
-    <string name="item6_title">Data Structures Book</string>
-    <string name="item6_prog">CITCS</string>
 
     <string name="cd_search">Search</string>
     <string name="cd_filter">Filter</string>
@@ -92,7 +64,6 @@
 
     <string name="meetup_kicker">SAFE MEETUP POINT</string>
     <string name="meetup_place">UC Main Gate Security Desk</string>
-    <string name="meetup_hours">Mon\u2013Fri, 9:00 AM\u20134:00 PM</string>
 
     <string name="btn_report">Report</string>
     <string name="btn_reserve">Reserve for \u20B11,200</string>
@@ -119,7 +90,7 @@
 
     <string name="lbl_listing_type">Listing type *</string>
     <string name="opt_sell">Sell</string>
-    <string name="opt_rent">Rent</string>
+    <string name="opt_rent">Lend</string>
     <string name="opt_swap">Swap</string>
 
     <string name="lbl_price">Price *</string>
@@ -153,27 +124,33 @@
 
     <string name="chat1_initials">PM</string>
     <string name="chat1_name">Paolo Mendoza</string>
-    <string name="chat1_prog">CITCS</string>
+    <string name="chat1_prog">CITCS \u2022 Casio fx-991EX</string>
     <string name="chat1_last">Yes, available pa! Meet tomorrow?</string>
     <string name="chat1_time">10:42</string>
 
     <string name="chat2_initials">JG</string>
     <string name="chat2_name">Janelle Garcia</string>
-    <string name="chat2_prog">CONAHS</string>
+    <string name="chat2_prog">CONAHS \u2022 White Lab Gown</string>
     <string name="chat2_last">Thank you ulit, Mika!</string>
     <string name="chat2_time">Yesterday</string>
 
     <string name="chat3_initials">MS</string>
     <string name="chat3_name">Miguel Santos</string>
-    <string name="chat3_prog">CEA</string>
-    <string name="chat3_last">Can I see more photos of the gown?</string>
+    <string name="chat3_prog">COE \u2022 Engineering Drawing Set</string>
+    <string name="chat3_last">Can I see more photos of the drawing set?</string>
     <string name="chat3_time">Mon</string>
 
     <string name="chat4_initials">AV</string>
     <string name="chat4_name">Aira Villanueva</string>
-    <string name="chat4_prog">CBA</string>
+    <string name="chat4_prog">CBA \u2022 Drafting Table Lamp</string>
     <string name="chat4_last">Transaction confirmed</string>
     <string name="chat4_time">Sat</string>
+
+    <string name="chat5_initials">CR</string>
+    <string name="chat5_name">Carlo Reyes</string>
+    <string name="chat5_prog">COE \u2022 Arduino Starter Kit</string>
+    <string name="chat5_last">Deal! Your calculus reviewer for my Arduino kit?</string>
+    <string name="chat5_time">Fri</string>
 
     <!-- Chat thread -->
     <string name="thread_status">Active now \u2022 CITCS</string>
@@ -196,6 +173,7 @@
     <string name="report_kicker">YOU\u2019RE REPORTING</string>
     <string name="report_item">UC PE Uniform</string>
     <string name="report_listed_by">Listed by Paolo Mendoza</string>
+    <string name="report_listed_by_format">Listed by %1$s</string>
 
     <string name="report_question">What\u2019s the issue?</string>
     <string name="report_question_sub">Select the reason that best describes your concern.</string>
@@ -255,8 +233,6 @@
     <string name="tab_completed_count">14</string>
     <string name="tab_saved">Saved</string>
     <string name="tab_saved_count">8</string>
-
-    <string name="posted_days_ago">Posted 3 days ago</string>
     <string name="cd_more">More options</string>
 
     <!-- Notifications -->
@@ -265,12 +241,12 @@
     <string name="notif_today">TODAY</string>
     <string name="notif_earlier">EARLIER</string>
 
-    <string name="notif1_title">Paolo Mendoza reserved your item</string>
-    <string name="notif1_sub">Casio fx-991EX \u2022 Meet tomorrow, 1:30 PM</string>
+    <string name="notif1_title">Reservation confirmed</string>
+    <string name="notif1_sub">Your Casio fx-991EX meetup with Paolo is set for tomorrow, 1:30 PM</string>
     <string name="notif1_time">10:42</string>
 
     <string name="notif2_title">New message from Miguel Santos</string>
-    <string name="notif2_sub">Can I see more photos of the gown?</string>
+    <string name="notif2_sub">Can I see more photos of the drawing set?</string>
     <string name="notif2_time">09:15</string>
 
     <string name="notif3_title">You received a new rating</string>
@@ -286,12 +262,603 @@
     <string name="notif5_time">Sat</string>
 
     <!-- Pickers -->
-    <string name="pick_program">Choose a program</string>
-    <string name="pick_meetup">Choose a meetup point</string>
-    <string name="meetup1">UC Main Gate Security Desk</string>
-    <string name="meetup2">UC Library Lobby</string>
-    <string name="meetup3">CITCS Building Entrance</string>
-    <string name="meetup4">UC Canteen Area</string>
     <string name="toast_select_reason">Select a reason first</string>
     <string name="counter_format">%1$d / 300</string>
+
+    <!-- Usability pass: new copy -->
+    <string name="cond_fair">FAIR</string>
+    <string name="cd_clear_search">Clear search</string>
+    <string name="sort_price_low">Price: low to high</string>
+    <string name="sort_price_high">Price: high to low</string>
+    <plurals name="items_found">
+        <item quantity="one">%1$d item found</item>
+        <item quantity="other">%1$d items found</item>
+    </plurals>
+    <string name="empty_market_title">No items match</string>
+    <string name="empty_market_sub">Try another keyword, program or filter.</string>
+    <string name="btn_clear_filters">Clear search and filters</string>
+
+    <string name="filters_title">Filters</string>
+    <string name="filters_reset">Reset</string>
+    <string name="lbl_condition_plain">Condition</string>
+    <string name="lbl_listing_type_plain">Listing type</string>
+    <string name="lbl_price_plain">Price</string>
+    <string name="price_any">Any price</string>
+    <string name="price_under_500">Under \u20B1500</string>
+    <string name="price_500_1000">\u20B1500\u2013\u20B11,000</string>
+    <string name="price_over_1000">Over \u20B11,000</string>
+    <string name="filters_show">Show items</string>
+    <plurals name="filters_show_count">
+        <item quantity="one">Show %1$d item</item>
+        <item quantity="other">Show %1$d items</item>
+    </plurals>
+
+    <!-- Listing detail -->
+    <string name="toast_saved">Saved to your list</string>
+    <string name="toast_unsaved">Removed from saved</string>
+    <string name="action_view">View</string>
+    <string name="action_undo">Undo</string>
+    <string name="cd_save">Save listing</string>
+    <string name="cd_unsave">Remove from saved</string>
+    <string name="condition_badge_format">%1$s CONDITION</string>
+    <string name="btn_reserve_format">Reserve for %1$s</string>
+    <string name="btn_swap">Offer a swap</string>
+    <string name="btn_rent_format">Borrow for %1$s</string>
+    <string name="seller_meta_format">%1$s \u2022 %2$s</string>
+
+    <!-- Reserve sheet -->
+    <string name="reserve_kicker">RESERVE ITEM</string>
+    <string name="reserve_title">Set up your meetup</string>
+    <string name="reserve_where">Meetup point</string>
+    <string name="reserve_day">Day</string>
+    <string name="reserve_time">Time</string>
+    <string name="reserve_note">You\u2019ll pay in person at the meetup. The seller holds the item for you for 24 hours.</string>
+    <string name="btn_confirm_reservation">Confirm reservation</string>
+    <string name="toast_pick_day_time">Pick a day and time first</string>
+    <string name="day_today_label">Today</string>
+    <string name="day_tomorrow_label">Tomorrow</string>
+    <string name="toast_reserved">Reserved! %1$s has been notified.</string>
+    <string name="sys_reserved">Reservation sent</string>
+    <string name="sys_reserved_detail">%1$s \u2022 %2$s, %3$s</string>
+
+    <!-- Meetup sheet -->
+    <string name="meetup_why">Why meet here</string>
+    <string name="meetup_why1">Staffed by campus security</string>
+    <string name="meetup_why2">Well lit and covered by CCTV</string>
+    <string name="meetup_why3">Inside campus, so only UC students can join</string>
+    <string name="btn_got_it">Got it</string>
+
+    <!-- Saved -->
+    <string name="saved_title">Saved items</string>
+    <plurals name="saved_count">
+        <item quantity="one">%1$d item saved</item>
+        <item quantity="other">%1$d items saved</item>
+    </plurals>
+    <string name="saved_empty_title">No saved items yet</string>
+    <string name="saved_empty_sub">Tap the bookmark on any listing to keep it here.</string>
+    <string name="btn_browse_market">Browse market</string>
+    <string name="saved_meta_format">%1$s \u2022 %2$s</string>
+
+    <!-- Seller profile -->
+    <string name="seller_profile_title">Seller profile</string>
+    <string name="seller_listings_format">Listings by %1$s</string>
+    <string name="btn_message_seller">Message %1$s</string>
+    <string name="seller_listing_meta">Posted %1$d days ago</string>
+    <string name="seller_listing_meta_today">Posted today</string>
+    <string name="seller_listing_meta_yesterday">Posted yesterday</string>
+
+    <!-- Chats -->
+    <string name="hint_search_chats">Search people or messages\u2026</string>
+    <string name="chats_empty">No conversations match</string>
+    <string name="hint_message_format">Message %1$s\u2026</string>
+    <string name="thread_status_format">%1$s \u2022 %2$s</string>
+    <string name="status_active">Active now</string>
+    <string name="status_away">Active today</string>
+    <string name="msg_sent_now">Just now</string>
+    <string name="actions_title">Share in chat</string>
+    <string name="action_photo">Photo</string>
+    <string name="action_photo_hint">Send a picture of the item</string>
+    <string name="action_meetup">Meetup point</string>
+    <string name="action_meetup_hint">Suggest a safe place on campus</string>
+    <string name="action_time">Meetup time</string>
+    <string name="action_time_hint">Propose when to meet</string>
+    <string name="action_listing">View listing</string>
+    <string name="action_listing_hint">Open the item you are talking about</string>
+    <string name="msg_meetup_format">Can we meet at %1$s?</string>
+    <string name="msg_time_format">Does %1$s work for you?</string>
+    <string name="msg_photo">Photo</string>
+
+    <!-- Profile menu -->
+    <string name="menu_logout">Log out</string>
+    <string name="logout_title">Log out?</string>
+    <string name="logout_message">You\u2019ll need your UC email to sign in again.</string>
+    <string name="logout_confirm">Log out</string>
+    <string name="logout_cancel">Stay</string>
+    <string name="profile_empty_saved">Nothing saved yet. Tap the bookmark on a listing to keep it here.</string>
+    <string name="posted_days_format">Posted %1$d days ago</string>
+
+    <!-- Create listing -->
+    <string name="toast_need_title">Add an item title</string>
+    <string name="toast_need_program">Choose a program</string>
+    <string name="toast_need_condition">Choose the item\u2019s condition</string>
+    <string name="toast_need_price">Add a price</string>
+    <string name="toast_need_meetup">Choose a meetup point</string>
+    <string name="photo_counter_format">%1$d / 4</string>
+
+
+    <!-- Own listing -->
+    <string name="seller_you_format">%1$s (You)</string>
+    <string name="btn_edit_listing">Edit listing</string>
+    <string name="btn_mark_sold">Mark as sold</string>
+    <string name="btn_mark_swapped">Mark as swapped</string>
+    <string name="mark_sold_title">Mark \u201C%1$s\u201D as done?</string>
+    <string name="mark_sold_message">It will leave the Campus Market and move to your Completed tab.</string>
+    <string name="mark_sold_confirm">Mark as done</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="state_closed">No longer listed \u2022 moved to Completed</string>
+    <string name="toast_marked_done">Moved to Completed</string>
+    <string name="edit_title">Edit listing</string>
+    <string name="btn_save_changes">Save changes</string>
+    <string name="toast_changes_saved">Changes saved</string>
+
+    <!-- Roles: giving vs getting -->
+    <string name="role_selling">SELLING</string>
+    <string name="role_lending">LENDING</string>
+    <string name="role_buying">BUYING</string>
+    <string name="role_borrowing">BORROWING</string>
+    <string name="role_swapping">SWAPPING</string>
+    <string name="section_mine">Your listings</string>
+    <string name="section_mine_hint">Things you\u2019re selling, lending or swapping</string>
+    <string name="section_reserved">Reserved by you</string>
+    <string name="section_reserved_hint">Things you\u2019re buying, borrowing or swapping for</string>
+    <string name="reserved_from_format">From %1$s</string>
+
+    <!-- Reservation -->
+    <string name="reservation_card_title">You reserved this item</string>
+    <string name="btn_cancel_short">Cancel</string>
+    <string name="cancel_reservation_title">Cancel this reservation?</string>
+    <string name="cancel_reservation_message">%1$s will be told the item is free again. You can reserve it later if it\u2019s still available.</string>
+    <string name="cancel_reservation_confirm">Cancel reservation</string>
+    <string name="cancel_reservation_keep">Keep it</string>
+    <string name="toast_reservation_cancelled">Reservation cancelled</string>
+    <string name="chip_pick_date">Pick a date\u2026</string>
+    <string name="chip_pick_time">Other time\u2026</string>
+    <string name="pick_date_title">Meetup date</string>
+    <string name="pick_time_title">Meetup time</string>
+
+    <!-- Chats: giving vs getting -->
+    <string name="chat_filter_all">All</string>
+    <string name="chat_filter_getting">Buying &amp; borrowing</string>
+    <string name="chat_filter_giving">Selling &amp; lending</string>
+    <string name="kicker_you_buying">YOU\u2019RE BUYING</string>
+    <string name="kicker_you_borrowing">YOU\u2019RE BORROWING</string>
+    <string name="kicker_you_selling">YOU\u2019RE SELLING</string>
+    <string name="kicker_you_lending">YOU\u2019RE LENDING</string>
+    <string name="kicker_swap">YOU\u2019RE SWAPPING</string>
+
+    <!-- Completed exchanges -->
+    <string name="ex_sold_to">Sold to %1$s</string>
+    <string name="ex_bought_from">Bought from %1$s</string>
+    <string name="ex_lent_to">Lent to %1$s</string>
+    <string name="ex_borrowed_from">Borrowed from %1$s</string>
+    <string name="ex_swapped_with">Swapped with %1$s</string>
+    <string name="ex_closed_by_you">Marked as done by you</string>
+    <string name="ex_summary_format">%1$s \u2022 %2$s</string>
+    <string name="badge_sold">SOLD</string>
+    <string name="badge_bought">BOUGHT</string>
+    <string name="badge_lent">LENT</string>
+    <string name="badge_borrowed">BORROWED</string>
+    <string name="badge_swapped">SWAPPED</string>
+    <string name="ex_title">Transaction details</string>
+    <string name="ex_completed_on">Completed %1$s</string>
+    <string name="ex_with">With</string>
+    <string name="ex_details">Details</string>
+    <string name="ex_reference">Reference</string>
+    <string name="ex_meetup">Meetup point</string>
+    <string name="ex_payment">Payment</string>
+    <string name="ex_paid_in_person">%1$s, paid in person</string>
+    <string name="ex_rent_fee">%1$s lending fee, paid in person</string>
+    <string name="ex_no_payment">No payment, item for item</string>
+    <string name="ex_ratings">Ratings</string>
+    <string name="ex_their_rating">%1$s rated you</string>
+    <string name="ex_your_rating">You rated %1$s</string>
+    <string name="ex_not_rated">Not rated yet</string>
+    <string name="ex_no_partner_note">You marked this listing as done. Ratings appear once the other student confirms.</string>
+    <string name="cd_stars">%1$d out of 5 stars</string>
+
+    <!-- Profile menu, settings and edit profile -->
+    <string name="menu_edit_profile">Edit profile</string>
+    <string name="menu_settings">Settings</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_account">ACCOUNT</string>
+    <string name="settings_edit_profile">Edit profile</string>
+    <string name="settings_email">UC email</string>
+    <string name="settings_program">Program</string>
+    <string name="me_meta_short">BSIT \u2022 3rd Year</string>
+    <string name="settings_notifications">NOTIFICATIONS</string>
+    <string name="settings_messages">Messages</string>
+    <string name="settings_messages_hint">New chats and replies</string>
+    <string name="settings_reservations">Reservations and meetups</string>
+    <string name="settings_reservations_hint">Confirmations, changes and cancellations</string>
+    <string name="settings_reminders">Return reminders</string>
+    <string name="settings_reminders_hint">Before a borrowed item is due back</string>
+    <string name="settings_price_drops">Price drops</string>
+    <string name="settings_price_drops_hint">When a saved item gets cheaper</string>
+    <string name="settings_marketplace">MARKETPLACE</string>
+    <string name="settings_default_meetup">Default meetup point</string>
+    <string name="settings_show_program">Show my program on listings</string>
+    <string name="settings_show_program_hint">Buyers see which college you\u2019re from</string>
+    <string name="settings_privacy">PRIVACY AND SAFETY</string>
+    <string name="settings_active_status">Show when I\u2019m active</string>
+    <string name="settings_active_status_hint">Others see \u201CActive now\u201D in chats</string>
+    <string name="settings_guidelines">Community guidelines</string>
+    <string name="settings_safety">Meetup safety tips</string>
+    <string name="settings_support">SUPPORT</string>
+    <string name="settings_help">Help center</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">Version 1.0</string>
+    <string name="toast_setting_saved">Setting updated</string>
+    <string name="info_guidelines_body">\u2022 List only items you own and can hand over.\n\u2022 Describe the condition honestly and show real photos.\n\u2022 No prohibited items: weapons, alcohol, medicine, exam answers.\n\u2022 Be respectful in chats. Harassment leads to a ban.\n\u2022 Keep every transaction inside the app.</string>
+    <string name="info_safety_body">\u2022 Meet only at a Safe Meetup Point during office hours.\n\u2022 Check the item before you pay.\n\u2022 Pay in person; never send money ahead.\n\u2022 Bring a friend if you feel unsure.\n\u2022 Report anything suspicious from the listing or chat.</string>
+    <string name="info_help_body">How do I reserve an item?\nOpen the listing and tap Reserve, then pick a meetup point, day and time.\n\nCan I cancel a reservation?\nYes. Open the listing and tap Cancel reservation on the reservation card.\n\nHow do I mark my item as sold?\nOpen your listing from Profile and tap Mark as sold.</string>
+    <string name="info_about_body">Hold High The Shop is the campus marketplace for University of the Cordilleras students. Sell, lend or swap what you no longer need and give it a second life.\n\nVersion 1.0</string>
+    <string name="edit_name">Full name</string>
+    <string name="edit_program">Program</string>
+    <string name="edit_year">Year level</string>
+    <string name="edit_bio">Bio</string>
+    <string name="edit_email_hint">Your UC email can\u2019t be changed.</string>
+    <string name="hint_bio">Tell other students a bit about yourself\u2026</string>
+    <string name="prog_default">CITCS</string>
+    <string name="year_default">3rd Year</string>
+    <string name="toast_profile_saved">Profile updated</string>
+    <string name="toast_need_name">Add your name</string>
+
+    <!-- Share listing -->
+    <string name="cd_share">Share listing</string>
+    <string name="share_title">Share listing</string>
+
+    <!-- Directions map -->
+    <string name="btn_directions">Directions</string>
+    <string name="btn_done">Done</string>
+    <string name="map_title">Directions</string>
+    <string name="map_cd">Campus map with a walking route from the Main Gate to %1$s</string>
+    <string name="map_zoom_in">Zoom in</string>
+    <string name="map_zoom_out">Zoom out</string>
+    <string name="map_recenter">Show the whole route</string>
+    <plurals name="map_walk">
+        <item quantity="one">From Main Gate \u2022 about %1$d min walk</item>
+        <item quantity="other">From Main Gate \u2022 about %1$d min walk</item>
+    </plurals>
+    <string name="map_disclaimer">Illustrative campus map, not to scale</string>
+
+    <!-- Seller availability -->
+    <string name="seller_free_format">%1$s is free %2$s</string>
+    <string name="you_free_format">You\u2019re free %1$s</string>
+    <string name="toast_seller_not_free">%1$s is free %2$s</string>
+    <string name="lbl_availability">When are you free to meet? *</string>
+    <string name="availability_hint">Buyers can only pick days and times you add here.</string>
+    <string name="lbl_from">From</string>
+    <string name="lbl_to">To</string>
+    <string name="toast_need_days">Pick at least one day for each available time</string>
+    <string name="toast_time_order">The end time must be after the start time</string>
+
+    <!-- Swap -->
+    <string name="price_swap">Swap</string>
+    <string name="price_rent_format">%1$s / week</string>
+    <string name="tag_for_sale">FOR SALE</string>
+    <string name="tag_for_rent">FOR LENDING</string>
+    <string name="tag_for_swap">FOR SWAP</string>
+    <string name="swap_wants_kicker">LOOKING TO SWAP FOR</string>
+    <string name="swap_kicker">OFFER A SWAP</string>
+    <string name="swap_title">What will you trade?</string>
+    <string name="swap_wants_format">Looking for: %1$s</string>
+    <string name="swap_offer_label">Offer one of your items</string>
+    <string name="swap_note_format">If %1$s accepts, you\u2019ll agree on a meetup in chat. No money changes hands.</string>
+    <string name="btn_send_swap">Send swap offer</string>
+    <string name="toast_pick_swap_item">Pick an item to offer</string>
+    <string name="toast_swap_sent">Swap offer sent to %1$s</string>
+    <string name="swap_summary_format">Your %1$s for their %2$s</string>
+    <string name="swap_card_title">You offered a swap</string>
+    <string name="sys_swap_offered">Swap offer sent</string>
+    <string name="cancel_swap_title">Withdraw this swap offer?</string>
+    <string name="cancel_swap_message">%1$s will be told you withdrew the offer. You can offer again later.</string>
+    <string name="cancel_swap_confirm">Withdraw offer</string>
+    <string name="toast_swap_withdrawn">Swap offer withdrawn</string>
+    <string name="btn_withdraw_short">Withdraw</string>
+    <string name="chat_filter_swaps">Swaps</string>
+    <string name="lbl_wants">Looking for *</string>
+    <string name="hint_wants">e.g. A Physics reviewer or a lab kit</string>
+    <string name="toast_need_wants">Say what you\u2019d like in exchange</string>
+    <string name="share_link_label">Listing link</string>
+    <string name="share_link_format">holdhightheshop.app/listing/%1$s</string>
+    <string name="share_coming_soon">Sharing straight to Messenger, Viber and other apps is coming in a later version.</string>
+    <string name="btn_copy_link">Copy link</string>
+    <string name="toast_link_copied">Link copied</string>
+    <string name="toast_free_that_day">%1$s is free on %2$s %3$s</string>
+    <string name="btn_add_free_time">Add available time</string>
+    <string name="free_time_title">AVAILABLE TIME %1$d</string>
+    <string name="cd_remove_free_time">Remove this available time</string>
+
+    <!-- Rental length -->
+    <plurals name="rent_weeks">
+        <item quantity="one">%1$d week</item>
+        <item quantity="other">%1$d weeks</item>
+    </plurals>
+    <string name="rent_1_month">1 month</string>
+    <string name="rent_2_months">2 months</string>
+    <string name="rent_semester">Semester</string>
+    <string name="lbl_price_per_week">Fee per week *</string>
+    <string name="lbl_max_rent">Longest loan *</string>
+    <string name="max_rent_hint">Borrowers choose up to this long.</string>
+    <string name="reserve_rent_for">Borrow for</string>
+    <string name="rent_return_total_format">Return by %1$s \u2022 %2$s total</string>
+    <string name="rent_max_format">%1$s lends for up to %2$s</string>
+    <string name="rent_summary_format">%1$s \u2022 %2$s, %3$s \u2022 %4$s</string>
+    <plurals name="days_left">
+        <item quantity="one">%1$d day left</item>
+        <item quantity="other">%1$d days left</item>
+    </plurals>
+    <plurals name="overdue_by">
+        <item quantity="one">Overdue by %1$d day</item>
+        <item quantity="other">Overdue by %1$d days</item>
+    </plurals>
+    <string name="due_tomorrow">Due tomorrow</string>
+    <string name="due_today">Due today</string>
+
+    <!-- Loans: lending and borrowing -->
+    <string name="btn_lend_out">Lend it out</string>
+    <string name="btn_mark_returned">Mark as returned</string>
+    <string name="loan_lent_title">Lent to %1$s</string>
+    <string name="loan_borrowed_title">Borrowed from %1$s</string>
+    <string name="loan_lent_due">Due back %1$s</string>
+    <string name="loan_borrowed_due">Return by %1$s</string>
+    <string name="return_title">Mark as returned?</string>
+    <string name="return_lent_message">Did %1$s give the %2$s back? It will move to Completed and you can lend it again.</string>
+    <string name="return_confirm">Yes, returned</string>
+    <string name="return_not_yet">Not yet</string>
+    <string name="toast_returned">Marked as returned</string>
+    <string name="lend_kicker">LEND IT OUT</string>
+    <string name="lend_who">Who\u2019s borrowing it?</string>
+    <string name="lend_how_long">For how long?</string>
+    <string name="lend_due_format">Due back %1$s</string>
+    <string name="btn_start_lending">Start lending</string>
+    <string name="toast_pick_borrower">Pick who is borrowing it</string>
+    <string name="toast_lent">Lent to %1$s. We\u2019ll remind you both before it\u2019s due.</string>
+    <string name="section_borrowing">Borrowing</string>
+    <string name="section_borrowing_hint">Return these on time to keep your reliability up</string>
+    <string name="section_lent">Lent out</string>
+    <string name="section_lent_hint">Your things other students have right now</string>
+    <string name="row_borrowed_meta">Return to %1$s by %2$s \u2022 %3$s</string>
+    <string name="row_lent_meta">With %1$s, back by %2$s \u2022 %3$s</string>
+    <string name="role_lent_out">LENT OUT</string>
+    <string name="reminder_title">Return %1$s to %2$s</string>
+    <string name="reminder_overdue_title">%1$s is overdue</string>
+
+    <!-- Finishing a deal -->
+    <string name="btn_got_item">I got the item</string>
+    <string name="btn_picked_up">I picked it up</string>
+    <string name="btn_swap_done">Swap done</string>
+    <string name="got_item_title">Got the %1$s?</string>
+    <string name="received_buy_message">This moves it to Completed. %1$s will be asked to rate the exchange.</string>
+    <string name="received_rent_message">Your return date starts today: %1$s.</string>
+    <string name="received_swap_message">Mark the swap with %1$s as done? It moves to Completed.</string>
+    <string name="received_confirm">Yes, got it</string>
+    <string name="toast_received">Moved to Completed</string>
+    <string name="toast_picked_up">Return by %1$s. We\u2019ll remind you.</string>
+    <string name="done_bought_title">You bought this from %1$s</string>
+    <string name="done_swapped_title">You swapped with %1$s</string>
+    <string name="done_detail">Completed today \u2022 see Profile, Completed</string>
+
+    <!-- Returns: borrower reports, lender confirms -->
+    <string name="btn_ive_returned">I\u2019ve returned it</string>
+    <string name="btn_confirm_returned">Confirm returned</string>
+    <string name="btn_not_received">Not received</string>
+    <string name="ive_returned_title">Gave it back?</string>
+    <string name="ive_returned_message">We\u2019ll ask %2$s to confirm they got the %1$s back. It moves to Completed once they do.</string>
+    <string name="ive_returned_confirm">Yes, I returned it</string>
+    <string name="toast_return_reported">Waiting for %1$s to confirm</string>
+    <string name="loan_waiting_confirm">Returned \u2022 waiting for %1$s to confirm</string>
+    <string name="loan_partner_says_returned">%1$s says it\u2019s returned \u2022 please confirm</string>
+    <string name="not_received_title">Not back yet?</string>
+    <string name="not_received_message">We\u2019ll tell %1$s you haven\u2019t got the %2$s back. The loan stays open and you can message or report them.</string>
+    <string name="not_received_confirm">Not received</string>
+    <string name="toast_not_received">%1$s has been told it\u2019s not back yet</string>
+    <string name="row_return_pending">Returned to %1$s \u2022 waiting for them to confirm</string>
+    <string name="row_confirm_return">%1$s says it\u2019s returned \u2022 tap to confirm</string>
+
+    <!-- Profile > Active filter chips -->
+    <string name="filter_all_format">All \u00B7 %1$d</string>
+    <string name="filter_borrowing_format">Borrowing \u00B7 %1$d</string>
+    <string name="filter_lent_format">Lent out \u00B7 %1$d</string>
+    <string name="filter_reserved_format">Reserved \u00B7 %1$d</string>
+    <string name="filter_mine_format">Your listings \u00B7 %1$d</string>
+
+    <!-- ===== Deals: requests, handovers, missed meetups, ratings, problems ===== -->
+    <string name="day_yesterday_label">Yesterday</string>
+    <string name="hours_short">%1$d h</string>
+    <string name="minutes_short">%1$d min</string>
+    <string name="action_message">Message</string>
+    <string name="btn_continue">Continue</string>
+
+    <!-- Requests on your listing -->
+    <string name="requests_kicker">REQUESTS</string>
+    <string name="requests_sub">Accept one and the rest wait on a waitlist, in case it falls through. Requests close after 24 hours without an answer.</string>
+    <string name="requests_one_buy">%1$s wants to buy this</string>
+    <string name="requests_one_borrow">%1$s wants to borrow this</string>
+    <string name="requests_one_swap">%1$s offered a swap</string>
+    <plurals name="requests_many">
+        <item quantity="one">%1$d person wants this</item>
+        <item quantity="other">%1$d people want this</item>
+    </plurals>
+    <plurals name="btn_review_requests">
+        <item quantity="one">Review request</item>
+        <item quantity="other">Review requests (%1$d)</item>
+    </plurals>
+    <string name="answer_within_format">Answer within %1$s</string>
+    <string name="request_where_when">%1$s • %2$s</string>
+    <string name="request_offers">Offers their %1$s</string>
+    <string name="request_borrow_for">%1$s • %2$s total</string>
+    <string name="request_expired">Expired • not answered within 24 hours</string>
+    <string name="btn_accept">Accept</string>
+    <string name="btn_decline">Decline</string>
+    <string name="decline_title">Decline %1$s’s request?</string>
+    <string name="decline_message">%1$s will be told the item isn’t available to them. You can’t undo this.</string>
+    <string name="toast_declined">Declined %1$s’s request</string>
+    <string name="toast_pick_request">Pick a request first</string>
+    <string name="toast_accepted">You accepted %1$s. Meetup: %2$s.</string>
+    <string name="withdraw_other_title">Withdraw your other offer?</string>
+    <string name="withdraw_other_message">You offered this item to %1$s for their %2$s. One item can’t go to two people, so accepting %3$s withdraws that offer.</string>
+    <string name="withdraw_other_confirm">Accept and withdraw</string>
+    <plurals name="waitlist_count">
+        <item quantity="one">%1$d on the waitlist</item>
+        <item quantity="other">%1$d on the waitlist</item>
+    </plurals>
+    <plurals name="row_requests">
+        <item quantity="one">%1$d request • answer within %2$s</item>
+        <item quantity="other">%1$d requests • answer within %2$s</item>
+    </plurals>
+
+    <!-- Your listing, promised to someone -->
+    <string name="deal_reserved_title">Reserved by %1$s</string>
+    <string name="deal_lending_title">Lending to %1$s</string>
+    <string name="deal_swapping_title">Swapping with %1$s</string>
+    <string name="deal_code_hint">Ask %1$s for their code at the meetup</string>
+    <string name="row_deal_reserved">Reserved by %1$s • %2$s</string>
+    <string name="row_deal_lending">Lending to %1$s • %2$s</string>
+    <string name="row_deal_swapping">Swapping with %1$s • %2$s</string>
+    <string name="btn_enter_code">Enter code</string>
+    <string name="btn_did_it_happen">Did it happen?</string>
+    <string name="btn_cancel_deal">Call off the deal</string>
+    <string name="cancel_deal_title">Call off the deal with %1$s?</string>
+    <string name="cancel_deal_message">%1$s’s reservation ends and they’ll be told. Anyone on the waitlist can be accepted again.</string>
+    <string name="cancel_deal_keep">Keep it</string>
+    <string name="cancel_deal_confirm">Call off</string>
+    <string name="toast_deal_cancelled">Deal with %1$s called off</string>
+    <string name="toast_deal_cancelled_late">Deal with %1$s called off • counted as a late cancel</string>
+    <string name="late_cancel_note">The meetup is less than 2 hours away, so this counts against your on-time rate.</string>
+    <string name="toast_cancelled_late">Cancelled • counted as a late cancel</string>
+
+    <!-- Handover codes -->
+    <string name="code_kicker">HANDOVER</string>
+    <string name="code_title">Enter %1$s’s code</string>
+    <string name="code_sub_sell">Ask %1$s for the 4-digit code in their app once you’ve been paid, and type it in here.</string>
+    <string name="code_sub_lend">Ask %1$s for the 4-digit code in their app once they have the item. The loan starts today.</string>
+    <string name="code_sub_swap">Ask %1$s for the 4-digit code in their app once you’ve swapped.</string>
+    <string name="code_hint">••••</string>
+    <string name="code_demo">Prototype: %1$s’s code is %2$s. In the real app only %1$s can see it.</string>
+    <string name="code_error_short">Enter all 4 digits</string>
+    <string name="code_error_wrong">That code doesn’t match. Check it with %1$s.</string>
+    <string name="btn_confirm_handover">Confirm handover</string>
+    <string name="btn_confirm_without_code">Confirm without code</string>
+    <string name="no_code_title">Confirm without a code?</string>
+    <string name="no_code_message">Only do this if the handover really happened. Without %1$s’s code there’s no proof you met, so %1$s can still dispute it.</string>
+    <string name="code_your_kicker">YOUR HANDOVER CODE</string>
+    <string name="code_your_hint">Show it to %1$s once you have the item</string>
+    <string name="code_your_hint_swap">Show it to %1$s when you swap</string>
+    <string name="toast_sold_to">Sold to %1$s • moved to Completed</string>
+    <string name="toast_swapped_with">Swapped with %1$s • moved to Completed</string>
+    <string name="toast_lent_until">Lent to %1$s until %2$s</string>
+
+    <!-- Swaps offered to you -->
+    <string name="incoming_title">Coming to you from %1$s</string>
+    <string name="incoming_detail">In a swap for your %1$s • %2$s</string>
+    <string name="sys_request_accepted">You accepted this request</string>
+
+    <!-- Did the meetup happen? -->
+    <string name="btn_did_meetup_happen">Did the meetup happen?</string>
+    <string name="meetup_missed_format">The meetup was %1$s. Did it happen?</string>
+    <string name="row_meetup_missed">Meetup with %1$s passed • did it happen?</string>
+    <string name="row_reserved_when">From %1$s • %2$s</string>
+    <string name="meetup_check_kicker">MEETUP CHECK</string>
+    <string name="meetup_check_sub">You were meeting %1$s %2$s for the %3$s, and nothing was confirmed.</string>
+    <string name="happened_yes_gave">Yes, I handed it over</string>
+    <string name="happened_yes_got">Yes, I got the item</string>
+    <string name="happened_yes_borrow">Yes, I picked it up</string>
+    <string name="happened_yes_swap">Yes, we swapped</string>
+    <string name="happened_yes_hint">Finish the exchange now</string>
+    <string name="happened_they_missed">%1$s didn’t come</string>
+    <string name="happened_they_missed_hint">Goes to student support. It won’t count against you.</string>
+    <string name="happened_i_missed">I couldn’t make it</string>
+    <string name="happened_i_missed_hint">Ends the deal and counts against your on-time rate</string>
+    <string name="no_show_title">Report a no-show?</string>
+    <string name="no_show_message">The deal ends and student support is told that %1$s didn’t come. If %1$s says otherwise, support will look into it.</string>
+    <string name="no_show_confirm">Report</string>
+    <string name="i_missed_title">End the deal?</string>
+    <string name="i_missed_message">The deal with %1$s ends, and the missed meetup counts against your on-time rate.</string>
+    <string name="i_missed_confirm">End it</string>
+    <string name="toast_no_show">No-show reported • reference %1$s</string>
+    <string name="toast_i_missed">Deal ended • counted as a missed meetup</string>
+    <string name="toast_pick_option">Pick an answer first</string>
+
+    <!-- Problems and disputes -->
+    <string name="btn_report_problem">Report a problem</string>
+    <string name="problem_kicker">REPORT A PROBLEM</string>
+    <string name="problem_no_show">They didn’t come to the meetup</string>
+    <string name="problem_not_returned">Not returned on time</string>
+    <string name="problem_damaged">Item was damaged</string>
+    <string name="problem_not_as_described">Item not as described</string>
+    <string name="problem_payment">Payment problem</string>
+    <string name="problem_other">Something else</string>
+    <string name="problem_details_hint">Anything that helps student support (optional)</string>
+    <string name="problem_note">Student support will look into it and may contact you and %1$s. %1$s won’t see what you wrote.</string>
+    <string name="problem_note_nobody">the other student</string>
+    <string name="btn_send_report">Send report</string>
+    <string name="toast_problem_reported">Sent to student support • reference %1$s</string>
+    <string name="status_reported_format">%1$s • reported (%2$s)</string>
+
+    <!-- Transaction details -->
+    <string name="ex_handover">Handover</string>
+    <string name="ex_handover_code">Code checked</string>
+    <string name="ex_handover_manual">Confirmed without code</string>
+    <string name="ex_handover_received">You confirmed you got it</string>
+    <string name="ex_handover_none">Closed by you</string>
+    <string name="ex_problem">Problem</string>
+    <string name="ex_problem_value">%1$s • under review (%2$s)</string>
+    <string name="ex_timeline">Timeline</string>
+    <string name="ex_rating_hidden">Rate them to see it</string>
+    <string name="ex_rate_by">You can rate until %1$s</string>
+    <string name="ex_rating_done">Thanks for rating</string>
+    <string name="ex_your_note">Your note: “%1$s”</string>
+    <string name="ex_rating_closed">Ratings are closed for this exchange</string>
+    <string name="btn_rate_format">Rate %1$s</string>
+
+    <!-- Timeline steps -->
+    <string name="ev_they_requested">%1$s sent a request</string>
+    <string name="ev_they_offered">%1$s offered a swap</string>
+    <string name="ev_they_accepted">%1$s confirmed the meetup</string>
+    <string name="ev_you_reserved">You reserved it</string>
+    <string name="ev_you_offered">You offered a swap</string>
+    <string name="ev_you_accepted">You accepted</string>
+    <string name="ev_handover_code">Handed over • code checked</string>
+    <string name="ev_handover_manual">Handed over • confirmed without code</string>
+    <string name="ev_you_got_it">You confirmed you got it</string>
+    <string name="ev_you_picked_up">You picked it up • loan started</string>
+    <string name="ev_picked_up">Picked up • loan started</string>
+    <string name="ev_lent_out">Lent to %1$s • loan started</string>
+    <string name="ev_swap_done">You confirmed the swap</string>
+    <string name="ev_they_returned">%1$s said it was returned</string>
+    <string name="ev_you_returned">You said it was returned</string>
+    <string name="ev_return_confirmed">Return confirmed</string>
+    <string name="ev_closed_by_you">You marked it as done</string>
+    <string name="ev_you_rated">You rated %1$s</string>
+    <string name="ev_problem_reported">Problem reported (%1$s)</string>
+
+    <!-- Rating -->
+    <string name="rate_kicker">RATE YOUR EXCHANGE</string>
+    <string name="rate_title">How was %1$s?</string>
+    <string name="rate_pick">Tap a star</string>
+    <string-array name="rate_words">
+        <item>Poor</item>
+        <item>Fair</item>
+        <item>Good</item>
+        <item>Great</item>
+        <item>Excellent</item>
+    </string-array>
+    <string name="rate_note_label">Add a note</string>
+    <string name="rate_note_hint">On time? Item as described? (optional)</string>
+    <string name="rate_blind">%1$s won’t see your rating until they rate you too, or the week is up. Ratings can’t be changed.</string>
+    <string name="btn_submit_rating">Submit rating</string>
+    <string name="toast_pick_stars">Pick how many stars first</string>
+    <string name="toast_rated">Rating sent • you’ll see %1$s’s when they rate you</string>
+    <string name="toast_rated_revealed">Rating sent • %1$s’s rating is now visible</string>
 </resources>

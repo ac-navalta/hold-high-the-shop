@@ -66,6 +66,21 @@ object Choice {
         }
     }
 
+    /**
+     * Chips where several can be on at once, such as Condition in the
+     * market filters. Tapping a chip turns it on or off.
+     */
+    fun toggles(views: List<TextView>, selected: Set<Int>, onChange: (Set<Int>) -> Unit) {
+        views.forEachIndexed { index, view ->
+            val isOn = index in selected
+            view.setOnClickListener {
+                onChange(if (isOn) selected - index else selected + index)
+            }
+            view.setBackgroundResource(if (isOn) R.drawable.bg_chip_active else R.drawable.bg_chip)
+            view.setTextColor(view.context.getColor(if (isOn) R.color.white else R.color.text_primary))
+        }
+    }
+
     /** Radio style rows, used by the report reasons. */
     fun rows(
         rows: List<View>,

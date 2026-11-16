@@ -27,7 +27,8 @@
             android:orientation="vertical"
             android:clipToPadding="false"
             android:clipChildren="false"
-            android:descendantFocusability="blocksDescendants"
+            android:descendantFocusability="beforeDescendants"
+            android:focusableInTouchMode="true"
             android:paddingBottom="28dp">
 
             <!-- GREEN HEADER -->
@@ -118,18 +119,22 @@
                 android:clipToPadding="false"
                 android:clipChildren="false"
                 android:layout_marginTop="-46dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp">
+                android:layout_marginStart="@dimen/screen_margin"
+                android:layout_marginEnd="@dimen/screen_margin">
 
                 <com.google.android.material.card.MaterialCardView
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:onClick="openExchanged"
+                    android:foreground="?attr/selectableItemBackground"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginEnd="4dp"
+                    android:layout_marginEnd="@dimen/half_gap"
                     app:cardCornerRadius="18dp"
                     app:cardElevation="5dp"
                     app:cardBackgroundColor="@color/white"
-                    app:cardUseCompatPadding="true"
+                    app:cardUseCompatPadding="false"
                     app:strokeWidth="0dp">
 
                     <LinearLayout
@@ -164,6 +169,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/poppins_bold"
+                                android:id="@+id/statExchanged"
                                 android:text="@string/stat_exchanged_value"
                                 android:textColor="@color/text_primary"
                                 android:textSize="18sp" />
@@ -182,14 +188,18 @@
                 </com.google.android.material.card.MaterialCardView>
 
                 <com.google.android.material.card.MaterialCardView
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:onClick="openActiveListings"
+                    android:foreground="?attr/selectableItemBackground"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="4dp"
+                    android:layout_marginStart="@dimen/half_gap"
                     app:cardCornerRadius="18dp"
                     app:cardElevation="5dp"
                     app:cardBackgroundColor="@color/white"
-                    app:cardUseCompatPadding="true"
+                    app:cardUseCompatPadding="false"
                     app:strokeWidth="0dp">
 
                     <LinearLayout
@@ -224,6 +234,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/poppins_bold"
+                                android:id="@+id/statListings"
                                 android:text="@string/stat_listings_value"
                                 android:textColor="@color/text_primary"
                                 android:textSize="18sp" />
@@ -242,21 +253,79 @@
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
+            <!-- RETURN REMINDER: the most urgent thing you borrowed, filled in by MainActivity -->
+            <LinearLayout
+                android:id="@+id/returnReminder"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_margin"
+                android:layout_marginEnd="@dimen/screen_margin"
+                android:layout_marginTop="@dimen/grid_gap"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_badge_swap"
+                android:padding="14dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/reminderIcon"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_clock"
+                    android:tint="@color/swap_text"
+                    android:contentDescription="@null" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/reminderTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_semibold"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/reminderDue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:fontFamily="@font/poppins_regular"
+                        android:textColor="@color/swap_text"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_chevron_right"
+                    android:tint="@color/text_secondary"
+                    android:contentDescription="@null" />
+            </LinearLayout>
+
             <!-- POST AN ITEM -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/grid_gap"
                 android:clickable="true"
                 android:focusable="true"
                 android:onClick="openCreateListing"
                 android:foreground="?attr/selectableItemBackground"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginStart="@dimen/screen_margin"
+                android:layout_marginEnd="@dimen/screen_margin"
                 app:cardCornerRadius="18dp"
                 app:cardElevation="5dp"
                 app:cardBackgroundColor="@color/white"
-                app:cardUseCompatPadding="true"
+                app:cardUseCompatPadding="false"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
@@ -318,7 +387,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="@dimen/section_gap"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp">
 
@@ -336,193 +405,42 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/poppins_semibold"
                     android:text="@string/see_all"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:onClick="openMarket"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
                     android:textColor="@color/uc_green"
                     android:textSize="13sp" />
             </LinearLayout>
 
-            <LinearLayout
+            <!-- One tile per college, filled in by MainActivity. Scrolls sideways. -->
+            <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
                 android:clipToPadding="false"
-                android:clipChildren="false"
-                android:layout_marginTop="8dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp">
+                android:paddingStart="@dimen/screen_margin"
+                android:paddingEnd="@dimen/screen_margin"
+                android:paddingTop="6dp"
+                android:paddingBottom="10dp"
+                android:scrollbars="none">
 
-                <com.google.android.material.card.MaterialCardView
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:onClick="openMarket"
-                    android:foreground="?attr/selectableItemBackground"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:id="@+id/programRow"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="2dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="4dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardUseCompatPadding="true"
-                    app:strokeWidth="0dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:gravity="center"
-                        android:paddingTop="16dp"
-                        android:paddingBottom="14dp">
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_prog_citcs"
-                            android:tint="@color/uc_green"
-                            android:contentDescription="@null" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:fontFamily="@font/poppins_semibold"
-                            android:text="@string/prog_citcs"
-                            android:textColor="@color/text_primary"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <com.google.android.material.card.MaterialCardView
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:onClick="openMarket"
-                    android:foreground="?attr/selectableItemBackground"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="2dp"
-                    android:layout_marginEnd="2dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="4dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardUseCompatPadding="true"
-                    app:strokeWidth="0dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:gravity="center"
-                        android:paddingTop="16dp"
-                        android:paddingBottom="14dp">
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_prog_conahs"
-                            android:tint="@color/uc_green"
-                            android:contentDescription="@null" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:fontFamily="@font/poppins_semibold"
-                            android:text="@string/prog_conahs"
-                            android:textColor="@color/text_primary"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <com.google.android.material.card.MaterialCardView
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:onClick="openMarket"
-                    android:foreground="?attr/selectableItemBackground"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="2dp"
-                    android:layout_marginEnd="2dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="4dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardUseCompatPadding="true"
-                    app:strokeWidth="0dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:gravity="center"
-                        android:paddingTop="16dp"
-                        android:paddingBottom="14dp">
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_prog_cba"
-                            android:tint="@color/uc_green"
-                            android:contentDescription="@null" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:fontFamily="@font/poppins_semibold"
-                            android:text="@string/prog_cba"
-                            android:textColor="@color/text_primary"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <com.google.android.material.card.MaterialCardView
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:onClick="openMarket"
-                    android:foreground="?attr/selectableItemBackground"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="2dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="4dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardUseCompatPadding="true"
-                    app:strokeWidth="0dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:gravity="center"
-                        android:paddingTop="16dp"
-                        android:paddingBottom="14dp">
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_prog_cea"
-                            android:tint="@color/uc_green"
-                            android:contentDescription="@null" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:fontFamily="@font/poppins_semibold"
-                            android:text="@string/prog_cea"
-                            android:textColor="@color/text_primary"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-            </LinearLayout>
+                    android:orientation="horizontal"
+                    android:clipToPadding="false"
+                    android:clipChildren="false" />
+            </HorizontalScrollView>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="@dimen/section_gap"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp">
 
@@ -545,381 +463,30 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:onClick="openMarket"
-                    android:padding="4dp" />
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp" />
             </LinearLayout>
 
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:layout_marginTop="6dp"
+                android:paddingStart="@dimen/screen_margin"
+                android:paddingEnd="@dimen/screen_margin"
+                android:paddingTop="6dp"
+                android:paddingBottom="12dp"
                 android:clipToPadding="false"
                 android:clipChildren="false"
                 android:scrollbars="none">
 
+                <!-- Newest listings from other students, filled in by MainActivity. -->
                 <LinearLayout
+                    android:id="@+id/freshRow"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:clipToPadding="false"
-                    android:clipChildren="false">
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:onClick="openListing"
-                        android:foreground="?attr/selectableItemBackground"
-                        android:layout_width="172dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="4dp"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="5dp"
-                        app:cardBackgroundColor="@color/white"
-                        app:cardUseCompatPadding="true"
-                        app:strokeWidth="0dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical">
-
-                            <FrameLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="124dp"
-                                android:background="@drawable/bg_photo_placeholder">
-
-                                <ImageView
-                                    android:layout_width="30dp"
-                                    android:layout_height="30dp"
-                                    android:layout_gravity="center"
-                                    android:src="@drawable/ic_image"
-                                    android:tint="#CFC9B4"
-                                    android:contentDescription="@string/cd_item_photo" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="bottom|start"
-                                    android:layout_margin="8dp"
-                                    android:background="@drawable/bg_badge_green"
-                                    android:paddingStart="9dp"
-                                    android:paddingEnd="9dp"
-                                    android:paddingTop="4dp"
-                                    android:paddingBottom="4dp"
-                                    android:fontFamily="@font/poppins_semibold"
-                                    android:text="@string/cond_like_new"
-                                    android:textColor="@color/white"
-                                    android:textSize="9sp"
-                                    android:letterSpacing="0.06" />
-                            </FrameLayout>
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:paddingStart="12dp"
-                                android:paddingEnd="12dp"
-                                android:paddingTop="10dp"
-                                android:paddingBottom="12dp">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:fontFamily="@font/poppins_bold"
-                                    android:text="@string/item1_price"
-                                    android:textColor="@color/uc_green"
-                                    android:textSize="18sp" />
-
-                                <TextView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:fontFamily="@font/poppins_semibold"
-                                    android:text="@string/item1_title"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="13sp"
-                                    android:lines="2"
-                                    android:ellipsize="end" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:fontFamily="@font/poppins_regular"
-                                    android:text="@string/item1_prog"
-                                    android:textColor="@color/text_secondary"
-                                    android:textSize="11sp" />
-                            </LinearLayout>
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:onClick="openListing"
-                        android:foreground="?attr/selectableItemBackground"
-                        android:layout_width="172dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="4dp"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="5dp"
-                        app:cardBackgroundColor="@color/white"
-                        app:cardUseCompatPadding="true"
-                        app:strokeWidth="0dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical">
-
-                            <FrameLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="124dp"
-                                android:background="@drawable/bg_photo_placeholder">
-
-                                <ImageView
-                                    android:layout_width="30dp"
-                                    android:layout_height="30dp"
-                                    android:layout_gravity="center"
-                                    android:src="@drawable/ic_image"
-                                    android:tint="#CFC9B4"
-                                    android:contentDescription="@string/cd_item_photo" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="bottom|start"
-                                    android:layout_margin="8dp"
-                                    android:background="@drawable/bg_badge_green"
-                                    android:paddingStart="9dp"
-                                    android:paddingEnd="9dp"
-                                    android:paddingTop="4dp"
-                                    android:paddingBottom="4dp"
-                                    android:fontFamily="@font/poppins_semibold"
-                                    android:text="@string/cond_good"
-                                    android:textColor="@color/white"
-                                    android:textSize="9sp"
-                                    android:letterSpacing="0.06" />
-                            </FrameLayout>
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:paddingStart="12dp"
-                                android:paddingEnd="12dp"
-                                android:paddingTop="10dp"
-                                android:paddingBottom="12dp">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:fontFamily="@font/poppins_bold"
-                                    android:text="@string/item2_price"
-                                    android:textColor="@color/uc_green"
-                                    android:textSize="18sp" />
-
-                                <TextView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:fontFamily="@font/poppins_semibold"
-                                    android:text="@string/item2_title"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="13sp"
-                                    android:lines="2"
-                                    android:ellipsize="end" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:fontFamily="@font/poppins_regular"
-                                    android:text="@string/item2_prog"
-                                    android:textColor="@color/text_secondary"
-                                    android:textSize="11sp" />
-                            </LinearLayout>
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:onClick="openListing"
-                        android:foreground="?attr/selectableItemBackground"
-                        android:layout_width="172dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="4dp"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="5dp"
-                        app:cardBackgroundColor="@color/white"
-                        app:cardUseCompatPadding="true"
-                        app:strokeWidth="0dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical">
-
-                            <FrameLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="124dp"
-                                android:background="@drawable/bg_photo_placeholder">
-
-                                <ImageView
-                                    android:layout_width="30dp"
-                                    android:layout_height="30dp"
-                                    android:layout_gravity="center"
-                                    android:src="@drawable/ic_image"
-                                    android:tint="#CFC9B4"
-                                    android:contentDescription="@string/cd_item_photo" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="bottom|start"
-                                    android:layout_margin="8dp"
-                                    android:background="@drawable/bg_badge_green"
-                                    android:paddingStart="9dp"
-                                    android:paddingEnd="9dp"
-                                    android:paddingTop="4dp"
-                                    android:paddingBottom="4dp"
-                                    android:fontFamily="@font/poppins_semibold"
-                                    android:text="@string/cond_good"
-                                    android:textColor="@color/white"
-                                    android:textSize="9sp"
-                                    android:letterSpacing="0.06" />
-                            </FrameLayout>
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:paddingStart="12dp"
-                                android:paddingEnd="12dp"
-                                android:paddingTop="10dp"
-                                android:paddingBottom="12dp">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:fontFamily="@font/poppins_bold"
-                                    android:text="@string/item3_price"
-                                    android:textColor="@color/uc_green"
-                                    android:textSize="18sp" />
-
-                                <TextView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:fontFamily="@font/poppins_semibold"
-                                    android:text="@string/item3_title"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="13sp"
-                                    android:lines="2"
-                                    android:ellipsize="end" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:fontFamily="@font/poppins_regular"
-                                    android:text="@string/item3_prog"
-                                    android:textColor="@color/text_secondary"
-                                    android:textSize="11sp" />
-                            </LinearLayout>
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:onClick="openListing"
-                        android:foreground="?attr/selectableItemBackground"
-                        android:layout_width="172dp"
-                        android:layout_height="wrap_content"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="5dp"
-                        app:cardBackgroundColor="@color/white"
-                        app:cardUseCompatPadding="true"
-                        app:strokeWidth="0dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical">
-
-                            <FrameLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="124dp"
-                                android:background="@drawable/bg_photo_placeholder">
-
-                                <ImageView
-                                    android:layout_width="30dp"
-                                    android:layout_height="30dp"
-                                    android:layout_gravity="center"
-                                    android:src="@drawable/ic_image"
-                                    android:tint="#CFC9B4"
-                                    android:contentDescription="@string/cd_item_photo" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="bottom|start"
-                                    android:layout_margin="8dp"
-                                    android:background="@drawable/bg_badge_green"
-                                    android:paddingStart="9dp"
-                                    android:paddingEnd="9dp"
-                                    android:paddingTop="4dp"
-                                    android:paddingBottom="4dp"
-                                    android:fontFamily="@font/poppins_semibold"
-                                    android:text="@string/cond_like_new"
-                                    android:textColor="@color/white"
-                                    android:textSize="9sp"
-                                    android:letterSpacing="0.06" />
-                            </FrameLayout>
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:paddingStart="12dp"
-                                android:paddingEnd="12dp"
-                                android:paddingTop="10dp"
-                                android:paddingBottom="12dp">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:fontFamily="@font/poppins_bold"
-                                    android:text="@string/item4_price"
-                                    android:textColor="@color/uc_green"
-                                    android:textSize="18sp" />
-
-                                <TextView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:fontFamily="@font/poppins_semibold"
-                                    android:text="@string/item4_title"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="13sp"
-                                    android:lines="2"
-                                    android:ellipsize="end" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:fontFamily="@font/poppins_regular"
-                                    android:text="@string/item4_prog"
-                                    android:textColor="@color/text_secondary"
-                                    android:textSize="11sp" />
-                            </LinearLayout>
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-                </LinearLayout>
+                    android:clipChildren="false" />
             </HorizontalScrollView>
 
         </LinearLayout>

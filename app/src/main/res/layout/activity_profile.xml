@@ -46,15 +46,28 @@
             android:textColor="@color/white"
             android:textSize="22sp" />
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_more"
-            android:tint="@color/white"
-            android:contentDescription="@string/cd_more" />
+        <FrameLayout
+            android:id="@+id/btnMore"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="-10dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="openMenu"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_more"
+                android:tint="@color/white"
+                android:contentDescription="@string/cd_more" />
+        </FrameLayout>
     </LinearLayout>
 
     <ScrollView
+        android:id="@+id/profileScroll"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
@@ -71,8 +84,7 @@
             android:orientation="vertical"
             android:clipToPadding="false"
             android:clipChildren="false"
-            android:descendantFocusability="blocksDescendants"
-            android:paddingBottom="24dp">
+                        android:paddingBottom="24dp">
 
             <!-- AVATAR -->
             <FrameLayout
@@ -149,13 +161,13 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginStart="@dimen/screen_margin"
+                android:layout_marginEnd="@dimen/screen_margin"
                 android:layout_marginTop="20dp"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="5dp"
                 app:cardBackgroundColor="@color/white"
-                app:cardUseCompatPadding="true"
+                app:cardUseCompatPadding="false"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
@@ -227,6 +239,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/poppins_bold"
+                                android:id="@+id/profileRating"
                                 android:text="@string/stat_rating"
                                 android:textColor="@color/text_primary"
                                 android:textSize="21sp" />
@@ -265,6 +278,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/poppins_bold"
+                                android:id="@+id/profileOnTime"
                                 android:text="@string/stat_ontime"
                                 android:textColor="@color/text_primary"
                                 android:textSize="21sp" />
@@ -303,6 +317,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/poppins_bold"
+                                android:id="@+id/profileCompleted"
                                 android:text="@string/stat_completed"
                                 android:textColor="@color/text_primary"
                                 android:textSize="21sp" />
@@ -335,12 +350,13 @@
 
             <!-- TABS -->
             <LinearLayout
+                android:id="@+id/profileTabs"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="14dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp">
+                android:layout_marginTop="@dimen/section_gap"
+                android:paddingStart="@dimen/screen_margin"
+                android:paddingEnd="@dimen/screen_margin">
 
                 <LinearLayout
                     android:id="@+id/tab1"
@@ -371,6 +387,7 @@
                             android:textSize="14sp" />
 
                         <TextView
+                            android:id="@+id/tab1Count"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="6dp"
@@ -421,6 +438,7 @@
                             android:textSize="14sp" />
 
                         <TextView
+                            android:id="@+id/tab2Count"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="6dp"
@@ -471,6 +489,7 @@
                             android:textSize="14sp" />
 
                         <TextView
+                            android:id="@+id/tab3Count"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="6dp"
@@ -496,154 +515,49 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
+                android:layout_marginStart="@dimen/screen_margin"
+                android:layout_marginEnd="@dimen/screen_margin"
                 android:background="@color/divider" />
 
-            <LinearLayout
+            <!-- ACTIVE TAB: jump to one group (borrowing, lent out, reserved, your listings) -->
+            <HorizontalScrollView
+                android:id="@+id/activeFiltersScroll"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:paddingTop="14dp"
-                android:paddingBottom="14dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:onClick="openListing"
-                android:foreground="?attr/selectableItemBackground">
-
-                <FrameLayout
-                    android:layout_width="58dp"
-                    android:layout_height="58dp"
-                    android:background="@drawable/bg_photo_placeholder">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_image"
-                        android:tint="#CFC9B4"
-                        android:contentDescription="@string/cd_item_photo" />
-                </FrameLayout>
+                android:layout_marginTop="16dp"
+                android:paddingStart="@dimen/screen_margin"
+                android:paddingEnd="@dimen/screen_margin"
+                android:clipToPadding="false"
+                android:scrollbars="none"
+                android:visibility="gone">
 
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:id="@+id/activeFilters"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="14dp"
-                    android:orientation="vertical">
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/poppins_semibold"
-                        android:text="@string/item1_title"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:fontFamily="@font/poppins_bold"
-                        android:text="@string/item1_price"
-                        android:textColor="@color/uc_green"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:fontFamily="@font/poppins_regular"
-                        android:text="@string/posted_days_ago"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:src="@drawable/ic_chevron_right"
-                    android:tint="@color/text_secondary"
-                    android:contentDescription="@null" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:background="@color/divider" />
-
+            <!-- TAB CONTENT, filled in by ProfileActivity -->
             <LinearLayout
+                android:id="@+id/profileList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:paddingTop="14dp"
-                android:paddingBottom="14dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:onClick="openListing"
-                android:foreground="?attr/selectableItemBackground">
+                android:orientation="vertical" />
 
-                <FrameLayout
-                    android:layout_width="58dp"
-                    android:layout_height="58dp"
-                    android:background="@drawable/bg_photo_placeholder">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_image"
-                        android:tint="#CFC9B4"
-                        android:contentDescription="@string/cd_item_photo" />
-                </FrameLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="14dp"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/poppins_semibold"
-                        android:text="@string/item2_title"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:fontFamily="@font/poppins_bold"
-                        android:text="@string/item2_price"
-                        android:textColor="@color/uc_green"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:fontFamily="@font/poppins_regular"
-                        android:text="@string/posted_days_ago"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:src="@drawable/ic_chevron_right"
-                    android:tint="@color/text_secondary"
-                    android:contentDescription="@null" />
-            </LinearLayout>
+            <TextView
+                android:id="@+id/profileEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingStart="40dp"
+                android:paddingEnd="40dp"
+                android:paddingTop="32dp"
+                android:fontFamily="@font/poppins_regular"
+                android:text="@string/profile_empty_saved"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:visibility="gone" />
 
         </LinearLayout>
     </ScrollView>

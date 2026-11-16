@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Market filters. Opened from the filter button beside the search bar. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_sheet_top"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="20dp">
+
+    <View style="@style/SheetHandle" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="@font/poppins_bold"
+            android:text="@string/filters_title"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/filterReset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="6dp"
+            android:fontFamily="@font/poppins_semibold"
+            android:text="@string/filters_reset"
+            android:textColor="@color/uc_green"
+            android:textSize="14sp"
+            android:background="?attr/selectableItemBackground" />
+    </LinearLayout>
+
+        <TextView
+            style="@style/SheetLabel"
+            android:text="@string/lbl_condition_plain" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/fCond0"
+                    style="@style/FilterChip"
+                    android:text="@string/opt_like_new" />
+                <TextView
+                    android:id="@+id/fCond1"
+                    style="@style/FilterChip"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/opt_good" />
+                <TextView
+                    android:id="@+id/fCond2"
+                    style="@style/FilterChip"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/opt_fair" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <TextView
+            style="@style/SheetLabel"
+            android:text="@string/lbl_listing_type_plain" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/fType0"
+                    style="@style/FilterChip"
+                    android:text="@string/opt_sell" />
+                <TextView
+                    android:id="@+id/fType1"
+                    style="@style/FilterChip"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/opt_rent" />
+                <TextView
+                    android:id="@+id/fType2"
+                    style="@style/FilterChip"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/opt_swap" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <TextView
+            style="@style/SheetLabel"
+            android:text="@string/lbl_price_plain" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/fPrice0"
+                    style="@style/FilterChip"
+                    android:text="@string/price_any" />
+                <TextView
+                    android:id="@+id/fPrice1"
+                    style="@style/FilterChip"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/price_under_500" />
+                <TextView
+                    android:id="@+id/fPrice2"
+                    style="@style/FilterChip"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/price_500_1000" />
+                <TextView
+                    android:id="@+id/fPrice3"
+                    style="@style/FilterChip"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/price_over_1000" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+    <TextView
+        android:id="@+id/filterApply"
+        style="@style/PrimaryButton"
+        android:layout_marginTop="26dp"
+        android:text="@string/filters_show" />
+</LinearLayout>

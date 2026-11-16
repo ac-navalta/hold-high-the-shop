@@ -46,12 +46,23 @@
             android:textColor="@color/white"
             android:textSize="22sp" />
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_search"
-            android:tint="@color/white"
-            android:contentDescription="@string/cd_search" />
+        <FrameLayout
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="-10dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="toggleSearch"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_search"
+                android:tint="@color/white"
+                android:contentDescription="@string/cd_search" />
+        </FrameLayout>
     </LinearLayout>
 
     <ScrollView
@@ -68,8 +79,109 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:descendantFocusability="blocksDescendants"
+            android:descendantFocusability="beforeDescendants"
+            android:focusableInTouchMode="true"
             android:paddingBottom="20dp">
+
+            <!-- SEARCH BAR, shown by the search icon in the header -->
+            <LinearLayout
+                android:id="@+id/chatSearchBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_margin"
+                android:layout_marginEnd="@dimen/screen_margin"
+                android:layout_marginTop="14dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_search"
+                android:elevation="3dp"
+                android:paddingStart="18dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_search"
+                    android:tint="@color/uc_green"
+                    android:contentDescription="@null" />
+
+                <EditText
+                    android:id="@+id/inputChatSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:background="@android:color/transparent"
+                    android:fontFamily="@font/poppins_regular"
+                    android:hint="@string/hint_search_chats"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:autofillHints="" />
+
+                <FrameLayout
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:onClick="toggleSearch"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_close"
+                        android:tint="@color/text_secondary"
+                        android:contentDescription="@string/cd_clear_search" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- WHO IS GIVING / GETTING, filters the list -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:clipToPadding="false"
+                android:paddingStart="@dimen/screen_margin"
+                android:paddingEnd="@dimen/screen_margin"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/chatFilterAll"
+                        style="@style/FilterChip"
+                        android:text="@string/chat_filter_all" />
+
+                    <TextView
+                        android:id="@+id/chatFilterGetting"
+                        style="@style/FilterChip"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/chat_filter_getting" />
+
+                    <TextView
+                        android:id="@+id/chatFilterGiving"
+                        style="@style/FilterChip"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/chat_filter_giving" />
+
+                    <TextView
+                        android:id="@+id/chatFilterSwaps"
+                        style="@style/FilterChip"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/chat_filter_swaps" />
+                </LinearLayout>
+            </HorizontalScrollView>
 
             <!-- SAFETY BANNER -->
             <LinearLayout
@@ -78,8 +190,8 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@drawable/bg_banner_mint"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginStart="@dimen/screen_margin"
+                android:layout_marginEnd="@dimen/screen_margin"
                 android:layout_marginTop="14dp"
                 android:padding="14dp">
 
@@ -103,6 +215,7 @@
 
 
             <LinearLayout
+                android:id="@+id/chatRow1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -114,6 +227,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:onClick="openThread"
+                android:tag="0"
                 android:foreground="?attr/selectableItemBackground">
 
                 <FrameLayout
@@ -152,13 +266,26 @@
                         android:textColor="@color/text_primary"
                         android:textSize="15sp" />
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/poppins_regular"
-                        android:text="@string/chat1_prog"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="10sp" />
+                        android:layout_marginTop="2dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/chatBadge1"
+                            style="@style/RoleBadge"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_regular"
+                            android:text="@string/chat1_prog"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp" />
+                    </LinearLayout>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -196,12 +323,15 @@
             </LinearLayout>
 
             <View
+                android:id="@+id/chatDivider1"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginStart="76dp"
+                android:layout_marginStart="78dp"
+                android:layout_marginEnd="@dimen/screen_margin"
                 android:background="@color/divider" />
 
             <LinearLayout
+                android:id="@+id/chatRow2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -213,6 +343,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:onClick="openThread"
+                android:tag="1"
                 android:foreground="?attr/selectableItemBackground">
 
                 <FrameLayout
@@ -245,13 +376,26 @@
                         android:textColor="@color/text_primary"
                         android:textSize="15sp" />
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/poppins_regular"
-                        android:text="@string/chat2_prog"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="10sp" />
+                        android:layout_marginTop="2dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/chatBadge2"
+                            style="@style/RoleBadge"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_regular"
+                            android:text="@string/chat2_prog"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp" />
+                    </LinearLayout>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -283,12 +427,15 @@
             </LinearLayout>
 
             <View
+                android:id="@+id/chatDivider2"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginStart="76dp"
+                android:layout_marginStart="78dp"
+                android:layout_marginEnd="@dimen/screen_margin"
                 android:background="@color/divider" />
 
             <LinearLayout
+                android:id="@+id/chatRow3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -300,6 +447,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:onClick="openThread"
+                android:tag="2"
                 android:foreground="?attr/selectableItemBackground">
 
                 <FrameLayout
@@ -338,13 +486,26 @@
                         android:textColor="@color/text_primary"
                         android:textSize="15sp" />
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/poppins_regular"
-                        android:text="@string/chat3_prog"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="10sp" />
+                        android:layout_marginTop="2dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/chatBadge3"
+                            style="@style/RoleBadge"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_regular"
+                            android:text="@string/chat3_prog"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp" />
+                    </LinearLayout>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -382,12 +543,15 @@
             </LinearLayout>
 
             <View
+                android:id="@+id/chatDivider3"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginStart="76dp"
+                android:layout_marginStart="78dp"
+                android:layout_marginEnd="@dimen/screen_margin"
                 android:background="@color/divider" />
 
             <LinearLayout
+                android:id="@+id/chatRow4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -399,6 +563,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:onClick="openThread"
+                android:tag="3"
                 android:foreground="?attr/selectableItemBackground">
 
                 <FrameLayout
@@ -431,13 +596,26 @@
                         android:textColor="@color/text_primary"
                         android:textSize="15sp" />
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/poppins_regular"
-                        android:text="@string/chat4_prog"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="10sp" />
+                        android:layout_marginTop="2dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/chatBadge4"
+                            style="@style/RoleBadge"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_regular"
+                            android:text="@string/chat4_prog"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp" />
+                    </LinearLayout>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -467,6 +645,122 @@
                         android:textSize="10sp" />
                 </LinearLayout>
             </LinearLayout>
+
+            <View
+                android:id="@+id/chatDivider4"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="78dp"
+                android:layout_marginEnd="@dimen/screen_margin"
+                android:background="@color/divider" />
+
+            <LinearLayout
+                android:id="@+id/chatRow5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="14dp"
+                android:paddingBottom="14dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:onClick="openThread"
+                android:tag="4"
+                android:foreground="?attr/selectableItemBackground">
+
+                <FrameLayout
+                    android:layout_width="46dp"
+                    android:layout_height="46dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_avatar_mint"
+                        android:gravity="center"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="@string/chat5_initials"
+                        android:textColor="@color/uc_green"
+                        android:textSize="14sp" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_semibold"
+                        android:text="@string/chat5_name"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/chatBadge5"
+                            style="@style/RoleBadge"
+                            android:layout_marginEnd="6dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_regular"
+                            android:text="@string/chat5_prog"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:fontFamily="@font/poppins_regular"
+                        android:text="@string/chat5_last"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_regular"
+                        android:text="@string/chat5_time"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="10sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/chatsEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingTop="40dp"
+                android:fontFamily="@font/poppins_medium"
+                android:text="@string/chats_empty"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:visibility="gone" />
 
         </LinearLayout>
     </ScrollView>

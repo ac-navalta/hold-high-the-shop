@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Lend it out" on your own rent listing: who has it, and for how long. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_sheet_top"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="20dp">
+
+    <View style="@style/SheetHandle" />
+
+    <TextView
+        style="@style/Kicker"
+        android:layout_marginTop="16dp"
+        android:text="@string/lend_kicker" />
+
+    <TextView
+        android:id="@+id/lendItem"
+        style="@style/SheetTitle"
+        android:layout_marginTop="4dp" />
+
+    <TextView
+        style="@style/SheetLabel"
+        android:text="@string/lend_who" />
+
+    <LinearLayout
+        android:id="@+id/lendPeople"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="vertical" />
+
+    <TextView
+        style="@style/SheetLabel"
+        android:layout_marginTop="12dp"
+        android:text="@string/lend_how_long" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/lendWeeks"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+
+    <TextView
+        android:id="@+id/lendDue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:fontFamily="@font/poppins_semibold"
+        android:textColor="@color/uc_green"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/lendStart"
+        style="@style/PrimaryButton"
+        android:layout_marginTop="20dp"
+        android:text="@string/btn_start_lending" />
+</LinearLayout>

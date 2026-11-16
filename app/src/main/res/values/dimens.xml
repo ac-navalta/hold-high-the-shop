@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Layout grid shared by every screen:
+    - content starts and ends 20dp from the screen edge,
+    - items side by side are 12dp apart,
+    - sections are separated by 24dp.
+    Cards do not use compat padding, so their visible edge sits on this grid.
+-->
+<resources>
+    <dimen name="screen_margin">20dp</dimen>
+    <dimen name="grid_gap">12dp</dimen>
+    <dimen name="half_gap">6dp</dimen>
+    <dimen name="section_gap">24dp</dimen>
+</resources>
