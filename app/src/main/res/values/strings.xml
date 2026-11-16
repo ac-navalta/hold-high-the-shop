@@ -64,7 +64,6 @@
 
     <string name="meetup_kicker">SAFE MEETUP POINT</string>
     <string name="meetup_place">UC Main Gate Security Desk</string>
-    <string name="meetup_hours">Open daily, 7:00 AM\u20137:00 PM</string>
 
     <string name="btn_report">Report</string>
     <string name="btn_reserve">Reserve for \u20B11,200</string>
@@ -324,11 +323,10 @@
 
     <!-- Meetup sheet -->
     <string name="meetup_why">Why meet here</string>
-    <string name="meetup_why1">Staffed by campus security during office hours</string>
+    <string name="meetup_why1">Staffed by campus security</string>
     <string name="meetup_why2">Well lit and covered by CCTV</string>
     <string name="meetup_why3">Inside campus, so only UC students can join</string>
     <string name="btn_got_it">Got it</string>
-    <string name="meetup_hours_short">Open daily, 7:00 AM\u20137:00 PM</string>
 
     <!-- Saved -->
     <string name="saved_title">Saved items</string>

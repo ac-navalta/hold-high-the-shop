@@ -45,30 +45,6 @@
         style="@style/SheetTitle"
         android:layout_marginTop="4dp" />
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-
-        <ImageView
-            android:layout_width="14dp"
-            android:layout_height="14dp"
-            android:src="@drawable/ic_clock"
-            android:tint="@color/text_secondary"
-            android:contentDescription="@null" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:fontFamily="@font/poppins_regular"
-            android:text="@string/meetup_hours_short"
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp" />
-    </LinearLayout>
-
     <TextView
         style="@style/SheetLabel"
         android:text="@string/meetup_why" />
