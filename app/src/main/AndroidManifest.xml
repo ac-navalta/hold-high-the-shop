@@ -76,6 +76,16 @@
             android:parentActivityName=".MainActivity" />
 
         <activity
+            android:name=".SavedActivity"
+            android:exported="false"
+            android:parentActivityName=".MarketActivity" />
+
+        <activity
+            android:name=".SellerProfileActivity"
+            android:exported="false"
+            android:parentActivityName=".ListingDetailActivity" />
+
+        <activity
             android:name=".MainActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />

@@ -68,6 +68,7 @@
 
     <!-- FORM -->
     <ScrollView
+        android:id="@+id/formScroll"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
@@ -81,7 +82,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:descendantFocusability="blocksDescendants"
+            android:descendantFocusability="beforeDescendants"
+            android:focusableInTouchMode="true"
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
             android:paddingTop="20dp"
@@ -104,6 +106,7 @@
                     android:textSize="15sp" />
 
                 <TextView
+                    android:id="@+id/photoCounter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/poppins_regular"
@@ -119,6 +122,8 @@
                 android:layout_marginTop="10dp">
 
                 <LinearLayout
+                    android:id="@+id/photoTile1"
+                    android:onClick="pickPhotos"
                     android:layout_width="0dp"
                     android:layout_height="82dp"
                     android:layout_weight="1"
@@ -148,6 +153,8 @@
                 </LinearLayout>
 
                 <FrameLayout
+                    android:id="@+id/photoTile2"
+                    android:onClick="pickPhotos"
                     android:layout_width="0dp"
                     android:layout_height="82dp"
                     android:layout_weight="1"
@@ -168,6 +175,8 @@
                 </FrameLayout>
 
                 <FrameLayout
+                    android:id="@+id/photoTile3"
+                    android:onClick="pickPhotos"
                     android:layout_width="0dp"
                     android:layout_height="82dp"
                     android:layout_weight="1"
@@ -188,6 +197,8 @@
                 </FrameLayout>
 
                 <FrameLayout
+                    android:id="@+id/photoTile4"
+                    android:onClick="pickPhotos"
                     android:layout_width="0dp"
                     android:layout_height="82dp"
                     android:layout_weight="1"
@@ -228,12 +239,14 @@
                 android:paddingEnd="18dp"
                 android:fontFamily="@font/poppins_regular"
                 android:hint="@string/hint_item_title"
-                android:inputType="text"
+                android:inputType="textCapWords"
+                android:imeOptions="actionNext"
+                android:maxLength="60"
                 android:maxLines="1"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
                 android:textSize="14sp"
-                android:autofillHints="name" />
+                android:autofillHints="" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -436,6 +449,9 @@
                     android:fontFamily="@font/poppins_regular"
                     android:hint="@string/hint_price"
                     android:inputType="number"
+                    android:digits="0123456789"
+                    android:maxLength="6"
+                    android:imeOptions="actionNext"
                     android:maxLines="1"
                     android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_secondary"
@@ -561,6 +577,7 @@
             android:text="@string/btn_save_draft"
             android:textColor="@color/text_primary"
             android:textSize="15sp"
+            android:onClick="saveDraft"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackground" />
@@ -576,6 +593,7 @@
             android:text="@string/btn_post_item"
             android:textColor="@color/white"
             android:textSize="15sp"
+            android:onClick="postItem"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackground" />

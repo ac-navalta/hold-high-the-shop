@@ -46,15 +46,28 @@
             android:textColor="@color/white"
             android:textSize="22sp" />
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_more"
-            android:tint="@color/white"
-            android:contentDescription="@string/cd_more" />
+        <FrameLayout
+            android:id="@+id/btnMore"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="-10dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="openMenu"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_more"
+                android:tint="@color/white"
+                android:contentDescription="@string/cd_more" />
+        </FrameLayout>
     </LinearLayout>
 
     <ScrollView
+        android:id="@+id/profileScroll"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
@@ -71,8 +84,7 @@
             android:orientation="vertical"
             android:clipToPadding="false"
             android:clipChildren="false"
-            android:descendantFocusability="blocksDescendants"
-            android:paddingBottom="24dp">
+                        android:paddingBottom="24dp">
 
             <!-- AVATAR -->
             <FrameLayout
@@ -335,6 +347,7 @@
 
             <!-- TABS -->
             <LinearLayout
+                android:id="@+id/profileTabs"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -371,6 +384,7 @@
                             android:textSize="14sp" />
 
                         <TextView
+                            android:id="@+id/tab1Count"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="6dp"
@@ -421,6 +435,7 @@
                             android:textSize="14sp" />
 
                         <TextView
+                            android:id="@+id/tab2Count"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="6dp"
@@ -471,6 +486,7 @@
                             android:textSize="14sp" />
 
                         <TextView
+                            android:id="@+id/tab3Count"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="6dp"
@@ -498,152 +514,26 @@
                 android:layout_height="1dp"
                 android:background="@color/divider" />
 
+            <!-- TAB CONTENT, filled in by ProfileActivity -->
             <LinearLayout
+                android:id="@+id/profileList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:paddingTop="14dp"
-                android:paddingBottom="14dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:onClick="openListing"
-                android:foreground="?attr/selectableItemBackground">
+                android:orientation="vertical" />
 
-                <FrameLayout
-                    android:layout_width="58dp"
-                    android:layout_height="58dp"
-                    android:background="@drawable/bg_photo_placeholder">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_image"
-                        android:tint="#CFC9B4"
-                        android:contentDescription="@string/cd_item_photo" />
-                </FrameLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="14dp"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/poppins_semibold"
-                        android:text="@string/item1_title"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:fontFamily="@font/poppins_bold"
-                        android:text="@string/item1_price"
-                        android:textColor="@color/uc_green"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:fontFamily="@font/poppins_regular"
-                        android:text="@string/posted_days_ago"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:src="@drawable/ic_chevron_right"
-                    android:tint="@color/text_secondary"
-                    android:contentDescription="@null" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:background="@color/divider" />
-
-            <LinearLayout
+            <TextView
+                android:id="@+id/profileEmpty"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:paddingTop="14dp"
-                android:paddingBottom="14dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:onClick="openListing"
-                android:foreground="?attr/selectableItemBackground">
-
-                <FrameLayout
-                    android:layout_width="58dp"
-                    android:layout_height="58dp"
-                    android:background="@drawable/bg_photo_placeholder">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_image"
-                        android:tint="#CFC9B4"
-                        android:contentDescription="@string/cd_item_photo" />
-                </FrameLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="14dp"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/poppins_semibold"
-                        android:text="@string/item2_title"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:fontFamily="@font/poppins_bold"
-                        android:text="@string/item2_price"
-                        android:textColor="@color/uc_green"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:fontFamily="@font/poppins_regular"
-                        android:text="@string/posted_days_ago"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:src="@drawable/ic_chevron_right"
-                    android:tint="@color/text_secondary"
-                    android:contentDescription="@null" />
-            </LinearLayout>
+                android:gravity="center"
+                android:paddingStart="40dp"
+                android:paddingEnd="40dp"
+                android:paddingTop="32dp"
+                android:fontFamily="@font/poppins_regular"
+                android:text="@string/profile_empty_saved"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:visibility="gone" />
 
         </LinearLayout>
     </ScrollView>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Opened by the Safe meetup point card on a listing. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_sheet_top"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="20dp">
+
+    <View style="@style/SheetHandle" />
+
+    <!-- MAP PLACEHOLDER -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_banner_mint">
+
+        <FrameLayout
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_circle_green"
+            android:elevation="4dp">
+
+            <ImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_location"
+                android:tint="@color/white"
+                android:contentDescription="@null" />
+        </FrameLayout>
+    </FrameLayout>
+
+    <TextView
+        style="@style/Kicker"
+        android:layout_marginTop="18dp"
+        android:text="@string/meetup_kicker" />
+
+    <TextView
+        android:id="@+id/meetupSheetPlace"
+        style="@style/SheetTitle"
+        android:layout_marginTop="4dp" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:src="@drawable/ic_clock"
+            android:tint="@color/text_secondary"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:fontFamily="@font/poppins_regular"
+            android:text="@string/meetup_hours_short"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <TextView
+        style="@style/SheetLabel"
+        android:text="@string/meetup_why" />
+
+    <TextView
+        style="@style/ActionHint"
+        android:layout_marginTop="8dp"
+        android:drawableStart="@drawable/ic_check_small"
+        android:drawablePadding="10dp"
+        android:gravity="center_vertical"
+        android:text="@string/meetup_why1"
+        android:textColor="@color/text_primary"
+        android:textSize="13sp" />
+
+    <TextView
+        style="@style/ActionHint"
+        android:layout_marginTop="8dp"
+        android:drawableStart="@drawable/ic_check_small"
+        android:drawablePadding="10dp"
+        android:gravity="center_vertical"
+        android:text="@string/meetup_why2"
+        android:textColor="@color/text_primary"
+        android:textSize="13sp" />
+
+    <TextView
+        style="@style/ActionHint"
+        android:layout_marginTop="8dp"
+        android:drawableStart="@drawable/ic_check_small"
+        android:drawablePadding="10dp"
+        android:gravity="center_vertical"
+        android:text="@string/meetup_why3"
+        android:textColor="@color/text_primary"
+        android:textSize="13sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/meetupDirections"
+            style="@style/OutlineButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="@string/btn_directions" />
+
+        <TextView
+            android:id="@+id/meetupDone"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:text="@string/btn_got_it" />
+    </LinearLayout>
+</LinearLayout>

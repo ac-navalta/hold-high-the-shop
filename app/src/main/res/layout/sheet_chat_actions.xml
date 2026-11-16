@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Opened by the + button in a chat. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_sheet_top"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="16dp">
+
+    <View style="@style/SheetHandle" />
+
+    <TextView
+        style="@style/SheetTitle"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="6dp"
+        android:text="@string/actions_title" />
+
+    <LinearLayout
+        android:id="@+id/actionPhoto"
+        style="@style/ActionRow">
+
+        <FrameLayout style="@style/ActionTile">
+
+            <ImageView
+                style="@style/ActionIcon"
+                android:src="@drawable/ic_image"
+                android:contentDescription="@null" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="14dp"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/ActionTitle"
+                android:text="@string/action_photo" />
+
+            <TextView
+                style="@style/ActionHint"
+                android:text="@string/action_photo_hint" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/actionMeetup"
+        style="@style/ActionRow">
+
+        <FrameLayout style="@style/ActionTile">
+
+            <ImageView
+                style="@style/ActionIcon"
+                android:src="@drawable/ic_location"
+                android:contentDescription="@null" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="14dp"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/ActionTitle"
+                android:text="@string/action_meetup" />
+
+            <TextView
+                style="@style/ActionHint"
+                android:text="@string/action_meetup_hint" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/actionTime"
+        style="@style/ActionRow">
+
+        <FrameLayout style="@style/ActionTile">
+
+            <ImageView
+                style="@style/ActionIcon"
+                android:src="@drawable/ic_clock"
+                android:contentDescription="@null" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="14dp"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/ActionTitle"
+                android:text="@string/action_time" />
+
+            <TextView
+                style="@style/ActionHint"
+                android:text="@string/action_time_hint" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/actionListing"
+        style="@style/ActionRow">
+
+        <FrameLayout style="@style/ActionTile">
+
+            <ImageView
+                style="@style/ActionIcon"
+                android:src="@drawable/ic_market"
+                android:contentDescription="@null" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="14dp"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/ActionTitle"
+                android:text="@string/action_listing" />
+
+            <TextView
+                style="@style/ActionHint"
+                android:text="@string/action_listing_hint" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

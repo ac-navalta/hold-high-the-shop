@@ -46,12 +46,23 @@
             android:textColor="@color/white"
             android:textSize="22sp" />
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_search"
-            android:tint="@color/white"
-            android:contentDescription="@string/cd_search" />
+        <FrameLayout
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="-10dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="toggleSearch"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_search"
+                android:tint="@color/white"
+                android:contentDescription="@string/cd_search" />
+        </FrameLayout>
     </LinearLayout>
 
     <ScrollView
@@ -68,8 +79,69 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:descendantFocusability="blocksDescendants"
+            android:descendantFocusability="beforeDescendants"
+            android:focusableInTouchMode="true"
             android:paddingBottom="20dp">
+
+            <!-- SEARCH BAR, shown by the search icon in the header -->
+            <LinearLayout
+                android:id="@+id/chatSearchBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="14dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_search"
+                android:elevation="3dp"
+                android:paddingStart="18dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_search"
+                    android:tint="@color/uc_green"
+                    android:contentDescription="@null" />
+
+                <EditText
+                    android:id="@+id/inputChatSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:background="@android:color/transparent"
+                    android:fontFamily="@font/poppins_regular"
+                    android:hint="@string/hint_search_chats"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:autofillHints="" />
+
+                <FrameLayout
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:onClick="toggleSearch"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_close"
+                        android:tint="@color/text_secondary"
+                        android:contentDescription="@string/cd_clear_search" />
+                </FrameLayout>
+            </LinearLayout>
 
             <!-- SAFETY BANNER -->
             <LinearLayout
@@ -103,6 +175,7 @@
 
 
             <LinearLayout
+                android:id="@+id/chatRow1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -114,6 +187,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:onClick="openThread"
+                android:tag="0"
                 android:foreground="?attr/selectableItemBackground">
 
                 <FrameLayout
@@ -196,12 +270,14 @@
             </LinearLayout>
 
             <View
+                android:id="@+id/chatDivider1"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginStart="76dp"
                 android:background="@color/divider" />
 
             <LinearLayout
+                android:id="@+id/chatRow2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -213,6 +289,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:onClick="openThread"
+                android:tag="1"
                 android:foreground="?attr/selectableItemBackground">
 
                 <FrameLayout
@@ -283,12 +360,14 @@
             </LinearLayout>
 
             <View
+                android:id="@+id/chatDivider2"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginStart="76dp"
                 android:background="@color/divider" />
 
             <LinearLayout
+                android:id="@+id/chatRow3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -300,6 +379,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:onClick="openThread"
+                android:tag="2"
                 android:foreground="?attr/selectableItemBackground">
 
                 <FrameLayout
@@ -382,12 +462,14 @@
             </LinearLayout>
 
             <View
+                android:id="@+id/chatDivider3"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginStart="76dp"
                 android:background="@color/divider" />
 
             <LinearLayout
+                android:id="@+id/chatRow4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -399,6 +481,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:onClick="openThread"
+                android:tag="3"
                 android:foreground="?attr/selectableItemBackground">
 
                 <FrameLayout
@@ -467,6 +550,18 @@
                         android:textSize="10sp" />
                 </LinearLayout>
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/chatsEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingTop="40dp"
+                android:fontFamily="@font/poppins_medium"
+                android:text="@string/chats_empty"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:visibility="gone" />
 
         </LinearLayout>
     </ScrollView>
