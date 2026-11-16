@@ -38,7 +38,10 @@ class ProfileActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Saved items and deals can change on other screens, so redraw on return.
+        // Saved items, deals and ratings can change on other screens, so redraw on return.
+        findViewById<TextView>(R.id.profileRating).text = Reliability.rating()
+        findViewById<TextView>(R.id.profileOnTime).text = Reliability.onTime()
+        findViewById<TextView>(R.id.profileCompleted).text = Reliability.completed().toString()
         selectTab(tab)
     }
 

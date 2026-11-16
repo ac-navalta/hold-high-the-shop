@@ -239,6 +239,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/poppins_bold"
+                                android:id="@+id/profileRating"
                                 android:text="@string/stat_rating"
                                 android:textColor="@color/text_primary"
                                 android:textSize="21sp" />
@@ -277,6 +278,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/poppins_bold"
+                                android:id="@+id/profileOnTime"
                                 android:text="@string/stat_ontime"
                                 android:textColor="@color/text_primary"
                                 android:textSize="21sp" />
@@ -315,6 +317,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/poppins_bold"
+                                android:id="@+id/profileCompleted"
                                 android:text="@string/stat_completed"
                                 android:textColor="@color/text_primary"
                                 android:textSize="21sp" />

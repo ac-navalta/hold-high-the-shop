@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rate the other student after a finished exchange: stars and an optional note. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_sheet_top"
+    android:paddingStart="@dimen/screen_margin"
+    android:paddingEnd="@dimen/screen_margin"
+    android:paddingBottom="@dimen/screen_margin">
+
+    <View style="@style/SheetHandle" />
+
+    <TextView
+        style="@style/Kicker"
+        android:layout_marginTop="16dp"
+        android:text="@string/rate_kicker" />
+
+    <TextView
+        android:id="@+id/rateTitle"
+        style="@style/SheetTitle"
+        android:layout_marginTop="4dp" />
+
+    <TextView
+        android:id="@+id/rateItem"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:fontFamily="@font/poppins_regular"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp" />
+
+    <LinearLayout
+        android:id="@+id/rateStars"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/screen_margin"
+        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal" />
+
+    <TextView
+        android:id="@+id/rateWord"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="6dp"
+        android:fontFamily="@font/poppins_semibold"
+        android:text="@string/rate_pick"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp" />
+
+    <TextView
+        style="@style/SheetLabel"
+        android:text="@string/rate_note_label" />
+
+    <EditText
+        android:id="@+id/rateNote"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_input"
+        android:gravity="top|start"
+        android:padding="16dp"
+        android:fontFamily="@font/poppins_regular"
+        android:hint="@string/rate_note_hint"
+        android:inputType="textMultiLine|textCapSentences"
+        android:maxLength="200"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_secondary"
+        android:textSize="14sp"
+        android:autofillHints="" />
+
+    <TextView
+        android:id="@+id/rateBlind"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_note_strip"
+        android:padding="12dp"
+        android:fontFamily="@font/poppins_regular"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/rateSubmit"
+        style="@style/PrimaryButton"
+        android:layout_marginTop="@dimen/screen_margin"
+        android:text="@string/btn_submit_rating" />
+</LinearLayout>

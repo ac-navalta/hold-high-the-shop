@@ -806,6 +806,22 @@
     <string name="toast_problem_reported">Sent to student support • reference %1$s</string>
     <string name="status_reported_format">%1$s • reported (%2$s)</string>
 
+    <!-- Transaction details -->
+    <string name="ex_handover">Handover</string>
+    <string name="ex_handover_code">Code checked</string>
+    <string name="ex_handover_manual">Confirmed without code</string>
+    <string name="ex_handover_received">You confirmed you got it</string>
+    <string name="ex_handover_none">Closed by you</string>
+    <string name="ex_problem">Problem</string>
+    <string name="ex_problem_value">%1$s • under review (%2$s)</string>
+    <string name="ex_timeline">Timeline</string>
+    <string name="ex_rating_hidden">Rate them to see it</string>
+    <string name="ex_rate_by">You can rate until %1$s</string>
+    <string name="ex_rating_done">Thanks for rating</string>
+    <string name="ex_your_note">Your note: “%1$s”</string>
+    <string name="ex_rating_closed">Ratings are closed for this exchange</string>
+    <string name="btn_rate_format">Rate %1$s</string>
+
     <!-- Timeline steps -->
     <string name="ev_they_requested">%1$s sent a request</string>
     <string name="ev_they_offered">%1$s offered a swap</string>
@@ -827,4 +843,22 @@
     <string name="ev_you_rated">You rated %1$s</string>
     <string name="ev_problem_reported">Problem reported (%1$s)</string>
 
+    <!-- Rating -->
+    <string name="rate_kicker">RATE YOUR EXCHANGE</string>
+    <string name="rate_title">How was %1$s?</string>
+    <string name="rate_pick">Tap a star</string>
+    <string-array name="rate_words">
+        <item>Poor</item>
+        <item>Fair</item>
+        <item>Good</item>
+        <item>Great</item>
+        <item>Excellent</item>
+    </string-array>
+    <string name="rate_note_label">Add a note</string>
+    <string name="rate_note_hint">On time? Item as described? (optional)</string>
+    <string name="rate_blind">%1$s won’t see your rating until they rate you too, or the week is up. Ratings can’t be changed.</string>
+    <string name="btn_submit_rating">Submit rating</string>
+    <string name="toast_pick_stars">Pick how many stars first</string>
+    <string name="toast_rated">Rating sent • you’ll see %1$s’s when they rate you</string>
+    <string name="toast_rated_revealed">Rating sent • %1$s’s rating is now visible</string>
 </resources>
