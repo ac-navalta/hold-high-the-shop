@@ -66,7 +66,7 @@ class ChatThreadActivity : BaseActivity() {
         // Say who is giving and who is getting, e.g. YOU'RE BORROWING.
         findViewById<TextView>(R.id.stripKicker).setText(Listings.roleKicker(listing))
         findViewById<TextView>(R.id.stripTitle).text = listing.title
-        findViewById<TextView>(R.id.stripPrice).text = Listings.price(listing.price)
+        findViewById<TextView>(R.id.stripPrice).text = Listings.priceLabel(this, listing)
     }
 
     /** The design's sample history belongs to Paolo's Casio conversation. */

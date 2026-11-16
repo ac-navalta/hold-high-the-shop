@@ -34,7 +34,7 @@ class ChatsActivity : BaseActivity() {
         val badges = listOf(R.id.chatBadge1, R.id.chatBadge2, R.id.chatBadge3, R.id.chatBadge4)
         Listings.SELLERS.forEachIndexed { index, seller ->
             val listing = Listings.byId(Listings.CHAT_LISTINGS[seller])
-            styleBadge(findViewById(badges[index]), Listings.role(this, listing), Listings.isMine(listing))
+            styleBadge(findViewById(badges[index]), Listings.role(this, listing), Listings.isMine(listing), listing.isSwap)
         }
         bindRoleChips()
 

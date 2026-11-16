@@ -22,4 +22,8 @@
     <!-- Destructive actions such as Cancel reservation. -->
     <color name="danger">#C62828</color>
     <color name="danger_light">#FDECEA</color>
+
+    <!-- Swap tags, built from the existing amber accent. -->
+    <color name="swap_bg">#FFF5DF</color>
+    <color name="swap_text">#8A5A00</color>
 </resources>

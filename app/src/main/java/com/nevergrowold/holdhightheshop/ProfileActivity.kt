@@ -80,24 +80,25 @@ class ProfileActivity : BaseActivity() {
                 if (mine.isNotEmpty()) addSection(list, R.string.section_mine, R.string.section_mine_hint)
                 mine.forEachIndexed { i, item ->
                     addRow(
-                        list, item.title, Listings.price(item.price),
+                        list, item.title, Listings.priceLabel(this, item),
                         getString(R.string.posted_days_format, item.postedDaysAgo + 2),
-                        i < mine.size - 1, Listings.role(this, item), giving = true
+                        i < mine.size - 1, Listings.role(this, item), giving = true, swap = item.isSwap
                     ) { openListingById(item.id) }
                 }
                 if (reserved.isNotEmpty()) addSection(list, R.string.section_reserved, R.string.section_reserved_hint)
                 reserved.forEachIndexed { i, item ->
                     addRow(
-                        list, item.title, Listings.price(item.price),
+                        list, item.title, Listings.priceLabel(this, item),
                         getString(R.string.reserved_from_format, item.seller.name),
-                        i < reserved.size - 1, Listings.role(this, item), giving = false
+                        i < reserved.size - 1, Listings.role(this, item), giving = false, swap = item.isSwap
                     ) { openListingById(item.id) }
                 }
             }
             TAB_COMPLETED -> completed.forEachIndexed { i, exchange ->
                 addRow(
                     list, exchange.title, Listings.price(exchange.price), ExchangeText.summary(this, exchange),
-                    i < completed.size - 1, ExchangeText.badge(this, exchange), exchange.giving
+                    i < completed.size - 1, ExchangeText.badge(this, exchange), exchange.giving,
+                    exchange.kind == Exchange.SWAPPED
                 ) {
                     startActivity(
                         Intent(this, ExchangeDetailActivity::class.java).putExtra(ExchangeDetailActivity.EXTRA_EXCHANGE, exchange.id)
@@ -106,7 +107,7 @@ class ProfileActivity : BaseActivity() {
             }
             else -> saved.forEachIndexed { i, item ->
                 addRow(
-                    list, item.title, Listings.price(item.price),
+                    list, item.title, Listings.priceLabel(this, item),
                     getString(R.string.saved_meta_format, item.program, item.seller.name),
                     i < saved.size - 1
                 ) { openListingById(item.id) }

@@ -50,8 +50,10 @@ class ListingDetailActivity : BaseActivity() {
         findViewById<TextView>(R.id.detailCondition).text =
             getString(R.string.condition_badge_format, Listings.conditionLabel(this, listing.condition))
         findViewById<TextView>(R.id.detailTitle).text = listing.title
-        findViewById<TextView>(R.id.detailPrice).text = Listings.price(listing.price)
+        findViewById<TextView>(R.id.detailPrice).text = Listings.priceLabel(this, listing)
         findViewById<TextView>(R.id.detailDesc).text = listing.description
+        findViewById<View>(R.id.swapWantsCard).isVisible = listing.isSwap && listing.wants != null
+        findViewById<TextView>(R.id.swapWants).text = listing.wants
         findViewById<TextView>(R.id.sellerInitials).text = seller.initials
         findViewById<TextView>(R.id.sellerName).text =
             if (isMine) getString(R.string.seller_you_format, seller.name) else seller.name
@@ -136,7 +138,7 @@ class ListingDetailActivity : BaseActivity() {
     fun shareListing(view: View) {
         Sheets.show(this, R.layout.sheet_share) { sheet, dialog ->
             sheet.findViewById<TextView>(R.id.shareItemTitle).text = listing.title
-            sheet.findViewById<TextView>(R.id.shareItemPrice).text = Listings.price(listing.price)
+            sheet.findViewById<TextView>(R.id.shareItemPrice).text = Listings.priceLabel(this, listing)
             val people = sheet.findViewById<LinearLayout>(R.id.sharePeople)
             Listings.SELLERS.filter { it != listing.seller }.forEach { person ->
                 val row = LayoutInflater.from(this).inflate(R.layout.item_share_person, people, false)
@@ -151,7 +153,7 @@ class ListingDetailActivity : BaseActivity() {
                             .putExtra(EXTRA_SELLER, person.name)
                             .putExtra(
                                 ChatThreadActivity.EXTRA_SHARE_TEXT,
-                                getString(R.string.share_message_format, listing.title, Listings.price(listing.price))
+                                getString(R.string.share_message_format, listing.title, Listings.priceLabel(this, listing))
                             )
                     )
                 }
@@ -218,7 +220,7 @@ class ListingDetailActivity : BaseActivity() {
         Sheets.show(this, R.layout.sheet_reserve) { sheet, dialog ->
             sheet.findViewById<TextView>(R.id.reserveItemTitle).text = listing.title
             sheet.findViewById<TextView>(R.id.reserveItemSeller).text = listing.seller.name
-            sheet.findViewById<TextView>(R.id.reserveItemPrice).text = Listings.price(listing.price)
+            sheet.findViewById<TextView>(R.id.reserveItemPrice).text = Listings.priceLabel(this, listing)
             sheet.findViewById<TextView>(R.id.reserveAvailability).text = freeLabel()
 
             val placeText = sheet.findViewById<TextView>(R.id.reservePlace)

@@ -100,10 +100,16 @@ open class BaseActivity : AppCompatActivity() {
     /** A product card (photo, condition, price, title, program) that opens the listing. */
     protected fun listingCard(parent: ViewGroup, listing: Listing): View {
         val card = LayoutInflater.from(this).inflate(R.layout.item_listing_card, parent, false)
-        card.findViewById<TextView>(R.id.cardPrice).text = Listings.price(listing.price)
+        card.findViewById<TextView>(R.id.cardPrice).text = Listings.priceLabel(this, listing)
         card.findViewById<TextView>(R.id.cardTitle).text = listing.title
         card.findViewById<TextView>(R.id.cardProgram).text = listing.program
         card.findViewById<TextView>(R.id.cardCondition).text = Listings.conditionLabel(this, listing.condition)
+        // Rent and swap listings are tagged on the photo; plain sales are not.
+        val type = card.findViewById<TextView>(R.id.cardType)
+        when {
+            listing.isSwap -> styleBadge(type, getString(R.string.tag_for_swap), giving = false, swap = true)
+            listing.isRent -> styleBadge(type, getString(R.string.tag_for_rent), giving = true)
+        }
         card.setOnClickListener { openListingById(listing.id) }
         return card
     }
@@ -120,6 +126,7 @@ open class BaseActivity : AppCompatActivity() {
         showDivider: Boolean,
         badge: String? = null,
         giving: Boolean = false,
+        swap: Boolean = false,
         onClick: (() -> Unit)?
     ): View {
         val row = LayoutInflater.from(this).inflate(R.layout.item_listing_row, list, false)
@@ -127,7 +134,7 @@ open class BaseActivity : AppCompatActivity() {
         row.findViewById<TextView>(R.id.rowPrice).text = price
         row.findViewById<TextView>(R.id.rowMeta).text = meta
         row.findViewById<View>(R.id.rowDivider).visibility = if (showDivider) View.VISIBLE else View.GONE
-        if (badge != null) styleBadge(row.findViewById(R.id.rowBadge), badge, giving)
+        if (badge != null) styleBadge(row.findViewById(R.id.rowBadge), badge, giving, swap)
         val body = row.findViewById<View>(R.id.rowBody)
         if (onClick != null) {
             body.setOnClickListener { onClick() }
@@ -141,11 +148,19 @@ open class BaseActivity : AppCompatActivity() {
 
     /**
      * Role tag such as LENDING or BORROWING. Giving (your own things) is
-     * outlined; getting (things from others) is filled mint.
+     * outlined; getting (things from others) is filled mint; swaps, where
+     * both sides give and get, are amber.
      */
-    protected fun styleBadge(view: TextView, label: String, giving: Boolean) {
+    protected fun styleBadge(view: TextView, label: String, giving: Boolean, swap: Boolean = false) {
         view.text = label
-        view.setBackgroundResource(if (giving) R.drawable.bg_badge_outline else R.drawable.bg_badge_mint)
+        view.setBackgroundResource(
+            when {
+                swap -> R.drawable.bg_badge_swap
+                giving -> R.drawable.bg_badge_outline
+                else -> R.drawable.bg_badge_mint
+            }
+        )
+        view.setTextColor(getColor(if (swap) R.color.swap_text else R.color.uc_green))
         view.visibility = View.VISIBLE
     }
 

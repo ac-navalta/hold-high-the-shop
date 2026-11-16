@@ -47,6 +47,13 @@
                 android:textColor="@color/white"
                 android:textSize="9sp"
                 android:letterSpacing="0.06" />
+
+            <TextView
+                android:id="@+id/cardType"
+                style="@style/RoleBadge"
+                android:layout_gravity="top|end"
+                android:layout_margin="8dp"
+                android:visibility="gone" />
         </FrameLayout>
 
         <LinearLayout

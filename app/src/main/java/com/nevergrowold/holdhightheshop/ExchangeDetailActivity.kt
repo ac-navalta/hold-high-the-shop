@@ -27,7 +27,10 @@ class ExchangeDetailActivity : BaseActivity() {
         exchange = Listings.exchange(intent.getStringExtra(EXTRA_EXCHANGE))
         val partner = exchange.partner
 
-        styleBadge(findViewById(R.id.exBadge), ExchangeText.badge(this, exchange), exchange.giving)
+        styleBadge(
+            findViewById(R.id.exBadge), ExchangeText.badge(this, exchange), exchange.giving,
+            exchange.kind == Exchange.SWAPPED
+        )
         findViewById<TextView>(R.id.exTitle).text = exchange.title
         findViewById<TextView>(R.id.exPrice).text = Listings.price(exchange.price)
         findViewById<TextView>(R.id.exDate).text = getString(R.string.ex_completed_on, exchange.date)

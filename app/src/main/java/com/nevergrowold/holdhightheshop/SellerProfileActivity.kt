@@ -37,7 +37,7 @@ class SellerProfileActivity : BaseActivity() {
                 1 -> getString(R.string.seller_listing_meta_yesterday)
                 else -> getString(R.string.seller_listing_meta, item.postedDaysAgo)
             }
-            addRow(list, item.title, Listings.price(item.price), meta, index < items.size - 1) {
+            addRow(list, item.title, Listings.priceLabel(this, item), meta, index < items.size - 1) {
                 openListingById(item.id)
             }
         }

@@ -542,4 +542,11 @@
     <string name="toast_need_days">Pick at least one day you\u2019re free</string>
     <string name="toast_desk_hours">Meetup desks are open 9:00 AM to 4:00 PM</string>
     <string name="toast_time_order">The end time must be after the start time</string>
+
+    <!-- Swap -->
+    <string name="price_swap">Swap</string>
+    <string name="price_rent_format">%1$s / week</string>
+    <string name="tag_for_rent">FOR RENT</string>
+    <string name="tag_for_swap">FOR SWAP</string>
+    <string name="swap_wants_kicker">LOOKING TO SWAP FOR</string>
 </resources>

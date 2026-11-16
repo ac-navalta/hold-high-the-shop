@@ -36,8 +36,13 @@ data class Listing(
     /** Lower is newer. Used by the "Newest" sort. */
     val postedDaysAgo: Int,
     /** When the seller is free to meet. Reserving only offers these times. */
-    val availability: Availability = Availability.OFFICE_HOURS
-)
+    val availability: Availability = Availability.OFFICE_HOURS,
+    /** Swap listings: what the seller would like in exchange. */
+    val wants: String? = null
+) {
+    val isRent get() = type == 1
+    val isSwap get() = type == 2
+}
 
 /**
  * When a seller can meet, set on the Create listing form.
@@ -204,7 +209,8 @@ object Listings {
             "item6", "Data Structures Book", 520, "CITCS", 2, 2,
             "Some notes in pencil on the early chapters. Open to swapping for an Algorithms book.",
             paolo, "CITCS Building Entrance", 5,
-            Availability(setOf(0, 2, 4), 13 * 60, 16 * 60)
+            Availability(setOf(0, 2, 4), 13 * 60, 16 * 60),
+            wants = "An Algorithms or Discrete Math book"
         ),
         Listing(
             "item7", "Fundamentals of Accounting", 400, "COA", 1, 0,
@@ -219,7 +225,8 @@ object Listings {
         Listing(
             "item9", "Lesson Plan Binder", 150, "CTE", 1, 2,
             "Sample lesson plans and templates from practice teaching. Swap for any CTE reviewer.",
-            janelle, "UC Library Lobby", 8
+            janelle, "UC Library Lobby", 8,
+            wants = "Any CTE board exam reviewer"
         ),
         Listing(
             "item10", "Chef Uniform and Toque", 600, "CHTM", 1, 1,
@@ -332,6 +339,13 @@ object Listings {
      * Your own listings live under Profile > Active instead.
      */
     fun open(): List<Listing> = ALL.filter { !isMine(it) && !UserState.isClosed(it.id) }
+
+    /** Price as shown on a listing: "₱850", "₱380 / week" for rent, "Swap" for swap. */
+    fun priceLabel(context: Context, listing: Listing): String = when {
+        listing.isSwap -> context.getString(R.string.price_swap)
+        listing.isRent -> context.getString(R.string.price_rent_format, price(listing.price))
+        else -> price(listing.price)
+    }
 
     fun price(value: Int): String =
         "₱" + NumberFormat.getIntegerInstance(Locale.US).format(value)
