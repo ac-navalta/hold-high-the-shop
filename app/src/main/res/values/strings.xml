@@ -11,7 +11,7 @@
     <string name="stat_listings_label">active listings</string>
 
     <string name="post_title">Post an item</string>
-    <string name="post_sub">Sell, rent, or swap in minutes</string>
+    <string name="post_sub">Sell, lend, or swap in minutes</string>
 
     <string name="browse_programs">Browse programs</string>
     <string name="see_all">See all →</string>
@@ -90,7 +90,7 @@
 
     <string name="lbl_listing_type">Listing type *</string>
     <string name="opt_sell">Sell</string>
-    <string name="opt_rent">Rent</string>
+    <string name="opt_rent">Lend</string>
     <string name="opt_swap">Swap</string>
 
     <string name="lbl_price">Price *</string>
@@ -303,7 +303,7 @@
     <string name="condition_badge_format">%1$s CONDITION</string>
     <string name="btn_reserve_format">Reserve for %1$s</string>
     <string name="btn_swap">Offer a swap</string>
-    <string name="btn_rent_format">Rent for %1$s</string>
+    <string name="btn_rent_format">Borrow for %1$s</string>
     <string name="seller_meta_format">%1$s \u2022 %2$s</string>
 
     <!-- Reserve sheet -->
@@ -457,7 +457,7 @@
     <string name="ex_meetup">Meetup point</string>
     <string name="ex_payment">Payment</string>
     <string name="ex_paid_in_person">%1$s, paid in person</string>
-    <string name="ex_rent_fee">%1$s rental fee, paid in person</string>
+    <string name="ex_rent_fee">%1$s lending fee, paid in person</string>
     <string name="ex_no_payment">No payment, item for item</string>
     <string name="ex_ratings">Ratings</string>
     <string name="ex_their_rating">%1$s rated you</string>
@@ -501,7 +501,7 @@
     <string name="info_guidelines_body">\u2022 List only items you own and can hand over.\n\u2022 Describe the condition honestly and show real photos.\n\u2022 No prohibited items: weapons, alcohol, medicine, exam answers.\n\u2022 Be respectful in chats. Harassment leads to a ban.\n\u2022 Keep every transaction inside the app.</string>
     <string name="info_safety_body">\u2022 Meet only at a Safe Meetup Point during office hours.\n\u2022 Check the item before you pay.\n\u2022 Pay in person; never send money ahead.\n\u2022 Bring a friend if you feel unsure.\n\u2022 Report anything suspicious from the listing or chat.</string>
     <string name="info_help_body">How do I reserve an item?\nOpen the listing and tap Reserve, then pick a meetup point, day and time.\n\nCan I cancel a reservation?\nYes. Open the listing and tap Cancel reservation on the reservation card.\n\nHow do I mark my item as sold?\nOpen your listing from Profile and tap Mark as sold.</string>
-    <string name="info_about_body">Hold High The Shop is the campus marketplace for University of the Cordilleras students. Sell, rent or swap what you no longer need and give it a second life.\n\nVersion 1.0</string>
+    <string name="info_about_body">Hold High The Shop is the campus marketplace for University of the Cordilleras students. Sell, lend or swap what you no longer need and give it a second life.\n\nVersion 1.0</string>
     <string name="edit_name">Full name</string>
     <string name="edit_program">Program</string>
     <string name="edit_year">Year level</string>
@@ -546,7 +546,7 @@
     <string name="price_swap">Swap</string>
     <string name="price_rent_format">%1$s / week</string>
     <string name="tag_for_sale">FOR SALE</string>
-    <string name="tag_for_rent">FOR RENT</string>
+    <string name="tag_for_rent">FOR LENDING</string>
     <string name="tag_for_swap">FOR SWAP</string>
     <string name="swap_wants_kicker">LOOKING TO SWAP FOR</string>
     <string name="swap_kicker">OFFER A SWAP</string>
@@ -587,10 +587,10 @@
     <string name="rent_1_month">1 month</string>
     <string name="rent_2_months">2 months</string>
     <string name="rent_semester">Semester</string>
-    <string name="lbl_price_per_week">Price per week *</string>
-    <string name="lbl_max_rent">Longest rental *</string>
+    <string name="lbl_price_per_week">Fee per week *</string>
+    <string name="lbl_max_rent">Longest loan *</string>
     <string name="max_rent_hint">Borrowers choose up to this long.</string>
-    <string name="reserve_rent_for">Rent for</string>
+    <string name="reserve_rent_for">Borrow for</string>
     <string name="rent_return_total_format">Return by %1$s \u2022 %2$s total</string>
     <string name="rent_max_format">%1$s lends for up to %2$s</string>
     <string name="rent_summary_format">%1$s \u2022 %2$s, %3$s \u2022 %4$s</string>

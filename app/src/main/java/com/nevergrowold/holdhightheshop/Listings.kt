@@ -240,14 +240,14 @@ object Listings {
         ),
         Listing(
             "item4", "UC PE Uniform", 450, "CBA", 0, 1,
-            "Size M shirt and jogging pants. Washed and ironed. Available to rent for the semester.",
+            "Size M shirt and jogging pants. Washed and ironed. Available to borrow for the semester.",
             aira, "UC Canteen Area", 3,
             Availability(FreeTime(setOf(0, 1, 2), 10 * 60, 15 * 60)),
             maxWeeks = 16
         ),
         Listing(
             "item5", "White Lab Gown", 380, "CONAHS", 1, 1,
-            "Size S, long sleeves. Clean and without stains. Rent for a week or the whole term.",
+            "Size S, long sleeves. Clean and without stains. Borrow it for a week or the whole term.",
             janelle, "UC Library Lobby", 4,
             Availability(FreeTime(setOf(1, 3), 9 * 60, 12 * 60), FreeTime(setOf(6), 14 * 60, 17 * 60)),
             maxWeeks = 2
@@ -277,7 +277,7 @@ object Listings {
         ),
         Listing(
             "item10", "Chef Uniform and Toque", 600, "CHTM", 1, 1,
-            "Size M, white. Rent it for your kitchen lab days.",
+            "Size M, white. Borrow it for your kitchen lab days.",
             aira, "UC Canteen Area", 9,
             maxWeeks = 1
         ),
@@ -298,7 +298,7 @@ object Listings {
         ),
         Listing(
             "mine2", "Drafting Table Lamp", 150, "CAFA", 1, 1,
-            "LED desk lamp with an adjustable arm. Rent it for the week of your plates.",
+            "LED desk lamp with an adjustable arm. Borrow it for the week of your plates.",
             ME, "CITCS Building Entrance", 3
         ),
         Listing(
