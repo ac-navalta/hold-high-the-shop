@@ -155,12 +155,7 @@ class MarketActivity : BaseActivity() {
     }
 
     private fun card(listing: Listing, column: Int): View {
-        val card = LayoutInflater.from(this).inflate(R.layout.item_listing_card, grid, false)
-        card.findViewById<TextView>(R.id.cardPrice).text = Listings.price(listing.price)
-        card.findViewById<TextView>(R.id.cardTitle).text = listing.title
-        card.findViewById<TextView>(R.id.cardProgram).text = listing.program
-        card.findViewById<TextView>(R.id.cardCondition).text = Listings.conditionLabel(this, listing.condition)
-        card.setOnClickListener { openListingById(listing.id) }
+        val card = listingCard(grid, listing)
         val params = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         if (column == 0) params.marginEnd = dp(this, 4) else params.marginStart = dp(this, 4)
         card.layoutParams = params

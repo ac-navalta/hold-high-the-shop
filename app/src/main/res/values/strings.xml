@@ -22,22 +22,6 @@
     <string name="cond_like_new">LIKE NEW</string>
     <string name="cond_good">GOOD</string>
 
-    <string name="item1_price">₱850</string>
-    <string name="item1_title">Engineering Drawing Set</string>
-    <string name="item1_prog">COE</string>
-
-    <string name="item2_price">₱1,200</string>
-    <string name="item2_title">Casio fx-991EX</string>
-    <string name="item2_prog">CITCS</string>
-
-    <string name="item3_price">₱650</string>
-    <string name="item3_title">Anatomy &amp; Physiology</string>
-    <string name="item3_prog">CONAHS</string>
-
-    <string name="item4_price">₱450</string>
-    <string name="item4_title">UC PE Uniform</string>
-    <string name="item4_prog">CBA</string>
-
     <string name="nav_home">Home</string>
     <string name="nav_market">Market</string>
     <string name="nav_chats">Chats</string>

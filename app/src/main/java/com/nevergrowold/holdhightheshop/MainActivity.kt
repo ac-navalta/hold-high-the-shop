@@ -28,6 +28,23 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Fresh on campus: the newest listings from other students.
+        val fresh = findViewById<LinearLayout>(R.id.freshRow)
+        fresh.removeAllViews()
+        Listings.open().sortedBy { it.postedDaysAgo }.take(FRESH_COUNT).forEach { listing ->
+            val card = listingCard(fresh, listing)
+            card.layoutParams = LinearLayout.LayoutParams(dp(this, 172), LinearLayout.LayoutParams.WRAP_CONTENT)
+                .apply { marginEnd = dp(this@MainActivity, 4) }
+            fresh.addView(card)
+        }
+    }
+
+    companion object {
+        private const val FRESH_COUNT = 6
+    }
+
     /** Opens the notifications screen. */
     fun openNotifications(view: View) {
         startActivity(Intent(this, NotificationsActivity::class.java))

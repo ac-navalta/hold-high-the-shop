@@ -97,6 +97,17 @@ open class BaseActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+    /** A product card (photo, condition, price, title, program) that opens the listing. */
+    protected fun listingCard(parent: ViewGroup, listing: Listing): View {
+        val card = LayoutInflater.from(this).inflate(R.layout.item_listing_card, parent, false)
+        card.findViewById<TextView>(R.id.cardPrice).text = Listings.price(listing.price)
+        card.findViewById<TextView>(R.id.cardTitle).text = listing.title
+        card.findViewById<TextView>(R.id.cardProgram).text = listing.program
+        card.findViewById<TextView>(R.id.cardCondition).text = Listings.conditionLabel(this, listing.condition)
+        card.setOnClickListener { openListingById(listing.id) }
+        return card
+    }
+
     /**
      * Adds a listing row (thumbnail, title, price, status) to a list.
      * Returns the row so callers can change its trailing icon.

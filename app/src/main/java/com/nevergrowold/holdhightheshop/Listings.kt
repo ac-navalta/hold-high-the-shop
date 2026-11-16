@@ -279,8 +279,11 @@ object Listings {
 
     fun bySeller(seller: Seller): List<Listing> = ALL.filter { it.seller == seller }
 
-    /** What the market shows: everything not yet sold, rented out or swapped. */
-    fun open(): List<Listing> = ALL.filter { !UserState.isClosed(it.id) }
+    /**
+     * What the market shows: other students' listings that are still open.
+     * Your own listings live under Profile > Active instead.
+     */
+    fun open(): List<Listing> = ALL.filter { !isMine(it) && !UserState.isClosed(it.id) }
 
     fun price(value: Int): String =
         "₱" + NumberFormat.getIntegerInstance(Locale.US).format(value)
