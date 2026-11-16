@@ -26,6 +26,9 @@ class CreateListingActivity : BaseActivity() {
 
     private val programs by lazy { Listings.PROGRAMS }
 
+    /** Rent: the longest rental the seller allows, in weeks. */
+    private var maxWeeks = 4
+
     /** Blocks of free time, edited in place. Starts with one: Mon–Fri, 9:00 AM–4:00 PM. */
     private class Block(var days: Set<Int>, var from: Int, var to: Int)
 
@@ -205,14 +208,33 @@ class CreateListingActivity : BaseActivity() {
             listingType
         ) { listingType = it; bindType() }
         findViewById<EditText>(R.id.inputWants).setText(listing.wants)
+        maxWeeks = listing.maxWeeks
         bindType()
     }
 
     /** Swap listings ask what you want in exchange instead of a price. */
     private fun bindType() {
         val swap = listingType == 2
+        val rent = listingType == 1
         listOf(R.id.labelPrice, R.id.rowPrice).forEach { findViewById<View>(it).isVisible = !swap }
         listOf(R.id.labelWants, R.id.inputWants).forEach { findViewById<View>(it).isVisible = swap }
+        findViewById<TextView>(R.id.labelPrice).setText(if (rent) R.string.lbl_price_per_week else R.string.lbl_price)
+        listOf(R.id.labelMaxRent, R.id.hintMaxRent, R.id.rowMaxRent).forEach { findViewById<View>(it).isVisible = rent }
+        if (rent) bindMaxRent()
+    }
+
+    /** Rent: chips for the longest rental (1 week ... a semester). */
+    private fun bindMaxRent() {
+        val box = findViewById<LinearLayout>(R.id.maxRentChips)
+        if (box.childCount == 0) {
+            Listings.RENT_WEEKS.forEach { weeks ->
+                val chip = LayoutInflater.from(this).inflate(R.layout.item_chip, box, false) as TextView
+                chip.text = Listings.weeksLabel(this, weeks)
+                box.addView(chip)
+            }
+        }
+        val chips = (0 until box.childCount).map { box.getChildAt(it) as TextView }
+        Choice.chips(chips, Listings.RENT_WEEKS.indexOf(maxWeeks)) { maxWeeks = Listings.RENT_WEEKS[it] }
     }
 
     /** Saves the listing as a draft and closes the form (Cancel in edit mode). */

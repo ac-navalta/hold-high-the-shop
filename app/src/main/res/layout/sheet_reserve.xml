@@ -163,6 +163,46 @@
             android:orientation="horizontal" />
     </HorizontalScrollView>
 
+    <!-- RENT ONLY: how long, and when it goes back -->
+    <LinearLayout
+        android:id="@+id/reserveRentSection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            style="@style/SheetLabel"
+            android:text="@string/reserve_rent_for" />
+
+        <TextView
+            android:id="@+id/reserveRentMax"
+            style="@style/ActionHint"
+            android:layout_marginTop="2dp" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/reserveWeeks"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+
+        <TextView
+            android:id="@+id/reserveReturnBy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/poppins_semibold"
+            android:textColor="@color/uc_green"
+            android:textSize="13sp" />
+    </LinearLayout>
+
     <!-- NOTE -->
     <LinearLayout
         android:layout_width="match_parent"

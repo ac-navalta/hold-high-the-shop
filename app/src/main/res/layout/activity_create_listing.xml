@@ -462,6 +462,40 @@
                     android:autofillHints="" />
             </LinearLayout>
 
+            <!-- Rent only: the longest a borrower can keep the item. -->
+            <TextView
+                android:id="@+id/labelMaxRent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:fontFamily="@font/poppins_semibold"
+                android:text="@string/lbl_max_rent"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/hintMaxRent"
+                style="@style/ActionHint"
+                android:layout_marginTop="2dp"
+                android:text="@string/max_rent_hint"
+                android:visibility="gone" />
+
+            <HorizontalScrollView
+                android:id="@+id/rowMaxRent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:scrollbars="none"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/maxRentChips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
             <!-- Shown instead of Price when the listing type is Swap. -->
             <TextView
                 android:id="@+id/labelWants"

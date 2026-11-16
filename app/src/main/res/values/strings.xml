@@ -581,4 +581,30 @@
     <string name="btn_add_free_time">Add available time</string>
     <string name="free_time_title">AVAILABLE TIME %1$d</string>
     <string name="cd_remove_free_time">Remove this available time</string>
+
+    <!-- Rental length -->
+    <plurals name="rent_weeks">
+        <item quantity="one">%1$d week</item>
+        <item quantity="other">%1$d weeks</item>
+    </plurals>
+    <string name="rent_1_month">1 month</string>
+    <string name="rent_2_months">2 months</string>
+    <string name="rent_semester">Semester</string>
+    <string name="lbl_price_per_week">Price per week *</string>
+    <string name="lbl_max_rent">Longest rental *</string>
+    <string name="max_rent_hint">Borrowers choose up to this long.</string>
+    <string name="reserve_rent_for">Rent for</string>
+    <string name="rent_return_total_format">Return by %1$s \u2022 %2$s total</string>
+    <string name="rent_max_format">%1$s lends for up to %2$s</string>
+    <string name="rent_summary_format">%1$s \u2022 %2$s, %3$s \u2022 %4$s</string>
+    <plurals name="days_left">
+        <item quantity="one">%1$d day left</item>
+        <item quantity="other">%1$d days left</item>
+    </plurals>
+    <plurals name="overdue_by">
+        <item quantity="one">Overdue by %1$d day</item>
+        <item quantity="other">Overdue by %1$d days</item>
+    </plurals>
+    <string name="due_tomorrow">Due tomorrow</string>
+    <string name="due_today">Due today</string>
 </resources>

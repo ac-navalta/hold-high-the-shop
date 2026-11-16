@@ -114,7 +114,7 @@ class ListingDetailActivity : BaseActivity() {
             if (listing.isSwap) R.string.swap_card_title else R.string.reservation_card_title
         )
         findViewById<View>(R.id.reservationCard).isVisible = !isMine && reservation != null
-        findViewById<TextView>(R.id.reservationDetail).text = reservation
+        findViewById<TextView>(R.id.reservationDetail).text = reservation?.summary
     }
 
     private fun bindReserveButton() {
@@ -219,6 +219,8 @@ class ListingDetailActivity : BaseActivity() {
         var place = Listings.MEETUP_POINTS.indexOf(listing.meetup).coerceAtLeast(0)
         var picked: MeetDay? = days.firstOrNull()
         var timeLabel: String? = null
+        val weekOptions = Listings.RENT_WEEKS.filter { it <= listing.maxWeeks }.ifEmpty { listOf(1) }
+        var weeks = weekOptions.first()
 
         Sheets.show(this, R.layout.sheet_reserve) { sheet, dialog ->
             sheet.findViewById<TextView>(R.id.reserveItemTitle).text = listing.title
@@ -258,6 +260,16 @@ class ListingDetailActivity : BaseActivity() {
                 }
             }
 
+            // Rent: how long, with the return date and total.
+            val returnBy = sheet.findViewById<TextView>(R.id.reserveReturnBy)
+            fun bindReturn() {
+                val start = picked?.millis ?: System.currentTimeMillis()
+                returnBy.text = getString(
+                    R.string.rent_return_total_format,
+                    Rentals.dateLabel(start + weeks * Rentals.WEEK_MS),
+                    Listings.price(listing.price * weeks)
+                )
+            }
             // Quick picks, plus a last chip that opens the full calendar.
             val dayChips = addChips(sheet.findViewById(R.id.reserveDays), days.map { it.label } + getString(R.string.chip_pick_date))
             fun bindDays() {
@@ -271,14 +283,31 @@ class ListingDetailActivity : BaseActivity() {
                             dayChips.last().text = day.label
                             picked = day
                             bindDays()
+                            bindTimes()
+                            if (listing.isRent) bindReturn()
                         }
                         return@chips
                     }
                     // A time that the new day does not offer is cleared.
                     if (picked?.let { listing.availability.isFreeAt(it.weekday, minutesOf(timeLabel)) } != true) timeLabel = null
                     bindTimes()
+                    if (listing.isRent) bindReturn()
                 }
             }
+            if (listing.isRent) {
+                sheet.findViewById<View>(R.id.reserveRentSection).isVisible = true
+                sheet.findViewById<TextView>(R.id.reserveRentMax).text = getString(
+                    R.string.rent_max_format, listing.seller.name.substringBefore(' '),
+                    Listings.weeksLabel(this, listing.maxWeeks)
+                )
+                val weekChips = addChips(sheet.findViewById(R.id.reserveWeeks), weekOptions.map { Listings.weeksLabel(this, it) })
+                Choice.chips(weekChips, 0) {
+                    weeks = weekOptions[it]
+                    bindReturn()
+                }
+                bindReturn()
+            }
+
             bindDays()
             bindTimes()
 
@@ -289,8 +318,15 @@ class ListingDetailActivity : BaseActivity() {
                     Toast.makeText(this, R.string.toast_pick_day_time, Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
-                val summary = getString(R.string.sys_reserved_detail, Listings.MEETUP_POINTS[place], pickedDay, pickedTime)
-                UserState.setReserved(listing.id, summary)
+                val summary = if (listing.isRent) {
+                    getString(
+                        R.string.rent_summary_format, Listings.MEETUP_POINTS[place], pickedDay, pickedTime,
+                        Listings.weeksLabel(this, weeks)
+                    )
+                } else {
+                    getString(R.string.sys_reserved_detail, Listings.MEETUP_POINTS[place], pickedDay, pickedTime)
+                }
+                UserState.setReserved(listing.id, summary, if (listing.isRent) weeks else 0)
                 bindActions()
                 dialog.dismiss()
                 Toast.makeText(this, getString(R.string.toast_reserved, listing.seller.name), Toast.LENGTH_SHORT).show()

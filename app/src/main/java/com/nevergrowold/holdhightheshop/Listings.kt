@@ -43,7 +43,9 @@ data class Listing(
     /** When the seller is free to meet. Reserving only offers these times. */
     val availability: Availability = Availability.OFFICE_HOURS,
     /** Swap listings: what the seller would like in exchange. */
-    val wants: String? = null
+    val wants: String? = null,
+    /** Rent listings: the longest a borrower can keep it, in weeks. */
+    val maxWeeks: Int = 4
 ) {
     val isRent get() = type == 1
     val isSwap get() = type == 2
@@ -241,13 +243,15 @@ object Listings {
             "item4", "UC PE Uniform", 450, "CBA", 0, 1,
             "Size M shirt and jogging pants. Washed and ironed. Available to rent for the semester.",
             aira, "UC Canteen Area", 3,
-            Availability(FreeTime(setOf(0, 1, 2), 10 * 60, 15 * 60))
+            Availability(FreeTime(setOf(0, 1, 2), 10 * 60, 15 * 60)),
+            maxWeeks = 16
         ),
         Listing(
             "item5", "White Lab Gown", 380, "CONAHS", 1, 1,
             "Size S, long sleeves. Clean and without stains. Rent for a week or the whole term.",
             janelle, "UC Library Lobby", 4,
-            Availability(FreeTime(setOf(1, 3), 9 * 60, 12 * 60), FreeTime(setOf(6), 14 * 60, 17 * 60))
+            Availability(FreeTime(setOf(1, 3), 9 * 60, 12 * 60), FreeTime(setOf(6), 14 * 60, 17 * 60)),
+            maxWeeks = 2
         ),
         Listing(
             "item6", "Data Structures Book", 520, "CITCS", 2, 2,
@@ -275,7 +279,8 @@ object Listings {
         Listing(
             "item10", "Chef Uniform and Toque", 600, "CHTM", 1, 1,
             "Size M, white. Rent it for your kitchen lab days.",
-            aira, "UC Canteen Area", 9
+            aira, "UC Canteen Area", 9,
+            maxWeeks = 1
         ),
         Listing(
             "item11", "General Chemistry Lab Manual", 200, "CAS", 2, 0,
@@ -425,6 +430,16 @@ object Listings {
         }
     }
 
+    /** Rental lengths offered on the forms, in weeks. */
+    val RENT_WEEKS = listOf(1, 2, 4, 8, 16)
+
+    fun weeksLabel(context: Context, weeks: Int): String = when (weeks) {
+        4 -> context.getString(R.string.rent_1_month)
+        8 -> context.getString(R.string.rent_2_months)
+        16 -> context.getString(R.string.rent_semester)
+        else -> context.resources.getQuantityString(R.plurals.rent_weeks, weeks, weeks)
+    }
+
     fun price(value: Int): String =
         "₱" + NumberFormat.getIntegerInstance(Locale.US).format(value)
 
@@ -446,10 +461,13 @@ object UserState {
 
     private val saved = mutableSetOf("item3", "item5")
     /** Listing id to meetup summary. Starts with the sample reservations. */
+    /** A pending reservation or swap offer. [weeks] is the rental length for rent listings. */
+    data class Reservation(val summary: String, val weeks: Int = 0)
+
     private val reserved = mutableMapOf(
-        "item2" to "UC Main Gate Security Desk \u2022 Tomorrow, 1:30 PM",
-        "item5" to "UC Library Lobby \u2022 Return by Friday",
-        "item14" to "Your Calculus Reviewer for their Arduino Starter Kit"
+        "item2" to Reservation("UC Main Gate Security Desk \u2022 Tomorrow, 1:30 PM"),
+        "item5" to Reservation("UC Library Lobby \u2022 Return by Friday", weeks = 1),
+        "item14" to Reservation("Your Calculus Reviewer for their Arduino Starter Kit")
     )
     private val closed = mutableSetOf<String>()
 
@@ -466,13 +484,13 @@ object UserState {
 
     fun isReserved(id: String) = id in reserved
 
-    fun reservation(id: String): String? = reserved[id]
+    fun reservation(id: String): Reservation? = reserved[id]
 
     /** Listings the student reserved from others, oldest first. */
     fun reservedListings(): List<Listing> = reserved.keys.map { Listings.byId(it) }
 
-    fun setReserved(id: String, detail: String) {
-        reserved[id] = detail
+    fun setReserved(id: String, detail: String, weeks: Int = 0) {
+        reserved[id] = Reservation(detail, weeks)
     }
 
     fun cancelReservation(id: String) {
@@ -485,4 +503,41 @@ object UserState {
     fun close(id: String) {
         closed.add(id)
     }
+}
+
+/** Dates and countdowns for rentals: return dates, "3 days left", "Overdue". */
+object Rentals {
+
+    const val DAY_MS = 24L * 60 * 60 * 1000
+    const val WEEK_MS = 7 * DAY_MS
+
+    /** "Fri, Nov 20" */
+    fun dateLabel(millis: Long): String =
+        java.text.SimpleDateFormat("EEE, MMM d", java.util.Locale.US).format(millis)
+
+    /** Whole days from today to [millis]; negative when it has passed. */
+    fun daysUntil(millis: Long): Int {
+        fun midnight(t: Long) = java.util.Calendar.getInstance().apply {
+            timeInMillis = t
+            set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        return Math.round((midnight(millis) - midnight(System.currentTimeMillis())).toDouble() / DAY_MS).toInt()
+    }
+
+    /** "4 days left", "Due tomorrow", "Due today" or "Overdue by 2 days". */
+    fun countdown(context: Context, millis: Long): String {
+        val days = daysUntil(millis)
+        return when {
+            days > 1 -> context.resources.getQuantityString(R.plurals.days_left, days, days)
+            days == 1 -> context.getString(R.string.due_tomorrow)
+            days == 0 -> context.getString(R.string.due_today)
+            else -> context.resources.getQuantityString(R.plurals.overdue_by, -days, -days)
+        }
+    }
+
+    fun isOverdue(millis: Long) = daysUntil(millis) < 0
+
+    /** Due within three days, or overdue: worth a reminder. */
+    fun isDueSoon(millis: Long) = daysUntil(millis) <= 3
 }
