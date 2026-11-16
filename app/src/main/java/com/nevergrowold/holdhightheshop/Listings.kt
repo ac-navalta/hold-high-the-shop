@@ -40,8 +40,37 @@ data class Listing(
 /** A college, shown as a Home tile, a Market chip and a Create listing option. */
 data class Program(val code: String, val icon: Int)
 
-/** A finished exchange, shown under Profile > Completed. */
-data class Exchange(val title: String, val price: Int, val summary: String)
+/**
+ * A finished exchange, shown under Profile > Completed and on its
+ * Transaction details screen.
+ *
+ * @param kind one of the Exchange.SOLD ... SWAPPED constants.
+ * @param partner the other student, or null for a listing you closed yourself.
+ * @param theirRating stars the other student gave you, 0 if not rated yet.
+ * @param yourRating stars you gave them, 0 if not rated yet.
+ */
+data class Exchange(
+    val id: String,
+    val title: String,
+    val price: Int,
+    val kind: Int,
+    val partner: Seller?,
+    val date: String,
+    val meetup: String,
+    val theirRating: Int,
+    val yourRating: Int
+) {
+    /** You gave the item (sold, lent or swapped) rather than received it. */
+    val giving get() = kind == SOLD || kind == LENT || kind == SWAPPED
+
+    companion object {
+        const val SOLD = 0
+        const val BOUGHT = 1
+        const val LENT = 2
+        const val BORROWED = 3
+        const val SWAPPED = 4
+    }
+}
 
 object Listings {
 
@@ -206,22 +235,34 @@ object Listings {
     fun myActive(): List<Listing> = ALL.filter { isMine(it) && !UserState.isClosed(it.id) }
 
     /** Mika's finished exchanges, shown under Profile > Completed. */
-    val COMPLETED = listOf(
-        Exchange("Calculus Textbook", 600, "Sold to Janelle Garcia • Nov 12"),
-        Exchange("UC Type A Uniform", 500, "Sold to Aira Villanueva • Nov 9"),
-        Exchange("Lab Goggles", 150, "Bought from Miguel Santos • Nov 5"),
-        Exchange("Drafting Table Lamp", 400, "Rented to Miguel Santos • Nov 1"),
-        Exchange("Intro to Programming", 450, "Swapped with Paolo Mendoza • Oct 28"),
-        Exchange("Nursing Shoes", 700, "Sold to Janelle Garcia • Oct 24"),
-        Exchange("Accounting Workbook", 300, "Bought from Aira Villanueva • Oct 20"),
-        Exchange("Stethoscope", 950, "Sold to Janelle Garcia • Oct 15"),
-        Exchange("Scientific Calculator", 800, "Sold to Miguel Santos • Oct 11"),
-        Exchange("UC Lanyard and ID Case", 80, "Sold to Paolo Mendoza • Oct 6"),
-        Exchange("Physics Reviewer", 250, "Bought from Paolo Mendoza • Oct 2"),
-        Exchange("Engineering Ruler Set", 200, "Sold to Miguel Santos • Sep 27"),
-        Exchange("Business Math Book", 350, "Swapped with Aira Villanueva • Sep 22"),
-        Exchange("Lab Gown (Size M)", 400, "Sold to Janelle Garcia • Sep 18")
+    private val COMPLETED = listOf(
+        Exchange("ex1", "Calculus Textbook", 600, Exchange.SOLD, janelle, "Nov 12", "UC Library Lobby", 5, 5),
+        Exchange("ex2", "UC Type A Uniform", 500, Exchange.SOLD, aira, "Nov 9", "UC Main Gate Security Desk", 5, 4),
+        Exchange("ex3", "Lab Goggles", 150, Exchange.BOUGHT, miguel, "Nov 5", "CITCS Building Entrance", 4, 4),
+        Exchange("ex4", "Graphing Calculator", 400, Exchange.LENT, miguel, "Nov 1", "UC Main Gate Security Desk", 5, 5),
+        Exchange("ex5", "Intro to Programming", 450, Exchange.SWAPPED, paolo, "Oct 28", "CITCS Building Entrance", 5, 5),
+        Exchange("ex6", "Nursing Shoes", 700, Exchange.SOLD, janelle, "Oct 24", "UC Library Lobby", 4, 5),
+        Exchange("ex7", "Accounting Workbook", 300, Exchange.BOUGHT, aira, "Oct 20", "UC Canteen Area", 5, 4),
+        Exchange("ex8", "Stethoscope", 950, Exchange.SOLD, janelle, "Oct 15", "UC Library Lobby", 5, 5),
+        Exchange("ex9", "Scientific Calculator", 800, Exchange.SOLD, miguel, "Oct 11", "UC Main Gate Security Desk", 4, 0),
+        Exchange("ex10", "UC Lanyard and ID Case", 80, Exchange.SOLD, paolo, "Oct 6", "UC Canteen Area", 5, 5),
+        Exchange("ex11", "Physics Reviewer", 250, Exchange.BOUGHT, paolo, "Oct 2", "UC Library Lobby", 0, 5),
+        Exchange("ex12", "Engineering Ruler Set", 200, Exchange.SOLD, miguel, "Sep 27", "CITCS Building Entrance", 5, 4),
+        Exchange("ex13", "Business Math Book", 350, Exchange.SWAPPED, aira, "Sep 22", "UC Canteen Area", 5, 5),
+        Exchange("ex14", "White Lab Gown", 120, Exchange.BORROWED, janelle, "Sep 18", "UC Library Lobby", 5, 5)
     )
+
+    /** Profile > Completed: anything you closed this session, then the history. */
+    fun completed(): List<Exchange> = ALL.filter { isMine(it) && UserState.isClosed(it.id) }.map {
+        val kind = when (it.type) {
+            1 -> Exchange.LENT
+            2 -> Exchange.SWAPPED
+            else -> Exchange.SOLD
+        }
+        Exchange("closed-${it.id}", it.title, it.price, kind, null, "Today", it.meetup, 0, 0)
+    } + COMPLETED
+
+    fun exchange(id: String?): Exchange = completed().firstOrNull { it.id == id } ?: COMPLETED.first()
 
     val MEETUP_POINTS = listOf(
         "UC Main Gate Security Desk",

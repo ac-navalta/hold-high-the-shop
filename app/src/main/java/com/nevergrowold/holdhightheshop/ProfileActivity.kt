@@ -68,7 +68,7 @@ class ProfileActivity : BaseActivity() {
         val saved = UserState.saved()
         val mine = Listings.myActive()
         val reserved = UserState.reservedListings()
-        val completed = closedExchanges() + Listings.COMPLETED
+        val completed = Listings.completed()
         findViewById<TextView>(R.id.tab1Count).text = (mine.size + reserved.size).toString()
         findViewById<TextView>(R.id.tab2Count).text = completed.size.toString()
         findViewById<TextView>(R.id.tab3Count).text = saved.size.toString()
@@ -97,9 +97,13 @@ class ProfileActivity : BaseActivity() {
             }
             TAB_COMPLETED -> completed.forEachIndexed { i, exchange ->
                 addRow(
-                    list, exchange.title, Listings.price(exchange.price), exchange.summary,
-                    i < completed.size - 1, onClick = null
-                )
+                    list, exchange.title, Listings.price(exchange.price), ExchangeText.summary(this, exchange),
+                    i < completed.size - 1, ExchangeText.badge(this, exchange), exchange.giving
+                ) {
+                    startActivity(
+                        Intent(this, ExchangeDetailActivity::class.java).putExtra(ExchangeDetailActivity.EXTRA_EXCHANGE, exchange.id)
+                    )
+                }
             }
             else -> saved.forEachIndexed { i, item ->
                 addRow(
@@ -111,10 +115,6 @@ class ProfileActivity : BaseActivity() {
         }
         findViewById<View>(R.id.profileEmpty).isVisible = selected == TAB_SAVED && saved.isEmpty()
     }
-
-    /** Own listings marked as done this session, newest first. */
-    private fun closedExchanges() = Listings.ALL.filter { Listings.isMine(it) && UserState.isClosed(it.id) }
-        .map { Exchange(it.title, it.price, getString(R.string.closed_summary)) }
 
     /** The "..." button in the header. */
     fun openMenu(view: View) {

@@ -412,7 +412,6 @@
     <string name="mark_sold_confirm">Mark as done</string>
     <string name="action_cancel">Cancel</string>
     <string name="state_closed">No longer listed \u2022 moved to Completed</string>
-    <string name="closed_summary">Marked as done \u2022 Today</string>
     <string name="toast_marked_done">Moved to Completed</string>
     <string name="edit_title">Edit listing</string>
     <string name="btn_save_changes">Save changes</string>
@@ -454,4 +453,34 @@
     <string name="kicker_you_selling">YOU\u2019RE SELLING</string>
     <string name="kicker_you_lending">YOU\u2019RE LENDING</string>
     <string name="kicker_swap">SWAP</string>
+
+    <!-- Completed exchanges -->
+    <string name="ex_sold_to">Sold to %1$s</string>
+    <string name="ex_bought_from">Bought from %1$s</string>
+    <string name="ex_lent_to">Lent to %1$s</string>
+    <string name="ex_borrowed_from">Borrowed from %1$s</string>
+    <string name="ex_swapped_with">Swapped with %1$s</string>
+    <string name="ex_closed_by_you">Marked as done by you</string>
+    <string name="ex_summary_format">%1$s \u2022 %2$s</string>
+    <string name="badge_sold">SOLD</string>
+    <string name="badge_bought">BOUGHT</string>
+    <string name="badge_lent">LENT</string>
+    <string name="badge_borrowed">BORROWED</string>
+    <string name="badge_swapped">SWAPPED</string>
+    <string name="ex_title">Transaction details</string>
+    <string name="ex_completed_on">Completed %1$s</string>
+    <string name="ex_with">With</string>
+    <string name="ex_details">Details</string>
+    <string name="ex_reference">Reference</string>
+    <string name="ex_meetup">Meetup point</string>
+    <string name="ex_payment">Payment</string>
+    <string name="ex_paid_in_person">%1$s, paid in person</string>
+    <string name="ex_rent_fee">%1$s rental fee, paid in person</string>
+    <string name="ex_no_payment">No payment, item for item</string>
+    <string name="ex_ratings">Ratings</string>
+    <string name="ex_their_rating">%1$s rated you</string>
+    <string name="ex_your_rating">You rated %1$s</string>
+    <string name="ex_not_rated">Not rated yet</string>
+    <string name="ex_no_partner_note">You marked this listing as done. Ratings appear once the other student confirms.</string>
+    <string name="cd_stars">%1$d out of 5 stars</string>
 </resources>
