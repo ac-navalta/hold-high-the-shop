@@ -6,7 +6,6 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ScrollView
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 
 class LoginActivity : BaseActivity() {
@@ -41,13 +40,6 @@ class LoginActivity : BaseActivity() {
      * so back from the dashboard leaves the app instead of returning to login.
      */
     fun signIn(view: View) {
-        val email = findViewById<EditText>(R.id.inputEmail)
-        val value = email.text.toString().trim()
-        if (!value.contains('@') || !value.endsWith("uc-bcf.edu.ph")) {
-            Toast.makeText(this, R.string.toast_need_uc_email, Toast.LENGTH_SHORT).show()
-            showKeyboard(email)
-            return
-        }
         hideKeyboard(view)
         startActivity(Intent(this, MainActivity::class.java))
         finish()

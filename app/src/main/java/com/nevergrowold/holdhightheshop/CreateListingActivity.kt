@@ -1,23 +1,18 @@
 package com.nevergrowold.holdhightheshop
 
 import android.content.Intent
-import android.graphics.BitmapFactory
-import android.media.ThumbnailUtils
-import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
-import android.widget.ImageView
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
+import androidx.core.view.isVisible
 
 class CreateListingActivity : BaseActivity() {
 
@@ -28,9 +23,8 @@ class CreateListingActivity : BaseActivity() {
 
     private val programs by lazy { Listings.PROGRAMS }
 
-    private val pickPhotos = registerForActivityResult(
-        ActivityResultContracts.PickMultipleVisualMedia(MAX_PHOTOS)
-    ) { uris -> if (uris.isNotEmpty()) showPhotos(uris) }
+    /** Which photo tiles show the "added" state. UI only for now. */
+    private val photos = BooleanArray(MAX_PHOTOS)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,48 +45,24 @@ class CreateListingActivity : BaseActivity() {
         countCharacters(findViewById(R.id.inputDescription), findViewById(R.id.counterDescription))
     }
 
-    /** Any photo tile: opens the system photo picker (up to four photos). */
+    /**
+     * Photo tiles. Tapping one marks it as added (or removes it again) so the
+     * flow can be tested. Picking real photos comes with the backend.
+     */
     fun pickPhotos(view: View) {
-        pickPhotos.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-    }
-
-    /** Fills the tiles in order with the chosen photos. */
-    private fun showPhotos(uris: List<Uri>) {
         val tiles = listOf(R.id.photoTile1, R.id.photoTile2, R.id.photoTile3, R.id.photoTile4)
-            .map { findViewById<ViewGroup>(it) }
-        tiles.forEachIndexed { index, tile ->
-            tile.findViewWithTag<View>(PHOTO_TAG)?.let { tile.removeView(it) }
-            for (i in 0 until tile.childCount) tile.getChildAt(i).visibility = View.VISIBLE
-            val uri = uris.getOrNull(index) ?: return@forEachIndexed
-            val thumb = loadThumb(uri, dp(this, 82)) ?: return@forEachIndexed
-            for (i in 0 until tile.childCount) tile.getChildAt(i).visibility = View.GONE
-            val image = ImageView(this).apply {
-                tag = PHOTO_TAG
-                setImageDrawable(
-                    RoundedBitmapDrawableFactory.create(resources, thumb).apply {
-                        cornerRadius = dp(this@CreateListingActivity, 14).toFloat()
-                    }
-                )
-                scaleType = ImageView.ScaleType.FIT_XY
-                contentDescription = getString(R.string.cd_item_photo)
-            }
-            tile.addView(image, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        val index = tiles.indexOf(view.id).takeIf { it >= 0 } ?: return
+        photos[index] = !photos[index]
+        val tile = view as ViewGroup
+        tile.findViewWithTag<View>(PHOTO_TAG)?.let { tile.removeView(it) }
+        for (i in 0 until tile.childCount) tile.getChildAt(i).isVisible = !photos[index]
+        if (photos[index]) {
+            val added = LayoutInflater.from(this).inflate(R.layout.item_photo_added, tile, false)
+            added.tag = PHOTO_TAG
+            tile.addView(added)
         }
         findViewById<TextView>(R.id.photoCounter).text =
-            getString(R.string.photo_counter_format, minOf(uris.size, MAX_PHOTOS))
-    }
-
-    /** Small square thumbnail, decoded at a reduced size to keep memory low. */
-    private fun loadThumb(uri: Uri, size: Int) = try {
-        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
-        var sample = 1
-        while (bounds.outWidth / (sample * 2) >= size * 2 && bounds.outHeight / (sample * 2) >= size * 2) sample *= 2
-        val opts = BitmapFactory.Options().apply { inSampleSize = sample }
-        contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, opts) }
-            ?.let { ThumbnailUtils.extractThumbnail(it, size * 2, size * 2) }
-    } catch (e: Exception) {
-        null
+            getString(R.string.photo_counter_format, photos.count { it })
     }
 
     /** Lets the seller pick which college the item belongs to. */

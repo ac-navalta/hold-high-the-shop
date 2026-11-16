@@ -342,9 +342,7 @@
     <string name="meetup_why1">Staffed by campus security during office hours</string>
     <string name="meetup_why2">Well lit and covered by CCTV</string>
     <string name="meetup_why3">Inside campus, so only UC students can join</string>
-    <string name="btn_directions">Directions</string>
     <string name="btn_got_it">Got it</string>
-    <string name="toast_no_maps">No maps app found on this phone</string>
     <string name="meetup_hours_short">Mon\u2013Fri, 9:00 AM\u20134:00 PM</string>
 
     <!-- Saved -->
@@ -390,14 +388,12 @@
 
     <!-- Profile menu -->
     <string name="menu_saved">Saved items</string>
-    <string name="menu_share">Share profile</string>
     <string name="menu_notifications">Notifications</string>
     <string name="menu_logout">Log out</string>
     <string name="logout_title">Log out?</string>
     <string name="logout_message">You\u2019ll need your UC email to sign in again.</string>
     <string name="logout_confirm">Log out</string>
     <string name="logout_cancel">Stay</string>
-    <string name="share_profile_text">Check out Mika Dela Cruz on Hold High The Shop, the UC campus marketplace.</string>
     <string name="profile_empty_saved">Nothing saved yet. Tap the bookmark on a listing to keep it here.</string>
     <string name="posted_days_format">Posted %1$d days ago</string>
 
@@ -409,6 +405,4 @@
     <string name="toast_need_meetup">Choose a meetup point</string>
     <string name="photo_counter_format">%1$d / 4</string>
 
-    <!-- Login -->
-    <string name="toast_need_uc_email">Use your UC email (ending in uc-bcf.edu.ph)</string>
 </resources>

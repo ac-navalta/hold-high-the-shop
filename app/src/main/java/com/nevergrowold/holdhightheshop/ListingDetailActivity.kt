@@ -1,8 +1,6 @@
 package com.nevergrowold.holdhightheshop
 
-import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -53,7 +51,7 @@ class ListingDetailActivity : BaseActivity() {
     }
 
     private fun bindSaved() {
-        val saved = UserState.isSaved(this, listing.id)
+        val saved = UserState.isSaved(listing.id)
         findViewById<ImageView>(R.id.saveIcon).apply {
             setImageResource(if (saved) R.drawable.ic_bookmark_filled else R.drawable.ic_bookmark)
             setColorFilter(getColor(if (saved) R.color.uc_green else R.color.text_primary))
@@ -64,7 +62,7 @@ class ListingDetailActivity : BaseActivity() {
     private fun bindReserveButton() {
         val price = Listings.price(listing.price)
         findViewById<TextView>(R.id.btnReserve).text = when {
-            UserState.isReserved(this, listing.id) -> getString(R.string.btn_reserved)
+            UserState.isReserved(listing.id) -> getString(R.string.btn_reserved)
             listing.type == 1 -> getString(R.string.btn_rent_format, price)
             listing.type == 2 -> getString(R.string.btn_swap)
             else -> getString(R.string.btn_reserve_format, price)
@@ -73,14 +71,14 @@ class ListingDetailActivity : BaseActivity() {
 
     /** Bookmark button on the photo. */
     fun toggleSave(view: View) {
-        val nowSaved = !UserState.isSaved(this, listing.id)
-        UserState.setSaved(this, listing.id, nowSaved)
+        val nowSaved = !UserState.isSaved(listing.id)
+        UserState.setSaved(listing.id, nowSaved)
         bindSaved()
         if (nowSaved) {
             notify(getString(R.string.toast_saved), getString(R.string.action_view)) { openSaved(view) }
         } else {
             notify(getString(R.string.toast_unsaved), getString(R.string.action_undo)) {
-                UserState.setSaved(this, listing.id, true)
+                UserState.setSaved(listing.id, true)
                 bindSaved()
             }
         }
@@ -99,20 +97,12 @@ class ListingDetailActivity : BaseActivity() {
         Sheets.show(this, R.layout.sheet_meetup) { sheet, dialog ->
             sheet.findViewById<TextView>(R.id.meetupSheetPlace).text = listing.meetup
             sheet.findViewById<View>(R.id.meetupDone).setOnClickListener { dialog.dismiss() }
-            sheet.findViewById<View>(R.id.meetupDirections).setOnClickListener {
-                val query = Uri.encode("${listing.meetup}, University of the Cordilleras, Baguio City")
-                try {
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=$query")))
-                } catch (e: ActivityNotFoundException) {
-                    Toast.makeText(this, R.string.toast_no_maps, Toast.LENGTH_SHORT).show()
-                }
-            }
         }
     }
 
     /** Reserve button: pick a meetup point, day and time, then confirm. */
     fun reserve(view: View) {
-        if (UserState.isReserved(this, listing.id)) {
+        if (UserState.isReserved(listing.id)) {
             openChatWith(listing.seller, listing.id)
             return
         }
@@ -148,7 +138,7 @@ class ListingDetailActivity : BaseActivity() {
                     Toast.makeText(this, R.string.toast_pick_day_time, Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
-                UserState.setReserved(this, listing.id)
+                UserState.setReserved(listing.id, true)
                 bindReserveButton()
                 dialog.dismiss()
                 Toast.makeText(this, getString(R.string.toast_reserved, listing.seller.name), Toast.LENGTH_SHORT).show()

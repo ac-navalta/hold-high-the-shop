@@ -145,42 +145,26 @@ object Listings {
 }
 
 /**
- * Remembers which listings the student saved or reserved. Kept in
- * SharedPreferences so the state survives moving between screens and
- * restarting the app, which is enough for usability testing.
+ * Which listings the student saved or reserved during this session.
+ * Kept in memory only: it resets when the app is closed, which is fine for
+ * a front-end prototype. The backend will own this later.
  */
 object UserState {
 
-    private const val PREFS = "user_state"
-    private const val KEY_SAVED = "saved"
-    private const val KEY_RESERVED = "reserved"
-    private val DEFAULT_SAVED = setOf("item3", "item5")
+    private val saved = mutableSetOf("item3", "item5")
+    private val reserved = mutableSetOf<String>()
 
-    private fun prefs(context: Context) =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    fun saved(): List<Listing> = Listings.ALL.filter { it.id in saved }
 
-    fun savedIds(context: Context): Set<String> =
-        prefs(context).getStringSet(KEY_SAVED, DEFAULT_SAVED) ?: DEFAULT_SAVED
+    fun isSaved(id: String) = id in saved
 
-    fun saved(context: Context): List<Listing> {
-        val ids = savedIds(context)
-        return Listings.ALL.filter { it.id in ids }
+    fun setSaved(id: String, on: Boolean) {
+        if (on) saved.add(id) else saved.remove(id)
     }
 
-    fun isSaved(context: Context, id: String) = id in savedIds(context)
+    fun isReserved(id: String) = id in reserved
 
-    fun setSaved(context: Context, id: String, saved: Boolean) {
-        val ids = savedIds(context).toMutableSet()
-        if (saved) ids.add(id) else ids.remove(id)
-        prefs(context).edit().putStringSet(KEY_SAVED, ids).apply()
-    }
-
-    fun isReserved(context: Context, id: String) =
-        id in (prefs(context).getStringSet(KEY_RESERVED, emptySet()) ?: emptySet())
-
-    fun setReserved(context: Context, id: String) {
-        val ids = (prefs(context).getStringSet(KEY_RESERVED, emptySet()) ?: emptySet()).toMutableSet()
-        ids.add(id)
-        prefs(context).edit().putStringSet(KEY_RESERVED, ids).apply()
+    fun setReserved(id: String, on: Boolean) {
+        if (on) reserved.add(id) else reserved.remove(id)
     }
 }

@@ -27,7 +27,7 @@ class SavedActivity : BaseActivity() {
     }
 
     private fun render() {
-        val saved = UserState.saved(this)
+        val saved = UserState.saved()
         val list = findViewById<LinearLayout>(R.id.savedList)
         list.removeAllViews()
 
@@ -45,10 +45,10 @@ class SavedActivity : BaseActivity() {
                 contentDescription = getString(R.string.cd_unsave)
             }
             row.findViewById<View>(R.id.rowAction).setOnClickListener {
-                UserState.setSaved(this, item.id, false)
+                UserState.setSaved(item.id, false)
                 render()
                 notify(getString(R.string.toast_unsaved), getString(R.string.action_undo)) {
-                    UserState.setSaved(this, item.id, true)
+                    UserState.setSaved(item.id, true)
                     render()
                 }
             }

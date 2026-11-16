@@ -65,7 +65,7 @@ class ProfileActivity : BaseActivity() {
             }
         }
 
-        val saved = UserState.saved(this)
+        val saved = UserState.saved()
         findViewById<TextView>(R.id.tab1Count).text = Listings.MY_ACTIVE.size.toString()
         findViewById<TextView>(R.id.tab2Count).text = Listings.COMPLETED.size.toString()
         findViewById<TextView>(R.id.tab3Count).text = saved.size.toString()
@@ -102,25 +102,16 @@ class ProfileActivity : BaseActivity() {
         val options = listOf(
             getString(R.string.menu_saved),
             getString(R.string.menu_notifications),
-            getString(R.string.menu_share),
             getString(R.string.menu_logout)
         )
-        val icons = listOf(R.drawable.ic_bookmark, R.drawable.ic_bell, R.drawable.ic_share, R.drawable.ic_logout)
+        val icons = listOf(R.drawable.ic_bookmark, R.drawable.ic_bell, R.drawable.ic_logout)
         Dropdown.show(view, options, icons = icons, widthDp = 210, alignEnd = true) {
             when (it) {
                 0 -> openSaved(view)
                 1 -> startActivity(Intent(this, NotificationsActivity::class.java))
-                2 -> shareProfile()
                 else -> confirmLogout()
             }
         }
-    }
-
-    private fun shareProfile() {
-        val send = Intent(Intent.ACTION_SEND)
-            .setType("text/plain")
-            .putExtra(Intent.EXTRA_TEXT, getString(R.string.share_profile_text))
-        startActivity(Intent.createChooser(send, getString(R.string.menu_share)))
     }
 
     private fun confirmLogout() {

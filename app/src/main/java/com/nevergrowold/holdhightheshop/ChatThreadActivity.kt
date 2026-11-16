@@ -1,18 +1,14 @@
 package com.nevergrowold.holdhightheshop
 
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
@@ -28,10 +24,6 @@ class ChatThreadActivity : BaseActivity() {
     private lateinit var listing: Listing
     private lateinit var messages: LinearLayout
     private lateinit var input: EditText
-
-    private val pickPhoto = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) addPhoto(uri)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,7 +63,7 @@ class ChatThreadActivity : BaseActivity() {
         input.hint = getString(R.string.hint_message_format, seller.name.substringBefore(' '))
 
         findViewById<TextView>(R.id.stripKicker).setText(
-            if (UserState.isReserved(this, listing.id) || isSampleThread()) R.string.reserved_item else R.string.about_item
+            if (UserState.isReserved(listing.id) || isSampleThread()) R.string.reserved_item else R.string.about_item
         )
         findViewById<TextView>(R.id.stripTitle).text = listing.title
         findViewById<TextView>(R.id.stripPrice).text = Listings.price(listing.price)
@@ -115,13 +107,9 @@ class ChatThreadActivity : BaseActivity() {
         scrollToEnd()
     }
 
-    private fun addPhoto(uri: Uri) {
-        val bubble = LayoutInflater.from(this).inflate(R.layout.item_bubble_photo, messages, false)
-        bubble.findViewById<ImageView>(R.id.bubblePhoto).apply {
-            setImageURI(uri)
-            clipToOutline = true
-        }
-        messages.addView(bubble)
+    /** Placeholder photo message. Real photos come with the backend. */
+    private fun addPhoto() {
+        messages.addView(LayoutInflater.from(this).inflate(R.layout.item_bubble_photo, messages, false))
         scrollToEnd()
     }
 
@@ -136,7 +124,7 @@ class ChatThreadActivity : BaseActivity() {
         Sheets.show(this, R.layout.sheet_chat_actions) { sheet, dialog ->
             sheet.findViewById<View>(R.id.actionPhoto).setOnClickListener {
                 dialog.dismiss()
-                pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                addPhoto()
             }
             sheet.findViewById<View>(R.id.actionMeetup).setOnClickListener {
                 dialog.dismiss()
