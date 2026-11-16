@@ -309,6 +309,9 @@ object UserState {
     )
     private val closed = mutableSetOf<String>()
 
+    /** Settings > Default meetup point. Used to prefill new listings. */
+    var defaultMeetup = 0
+
     fun saved(): List<Listing> = Listings.ALL.filter { it.id in saved }
 
     fun isSaved(id: String) = id in saved

@@ -91,6 +91,16 @@
             android:parentActivityName=".ProfileActivity" />
 
         <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:parentActivityName=".ProfileActivity" />
+
+        <activity
+            android:name=".EditProfileActivity"
+            android:exported="false"
+            android:parentActivityName=".ProfileActivity" />
+
+        <activity
             android:name=".MainActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Read-only text in a bottom sheet: guidelines, safety tips, help, about. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_sheet_top"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="20dp">
+
+    <View style="@style/SheetHandle" />
+
+    <TextView
+        android:id="@+id/infoTitle"
+        style="@style/SheetTitle"
+        android:layout_marginTop="16dp" />
+
+    <TextView
+        android:id="@+id/infoBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:fontFamily="@font/poppins_regular"
+        android:textColor="@color/text_primary"
+        android:textSize="13sp"
+        android:lineSpacingExtra="4dp" />
+
+    <TextView
+        android:id="@+id/infoDone"
+        style="@style/PrimaryButton"
+        android:layout_marginTop="22dp"
+        android:text="@string/btn_got_it" />
+</LinearLayout>

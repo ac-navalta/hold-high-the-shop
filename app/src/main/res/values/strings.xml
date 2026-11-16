@@ -382,8 +382,6 @@
     <string name="msg_photo">Photo</string>
 
     <!-- Profile menu -->
-    <string name="menu_saved">Saved items</string>
-    <string name="menu_notifications">Notifications</string>
     <string name="menu_logout">Log out</string>
     <string name="logout_title">Log out?</string>
     <string name="logout_message">You\u2019ll need your UC email to sign in again.</string>
@@ -483,4 +481,51 @@
     <string name="ex_not_rated">Not rated yet</string>
     <string name="ex_no_partner_note">You marked this listing as done. Ratings appear once the other student confirms.</string>
     <string name="cd_stars">%1$d out of 5 stars</string>
+
+    <!-- Profile menu, settings and edit profile -->
+    <string name="menu_edit_profile">Edit profile</string>
+    <string name="menu_settings">Settings</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_account">ACCOUNT</string>
+    <string name="settings_edit_profile">Edit profile</string>
+    <string name="settings_email">UC email</string>
+    <string name="settings_program">Program</string>
+    <string name="me_meta_short">BSIT \u2022 3rd Year</string>
+    <string name="settings_notifications">NOTIFICATIONS</string>
+    <string name="settings_messages">Messages</string>
+    <string name="settings_messages_hint">New chats and replies</string>
+    <string name="settings_reservations">Reservations and meetups</string>
+    <string name="settings_reservations_hint">Confirmations, changes and cancellations</string>
+    <string name="settings_reminders">Return reminders</string>
+    <string name="settings_reminders_hint">Before a borrowed item is due back</string>
+    <string name="settings_price_drops">Price drops</string>
+    <string name="settings_price_drops_hint">When a saved item gets cheaper</string>
+    <string name="settings_marketplace">MARKETPLACE</string>
+    <string name="settings_default_meetup">Default meetup point</string>
+    <string name="settings_show_program">Show my program on listings</string>
+    <string name="settings_show_program_hint">Buyers see which college you\u2019re from</string>
+    <string name="settings_privacy">PRIVACY AND SAFETY</string>
+    <string name="settings_active_status">Show when I\u2019m active</string>
+    <string name="settings_active_status_hint">Others see \u201CActive now\u201D in chats</string>
+    <string name="settings_guidelines">Community guidelines</string>
+    <string name="settings_safety">Meetup safety tips</string>
+    <string name="settings_support">SUPPORT</string>
+    <string name="settings_help">Help center</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">Version 1.0</string>
+    <string name="toast_setting_saved">Setting updated</string>
+    <string name="info_guidelines_body">\u2022 List only items you own and can hand over.\n\u2022 Describe the condition honestly and show real photos.\n\u2022 No prohibited items: weapons, alcohol, medicine, exam answers.\n\u2022 Be respectful in chats. Harassment leads to a ban.\n\u2022 Keep every transaction inside the app.</string>
+    <string name="info_safety_body">\u2022 Meet only at a Safe Meetup Point during office hours.\n\u2022 Check the item before you pay.\n\u2022 Pay in person; never send money ahead.\n\u2022 Bring a friend if you feel unsure.\n\u2022 Report anything suspicious from the listing or chat.</string>
+    <string name="info_help_body">How do I reserve an item?\nOpen the listing and tap Reserve, then pick a meetup point, day and time.\n\nCan I cancel a reservation?\nYes. Open the listing and tap Cancel reservation on the reservation card.\n\nHow do I mark my item as sold?\nOpen your listing from Profile and tap Mark as sold.</string>
+    <string name="info_about_body">Hold High The Shop is the campus marketplace for University of the Cordilleras students. Sell, rent or swap what you no longer need and give it a second life.\n\nVersion 1.0</string>
+    <string name="edit_name">Full name</string>
+    <string name="edit_program">Program</string>
+    <string name="edit_year">Year level</string>
+    <string name="edit_bio">Bio</string>
+    <string name="edit_email_hint">Your UC email can\u2019t be changed.</string>
+    <string name="hint_bio">Tell other students a bit about yourself\u2026</string>
+    <string name="prog_default">CITCS</string>
+    <string name="year_default">3rd Year</string>
+    <string name="toast_profile_saved">Profile updated</string>
+    <string name="toast_need_name">Add your name</string>
 </resources>

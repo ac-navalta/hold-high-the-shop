@@ -8,7 +8,6 @@ import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.isVisible
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class ProfileActivity : BaseActivity() {
 
@@ -119,31 +118,18 @@ class ProfileActivity : BaseActivity() {
     /** The "..." button in the header. */
     fun openMenu(view: View) {
         val options = listOf(
-            getString(R.string.menu_saved),
-            getString(R.string.menu_notifications),
+            getString(R.string.menu_edit_profile),
+            getString(R.string.menu_settings),
             getString(R.string.menu_logout)
         )
-        val icons = listOf(R.drawable.ic_bookmark, R.drawable.ic_bell, R.drawable.ic_logout)
-        Dropdown.show(view, options, icons = icons, widthDp = 210, alignEnd = true) {
+        val icons = listOf(R.drawable.ic_profile, R.drawable.ic_settings, R.drawable.ic_logout)
+        Dropdown.show(view, options, icons = icons, widthDp = 200, alignEnd = true) {
             when (it) {
-                0 -> openSaved(view)
-                1 -> startActivity(Intent(this, NotificationsActivity::class.java))
+                0 -> startActivity(Intent(this, EditProfileActivity::class.java))
+                1 -> startActivity(Intent(this, SettingsActivity::class.java))
                 else -> confirmLogout()
             }
         }
-    }
-
-    private fun confirmLogout() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.logout_title)
-            .setMessage(R.string.logout_message)
-            .setNegativeButton(R.string.logout_cancel, null)
-            .setPositiveButton(R.string.logout_confirm) { _, _ ->
-                val intent = Intent(this, LoginActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
-            }
-            .show()
     }
 
     companion object {

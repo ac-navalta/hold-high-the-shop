@@ -36,7 +36,10 @@ class CreateListingActivity : BaseActivity() {
         BarInsets.apply(this)
 
         editing = intent.getStringExtra(EXTRA_LISTING)?.let { Listings.byId(it) }
-        editing?.let { prefill(it) }
+        editing?.let { prefill(it) } ?: run {
+            meetup = UserState.defaultMeetup
+            setPicked(R.id.rowMeetupText, Listings.MEETUP_POINTS[meetup])
+        }
 
         Choice.pills(
             listOf(findViewById(R.id.condition1), findViewById(R.id.condition2), findViewById(R.id.condition3)),

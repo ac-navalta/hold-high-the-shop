@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 /**
  * Shared behaviour for every screen in the app.
@@ -67,6 +68,20 @@ open class BaseActivity : AppCompatActivity() {
                 .putExtra(EXTRA_LISTING, listingId)
                 .putExtra(EXTRA_RESERVED, justReserved)
         )
+    }
+
+    /** Asks before signing out, then returns to the login screen. */
+    fun confirmLogout() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.logout_title)
+            .setMessage(R.string.logout_message)
+            .setNegativeButton(R.string.logout_cancel, null)
+            .setPositiveButton(R.string.logout_confirm) { _, _ ->
+                val intent = Intent(this, LoginActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+            }
+            .show()
     }
 
     /** Closes the current screen. */
