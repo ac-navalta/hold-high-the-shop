@@ -519,9 +519,6 @@
     <!-- Share listing -->
     <string name="cd_share">Share listing</string>
     <string name="share_title">Share listing</string>
-    <string name="share_to_chat">Send to a chat</string>
-    <string name="share_message_format">Check out this listing: %1$s (%2$s)</string>
-    <string name="toast_shared">Sent to %1$s</string>
 
     <!-- Directions map -->
     <string name="btn_directions">Directions</string>
@@ -575,4 +572,9 @@
     <string name="lbl_wants">Looking for *</string>
     <string name="hint_wants">e.g. A Physics reviewer or a lab kit</string>
     <string name="toast_need_wants">Say what you\u2019d like in exchange</string>
+    <string name="share_link_label">Listing link</string>
+    <string name="share_link_format">holdhightheshop.app/listing/%1$s</string>
+    <string name="share_coming_soon">Sharing straight to Messenger, Viber and other apps is coming in a later version.</string>
+    <string name="btn_copy_link">Copy link</string>
+    <string name="toast_link_copied">Link copied</string>
 </resources>

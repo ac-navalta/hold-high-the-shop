@@ -1,5 +1,7 @@
 package com.nevergrowold.holdhightheshop
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -140,30 +142,22 @@ class ListingDetailActivity : BaseActivity() {
         }
     }
 
-    /** Share button: send the listing to one of your chats (in-app only for now). */
+    /**
+     * Share button: preview of what will be shared and the listing link.
+     * Sending to Messenger, Viber and other apps comes in a later version;
+     * for now the link can be copied.
+     */
     fun shareListing(view: View) {
         Sheets.show(this, R.layout.sheet_share) { sheet, dialog ->
+            val link = getString(R.string.share_link_format, listing.id)
             sheet.findViewById<TextView>(R.id.shareItemTitle).text = listing.title
             sheet.findViewById<TextView>(R.id.shareItemPrice).text = Listings.priceLabel(this, listing)
-            val people = sheet.findViewById<LinearLayout>(R.id.sharePeople)
-            Listings.SELLERS.filter { it != listing.seller }.forEach { person ->
-                val row = LayoutInflater.from(this).inflate(R.layout.item_share_person, people, false)
-                row.findViewById<TextView>(R.id.personInitials).text = person.initials
-                row.findViewById<TextView>(R.id.personName).text = person.name
-                row.findViewById<TextView>(R.id.personProgram).text = person.program
-                row.setOnClickListener {
-                    dialog.dismiss()
-                    Toast.makeText(this, getString(R.string.toast_shared, person.name), Toast.LENGTH_SHORT).show()
-                    startActivity(
-                        Intent(this, ChatThreadActivity::class.java)
-                            .putExtra(EXTRA_SELLER, person.name)
-                            .putExtra(
-                                ChatThreadActivity.EXTRA_SHARE_TEXT,
-                                getString(R.string.share_message_format, listing.title, Listings.priceLabel(this, listing).toString())
-                            )
-                    )
-                }
-                people.addView(row)
+            sheet.findViewById<TextView>(R.id.shareLink).text = link
+            sheet.findViewById<View>(R.id.shareCopy).setOnClickListener {
+                val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText(listing.title, link))
+                dialog.dismiss()
+                notify(getString(R.string.toast_link_copied))
             }
         }
     }
