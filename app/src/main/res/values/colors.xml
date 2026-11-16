@@ -18,4 +18,8 @@
     <color name="divider">#E6E2D2</color>
     <color name="photo_placeholder">#E9E5D6</color>
     <color name="alert_dot">#E4A11B</color>
+
+    <!-- Destructive actions such as Cancel reservation. -->
+    <color name="danger">#C62828</color>
+    <color name="danger_light">#FDECEA</color>
 </resources>

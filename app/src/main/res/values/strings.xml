@@ -297,7 +297,6 @@
     <string name="cd_unsave">Remove from saved</string>
     <string name="condition_badge_format">%1$s CONDITION</string>
     <string name="btn_reserve_format">Reserve for %1$s</string>
-    <string name="btn_reserved">Reserved \u2022 Message seller</string>
     <string name="btn_swap">Offer a swap</string>
     <string name="btn_rent_format">Rent for %1$s</string>
     <string name="seller_meta_format">%1$s \u2022 %2$s</string>
@@ -413,7 +412,7 @@
 
     <!-- Reservation -->
     <string name="reservation_card_title">You reserved this item</string>
-    <string name="btn_cancel_reservation">Cancel reservation</string>
+    <string name="btn_cancel_short">Cancel</string>
     <string name="cancel_reservation_title">Cancel this reservation?</string>
     <string name="cancel_reservation_message">%1$s will be told the item is free again. You can reserve it later if it\u2019s still available.</string>
     <string name="cancel_reservation_confirm">Cancel reservation</string>

@@ -260,25 +260,6 @@
                                 android:textSize="11sp" />
                         </LinearLayout>
                     </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/btnCancelReservation"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="end"
-                        android:layout_marginTop="8dp"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
-                        android:paddingTop="6dp"
-                        android:paddingBottom="6dp"
-                        android:background="?attr/selectableItemBackground"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:onClick="cancelReservation"
-                        android:fontFamily="@font/poppins_semibold"
-                        android:text="@string/btn_cancel_reservation"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
                 </LinearLayout>
 
                 <!-- SELLER -->
@@ -562,36 +543,27 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <LinearLayout
+        <!-- Report: icon only, so the main actions get the room. -->
+        <FrameLayout
             android:id="@+id/btnReport"
-            android:layout_width="wrap_content"
+            android:layout_width="52dp"
             android:layout_height="52dp"
-            android:orientation="horizontal"
-            android:gravity="center"
             android:background="@drawable/bg_btn_outline"
-            android:paddingStart="20dp"
-            android:paddingEnd="22dp"
             android:clickable="true"
             android:focusable="true"
             android:onClick="openReport"
-            android:foreground="?attr/selectableItemBackground">
+            android:contentDescription="@string/btn_report"
+            android:tooltipText="@string/btn_report"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
 
             <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
                 android:src="@drawable/ic_flag"
                 android:tint="@color/text_secondary"
                 android:contentDescription="@null" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="7dp"
-                android:fontFamily="@font/poppins_medium"
-                android:text="@string/btn_report"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp" />
-        </LinearLayout>
+        </FrameLayout>
 
         <TextView
             android:id="@+id/btnReserve"
@@ -613,6 +585,17 @@
             android:focusable="true"
             android:onClick="reserve"
             android:foreground="?attr/selectableItemBackground" />
+
+        <!-- After reserving: cancel sits beside Message seller, same size, in red. -->
+        <TextView
+            android:id="@+id/btnCancelReservation"
+            style="@style/DangerButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:onClick="cancelReservation"
+            android:text="@string/btn_cancel_short"
+            android:visibility="gone" />
 
         <!-- Shown instead of Report / Reserve on the student's own listing. -->
         <TextView

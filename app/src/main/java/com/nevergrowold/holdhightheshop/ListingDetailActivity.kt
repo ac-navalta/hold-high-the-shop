@@ -93,6 +93,7 @@ class ListingDetailActivity : BaseActivity() {
         if (!isMine) bindReserveButton()
 
         val reservation = UserState.reservation(listing.id)
+        findViewById<View>(R.id.btnCancelReservation).isVisible = !isMine && reservation != null
         findViewById<View>(R.id.reservationCard).isVisible = !isMine && reservation != null
         findViewById<TextView>(R.id.reservationDetail).text = reservation
     }
@@ -100,7 +101,7 @@ class ListingDetailActivity : BaseActivity() {
     private fun bindReserveButton() {
         val price = Listings.price(listing.price)
         findViewById<TextView>(R.id.btnReserve).text = when {
-            UserState.isReserved(listing.id) -> getString(R.string.btn_reserved)
+            UserState.isReserved(listing.id) -> getString(R.string.btn_message_seller, listing.seller.name.substringBefore(' '))
             listing.type == 1 -> getString(R.string.btn_rent_format, price)
             listing.type == 2 -> getString(R.string.btn_swap)
             else -> getString(R.string.btn_reserve_format, price)

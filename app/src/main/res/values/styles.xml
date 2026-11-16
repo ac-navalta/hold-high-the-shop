@@ -80,6 +80,12 @@
         <item name="android:textColor">@color/text_primary</item>
     </style>
 
+    <!-- Red outlined button for actions that undo something, e.g. Cancel reservation. -->
+    <style name="DangerButton" parent="PrimaryButton">
+        <item name="android:background">@drawable/bg_btn_danger</item>
+        <item name="android:textColor">@color/danger</item>
+    </style>
+
     <!-- Row in an action sheet: mint icon tile, title and a short hint. -->
     <style name="ActionRow">
         <item name="android:layout_width">match_parent</item>
