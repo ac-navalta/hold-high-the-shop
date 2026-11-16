@@ -185,6 +185,10 @@ class ListingDetailActivity : BaseActivity() {
         Sheets.show(this, R.layout.sheet_meetup) { sheet, dialog ->
             sheet.findViewById<TextView>(R.id.meetupSheetPlace).text = listing.meetup
             sheet.findViewById<View>(R.id.meetupDone).setOnClickListener { dialog.dismiss() }
+            sheet.findViewById<View>(R.id.meetupDirections).setOnClickListener {
+                dialog.dismiss()
+                startActivity(Intent(this, MapActivity::class.java).putExtra(MapActivity.EXTRA_PLACE, listing.meetup))
+            }
         }
     }
 

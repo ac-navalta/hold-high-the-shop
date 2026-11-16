@@ -518,4 +518,18 @@
     <string name="share_to_chat">Send to a chat</string>
     <string name="share_message_format">Check out this listing: %1$s (%2$s)</string>
     <string name="toast_shared">Sent to %1$s</string>
+
+    <!-- Directions map -->
+    <string name="btn_directions">Directions</string>
+    <string name="btn_done">Done</string>
+    <string name="map_title">Directions</string>
+    <string name="map_cd">Campus map with a walking route from the Main Gate to %1$s</string>
+    <string name="map_zoom_in">Zoom in</string>
+    <string name="map_zoom_out">Zoom out</string>
+    <string name="map_recenter">Show the whole route</string>
+    <plurals name="map_walk">
+        <item quantity="one">From Main Gate \u2022 about %1$d min walk</item>
+        <item quantity="other">From Main Gate \u2022 about %1$d min walk</item>
+    </plurals>
+    <string name="map_disclaimer">Illustrative campus map, not to scale</string>
 </resources>

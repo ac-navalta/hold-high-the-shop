@@ -101,6 +101,11 @@
             android:parentActivityName=".ProfileActivity" />
 
         <activity
+            android:name=".MapActivity"
+            android:exported="false"
+            android:parentActivityName=".ListingDetailActivity" />
+
+        <activity
             android:name=".MainActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
