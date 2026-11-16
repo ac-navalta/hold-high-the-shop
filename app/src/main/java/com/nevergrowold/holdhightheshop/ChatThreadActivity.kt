@@ -76,7 +76,21 @@ class ChatThreadActivity : BaseActivity() {
         if (!isSampleThread()) {
             // Keep only the "TODAY" label, then start from the last message in the list.
             while (messages.childCount > 1) messages.removeViewAt(1)
-            if (!intent.getBooleanExtra(EXTRA_RESERVED, false)) addBubble(seller.lastMessage, outgoing = false)
+            // Someone who sent a request on your listing: their request opens the chat.
+            val request = UserState.requestFrom(seller, listing.id)
+            if (request != null) {
+                addBubble(request.message, outgoing = false)
+                if (UserState.status(request) == Deals.ACCEPTED) {
+                    val card = LayoutInflater.from(this).inflate(R.layout.item_system_card, messages, false)
+                    card.findViewById<TextView>(R.id.systemTitle).setText(R.string.sys_request_accepted)
+                    card.findViewById<TextView>(R.id.systemDetail).text = getString(
+                        R.string.request_where_when, request.meetup, Rentals.whenLabel(this, request.meetMillis)
+                    )
+                    messages.addView(card)
+                }
+            } else if (!intent.getBooleanExtra(EXTRA_RESERVED, false)) {
+                addBubble(seller.lastMessage, outgoing = false)
+            }
         }
         val detail = intent.getStringExtra(EXTRA_RESERVED_DETAIL)
         if (intent.getBooleanExtra(EXTRA_RESERVED, false) && detail != null) {

@@ -672,4 +672,159 @@
     <string name="filter_lent_format">Lent out \u00B7 %1$d</string>
     <string name="filter_reserved_format">Reserved \u00B7 %1$d</string>
     <string name="filter_mine_format">Your listings \u00B7 %1$d</string>
+
+    <!-- ===== Deals: requests, handovers, missed meetups, ratings, problems ===== -->
+    <string name="day_yesterday_label">Yesterday</string>
+    <string name="hours_short">%1$d h</string>
+    <string name="minutes_short">%1$d min</string>
+    <string name="action_message">Message</string>
+    <string name="btn_continue">Continue</string>
+
+    <!-- Requests on your listing -->
+    <string name="requests_kicker">REQUESTS</string>
+    <string name="requests_sub">Accept one and the rest wait on a waitlist, in case it falls through. Requests close after 24 hours without an answer.</string>
+    <string name="requests_one_buy">%1$s wants to buy this</string>
+    <string name="requests_one_borrow">%1$s wants to borrow this</string>
+    <string name="requests_one_swap">%1$s offered a swap</string>
+    <plurals name="requests_many">
+        <item quantity="one">%1$d person wants this</item>
+        <item quantity="other">%1$d people want this</item>
+    </plurals>
+    <plurals name="btn_review_requests">
+        <item quantity="one">Review request</item>
+        <item quantity="other">Review requests (%1$d)</item>
+    </plurals>
+    <string name="answer_within_format">Answer within %1$s</string>
+    <string name="request_where_when">%1$s • %2$s</string>
+    <string name="request_offers">Offers their %1$s</string>
+    <string name="request_borrow_for">%1$s • %2$s total</string>
+    <string name="request_expired">Expired • not answered within 24 hours</string>
+    <string name="btn_accept">Accept</string>
+    <string name="btn_decline">Decline</string>
+    <string name="decline_title">Decline %1$s’s request?</string>
+    <string name="decline_message">%1$s will be told the item isn’t available to them. You can’t undo this.</string>
+    <string name="toast_declined">Declined %1$s’s request</string>
+    <string name="toast_pick_request">Pick a request first</string>
+    <string name="toast_accepted">You accepted %1$s. Meetup: %2$s.</string>
+    <string name="withdraw_other_title">Withdraw your other offer?</string>
+    <string name="withdraw_other_message">You offered this item to %1$s for their %2$s. One item can’t go to two people, so accepting %3$s withdraws that offer.</string>
+    <string name="withdraw_other_confirm">Accept and withdraw</string>
+    <plurals name="waitlist_count">
+        <item quantity="one">%1$d on the waitlist</item>
+        <item quantity="other">%1$d on the waitlist</item>
+    </plurals>
+    <plurals name="row_requests">
+        <item quantity="one">%1$d request • answer within %2$s</item>
+        <item quantity="other">%1$d requests • answer within %2$s</item>
+    </plurals>
+
+    <!-- Your listing, promised to someone -->
+    <string name="deal_reserved_title">Reserved by %1$s</string>
+    <string name="deal_lending_title">Lending to %1$s</string>
+    <string name="deal_swapping_title">Swapping with %1$s</string>
+    <string name="deal_code_hint">Ask %1$s for their code at the meetup</string>
+    <string name="row_deal_reserved">Reserved by %1$s • %2$s</string>
+    <string name="row_deal_lending">Lending to %1$s • %2$s</string>
+    <string name="row_deal_swapping">Swapping with %1$s • %2$s</string>
+    <string name="btn_enter_code">Enter code</string>
+    <string name="btn_did_it_happen">Did it happen?</string>
+    <string name="btn_cancel_deal">Call off the deal</string>
+    <string name="cancel_deal_title">Call off the deal with %1$s?</string>
+    <string name="cancel_deal_message">%1$s’s reservation ends and they’ll be told. Anyone on the waitlist can be accepted again.</string>
+    <string name="cancel_deal_keep">Keep it</string>
+    <string name="cancel_deal_confirm">Call off</string>
+    <string name="toast_deal_cancelled">Deal with %1$s called off</string>
+    <string name="toast_deal_cancelled_late">Deal with %1$s called off • counted as a late cancel</string>
+    <string name="late_cancel_note">The meetup is less than 2 hours away, so this counts against your on-time rate.</string>
+    <string name="toast_cancelled_late">Cancelled • counted as a late cancel</string>
+
+    <!-- Handover codes -->
+    <string name="code_kicker">HANDOVER</string>
+    <string name="code_title">Enter %1$s’s code</string>
+    <string name="code_sub_sell">Ask %1$s for the 4-digit code in their app once you’ve been paid, and type it in here.</string>
+    <string name="code_sub_lend">Ask %1$s for the 4-digit code in their app once they have the item. The loan starts today.</string>
+    <string name="code_sub_swap">Ask %1$s for the 4-digit code in their app once you’ve swapped.</string>
+    <string name="code_hint">••••</string>
+    <string name="code_demo">Prototype: %1$s’s code is %2$s. In the real app only %1$s can see it.</string>
+    <string name="code_error_short">Enter all 4 digits</string>
+    <string name="code_error_wrong">That code doesn’t match. Check it with %1$s.</string>
+    <string name="btn_confirm_handover">Confirm handover</string>
+    <string name="btn_confirm_without_code">Confirm without code</string>
+    <string name="no_code_title">Confirm without a code?</string>
+    <string name="no_code_message">Only do this if the handover really happened. Without %1$s’s code there’s no proof you met, so %1$s can still dispute it.</string>
+    <string name="code_your_kicker">YOUR HANDOVER CODE</string>
+    <string name="code_your_hint">Show it to %1$s once you have the item</string>
+    <string name="code_your_hint_swap">Show it to %1$s when you swap</string>
+    <string name="toast_sold_to">Sold to %1$s • moved to Completed</string>
+    <string name="toast_swapped_with">Swapped with %1$s • moved to Completed</string>
+    <string name="toast_lent_until">Lent to %1$s until %2$s</string>
+
+    <!-- Swaps offered to you -->
+    <string name="incoming_title">Coming to you from %1$s</string>
+    <string name="incoming_detail">In a swap for your %1$s • %2$s</string>
+    <string name="sys_request_accepted">You accepted this request</string>
+
+    <!-- Did the meetup happen? -->
+    <string name="btn_did_meetup_happen">Did the meetup happen?</string>
+    <string name="meetup_missed_format">The meetup was %1$s. Did it happen?</string>
+    <string name="row_meetup_missed">Meetup with %1$s passed • did it happen?</string>
+    <string name="row_reserved_when">From %1$s • %2$s</string>
+    <string name="meetup_check_kicker">MEETUP CHECK</string>
+    <string name="meetup_check_sub">You were meeting %1$s %2$s for the %3$s, and nothing was confirmed.</string>
+    <string name="happened_yes_gave">Yes, I handed it over</string>
+    <string name="happened_yes_got">Yes, I got the item</string>
+    <string name="happened_yes_borrow">Yes, I picked it up</string>
+    <string name="happened_yes_swap">Yes, we swapped</string>
+    <string name="happened_yes_hint">Finish the exchange now</string>
+    <string name="happened_they_missed">%1$s didn’t come</string>
+    <string name="happened_they_missed_hint">Goes to student support. It won’t count against you.</string>
+    <string name="happened_i_missed">I couldn’t make it</string>
+    <string name="happened_i_missed_hint">Ends the deal and counts against your on-time rate</string>
+    <string name="no_show_title">Report a no-show?</string>
+    <string name="no_show_message">The deal ends and student support is told that %1$s didn’t come. If %1$s says otherwise, support will look into it.</string>
+    <string name="no_show_confirm">Report</string>
+    <string name="i_missed_title">End the deal?</string>
+    <string name="i_missed_message">The deal with %1$s ends, and the missed meetup counts against your on-time rate.</string>
+    <string name="i_missed_confirm">End it</string>
+    <string name="toast_no_show">No-show reported • reference %1$s</string>
+    <string name="toast_i_missed">Deal ended • counted as a missed meetup</string>
+    <string name="toast_pick_option">Pick an answer first</string>
+
+    <!-- Problems and disputes -->
+    <string name="btn_report_problem">Report a problem</string>
+    <string name="problem_kicker">REPORT A PROBLEM</string>
+    <string name="problem_no_show">They didn’t come to the meetup</string>
+    <string name="problem_not_returned">Not returned on time</string>
+    <string name="problem_damaged">Item was damaged</string>
+    <string name="problem_not_as_described">Item not as described</string>
+    <string name="problem_payment">Payment problem</string>
+    <string name="problem_other">Something else</string>
+    <string name="problem_details_hint">Anything that helps student support (optional)</string>
+    <string name="problem_note">Student support will look into it and may contact you and %1$s. %1$s won’t see what you wrote.</string>
+    <string name="problem_note_nobody">the other student</string>
+    <string name="btn_send_report">Send report</string>
+    <string name="toast_problem_reported">Sent to student support • reference %1$s</string>
+    <string name="status_reported_format">%1$s • reported (%2$s)</string>
+
+    <!-- Timeline steps -->
+    <string name="ev_they_requested">%1$s sent a request</string>
+    <string name="ev_they_offered">%1$s offered a swap</string>
+    <string name="ev_they_accepted">%1$s confirmed the meetup</string>
+    <string name="ev_you_reserved">You reserved it</string>
+    <string name="ev_you_offered">You offered a swap</string>
+    <string name="ev_you_accepted">You accepted</string>
+    <string name="ev_handover_code">Handed over • code checked</string>
+    <string name="ev_handover_manual">Handed over • confirmed without code</string>
+    <string name="ev_you_got_it">You confirmed you got it</string>
+    <string name="ev_you_picked_up">You picked it up • loan started</string>
+    <string name="ev_picked_up">Picked up • loan started</string>
+    <string name="ev_lent_out">Lent to %1$s • loan started</string>
+    <string name="ev_swap_done">You confirmed the swap</string>
+    <string name="ev_they_returned">%1$s said it was returned</string>
+    <string name="ev_you_returned">You said it was returned</string>
+    <string name="ev_return_confirmed">Return confirmed</string>
+    <string name="ev_closed_by_you">You marked it as done</string>
+    <string name="ev_you_rated">You rated %1$s</string>
+    <string name="ev_problem_reported">Problem reported (%1$s)</string>
+
 </resources>

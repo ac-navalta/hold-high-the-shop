@@ -315,6 +315,55 @@
                         </LinearLayout>
                     </LinearLayout>
 
+                    <!--
+                        Your handover code, when you are the one receiving. The
+                        other student types it in on their phone to prove you met.
+                    -->
+                    <LinearLayout
+                        android:id="@+id/codeBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/bg_code_box"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:paddingTop="10dp"
+                        android:paddingBottom="10dp"
+                        android:visibility="gone">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/Kicker"
+                                android:text="@string/code_your_kicker" />
+
+                            <TextView
+                                android:id="@+id/codeHint"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:fontFamily="@font/poppins_regular"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/codeValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/grid_gap"
+                            android:fontFamily="@font/poppins_bold"
+                            android:letterSpacing="0.25"
+                            android:textColor="@color/uc_green"
+                            android:textSize="22sp" />
+                    </LinearLayout>
+
                     <!-- After the meetup: "I got the item" / "I picked it up" / "Swap done". -->
                     <TextView
                         android:id="@+id/btnReceived"
@@ -631,6 +680,52 @@
                 android:contentDescription="@null" />
         </FrameLayout>
 
+        <!-- Your listing promised to someone: call it off. Red, and it asks first. -->
+        <FrameLayout
+            android:id="@+id/btnCancelDeal"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_btn_danger"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="cancelDeal"
+            android:contentDescription="@string/btn_cancel_deal"
+            android:tooltipText="@string/btn_cancel_deal"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_close"
+                android:tint="@color/danger"
+                android:contentDescription="@null" />
+        </FrameLayout>
+
+        <!-- Something you lent is overdue: report it to student support. -->
+        <FrameLayout
+            android:id="@+id/btnProblem"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_btn_outline"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="reportLoanProblem"
+            android:contentDescription="@string/btn_report_problem"
+            android:tooltipText="@string/btn_report_problem"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_flag"
+                android:tint="@color/danger"
+                android:contentDescription="@null" />
+        </FrameLayout>
+
         <TextView
             android:id="@+id/btnReserve"
             android:layout_width="0dp"
@@ -711,6 +806,26 @@
             android:layout_weight="1"
             android:layout_marginStart="10dp"
             android:onClick="markDone"
+            android:visibility="gone" />
+
+        <!-- Your listing, promised to someone: type in their code at the meetup. -->
+        <TextView
+            android:id="@+id/btnHandover"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:onClick="handOver"
+            android:visibility="gone" />
+
+        <!-- Your listing with requests waiting: answer them. -->
+        <TextView
+            android:id="@+id/btnRequests"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:onClick="reviewRequests"
             android:visibility="gone" />
 
         <!-- Own listing already marked as done. -->

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Pick one option, then act on it. Used for reviewing requests on your
+    listing, "Did the meetup happen?" and reporting a problem. The note,
+    the details box and the second button are hidden unless a screen needs them.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_sheet_top"
+    android:paddingStart="@dimen/screen_margin"
+    android:paddingEnd="@dimen/screen_margin"
+    android:paddingBottom="@dimen/screen_margin">
+
+    <View style="@style/SheetHandle" />
+
+    <TextView
+        android:id="@+id/chooseKicker"
+        style="@style/Kicker"
+        android:layout_marginTop="16dp" />
+
+    <TextView
+        android:id="@+id/chooseTitle"
+        style="@style/SheetTitle"
+        android:layout_marginTop="4dp" />
+
+    <TextView
+        android:id="@+id/chooseSub"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:fontFamily="@font/poppins_regular"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/chooseRows"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+
+    <EditText
+        android:id="@+id/chooseInput"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:layout_marginTop="4dp"
+        android:background="@drawable/bg_input"
+        android:gravity="top|start"
+        android:padding="16dp"
+        android:fontFamily="@font/poppins_regular"
+        android:inputType="textMultiLine|textCapSentences"
+        android:maxLength="300"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_secondary"
+        android:textSize="14sp"
+        android:autofillHints=""
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/chooseNote"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_note_strip"
+        android:padding="12dp"
+        android:fontFamily="@font/poppins_regular"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/screen_margin"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/chooseSecondary"
+            style="@style/DangerButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="@dimen/grid_gap"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/choosePrimary"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_weight="1" />
+    </LinearLayout>
+</LinearLayout>

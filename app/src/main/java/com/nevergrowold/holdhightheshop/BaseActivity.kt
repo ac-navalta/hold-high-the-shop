@@ -165,6 +165,58 @@ open class BaseActivity : AppCompatActivity() {
         view.visibility = View.VISIBLE
     }
 
+    /**
+     * "Report a problem": pick a reason, add details if you like, and it goes
+     * to student support as an issue with a reference number. Used for
+     * finished exchanges and for overdue loans.
+     *
+     * @param subject the exchange or listing id the problem is about.
+     */
+    protected fun reportProblem(
+        subject: String,
+        itemTitle: String,
+        partner: Seller?,
+        reasons: List<Int>,
+        onReported: (Issue) -> Unit = {}
+    ) {
+        var picked = -1
+        Sheets.show(this, R.layout.sheet_choose) { sheet, dialog ->
+            dialog.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            sheet.findViewById<TextView>(R.id.chooseKicker).setText(R.string.problem_kicker)
+            sheet.findViewById<TextView>(R.id.chooseTitle).text = itemTitle
+            val box = sheet.findViewById<LinearLayout>(R.id.chooseRows)
+            val rows = reasons.map { reason ->
+                LayoutInflater.from(this).inflate(R.layout.item_swap_option, box, false).also {
+                    it.findViewById<TextView>(R.id.optionTitle).setText(reason)
+                    it.findViewById<View>(R.id.optionMeta).visibility = View.GONE
+                    box.addView(it)
+                }
+            }
+            Choice.rows(rows, rows.map { it.findViewById(R.id.optionRadio) }, picked) { picked = it }
+            val input = sheet.findViewById<android.widget.EditText>(R.id.chooseInput)
+            input.visibility = View.VISIBLE
+            input.setHint(R.string.problem_details_hint)
+            sheet.findViewById<TextView>(R.id.chooseNote).apply {
+                visibility = View.VISIBLE
+                text = getString(R.string.problem_note, partner?.first ?: getString(R.string.problem_note_nobody))
+            }
+            sheet.findViewById<TextView>(R.id.choosePrimary).apply {
+                setText(R.string.btn_send_report)
+                setOnClickListener {
+                    if (picked < 0) {
+                        android.widget.Toast.makeText(this@BaseActivity, R.string.toast_select_reason, android.widget.Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
+                    hideKeyboard(input)
+                    val issue = UserState.report(subject, reasons[picked], partner, input.text.toString().trim())
+                    dialog.dismiss()
+                    onReported(issue)
+                    notify(getString(R.string.toast_problem_reported, issue.ref))
+                }
+            }
+        }
+    }
+
     /** Adds a heading with a one-line hint to a list. */
     protected fun addSection(list: LinearLayout, title: Int, hint: Int) {
         val header = LayoutInflater.from(this).inflate(R.layout.item_section_header, list, false)

@@ -24,7 +24,10 @@ data class Seller(
     val completed: Int,
     val lastMessage: String,
     val online: Boolean
-)
+) {
+    /** "Paolo", for buttons and short messages. */
+    val first get() = name.substringBefore(' ')
+}
 
 data class Listing(
     val id: String,
@@ -127,13 +130,26 @@ data class Availability(val times: List<FreeTime>) {
 data class Program(val code: String, val icon: Int)
 
 /**
+ * One step in a deal's history, shown on Transaction details, e.g.
+ * "Miguel sent a request" at 2:14 PM. [text] is a string resource; [arg]
+ * fills its %1$s, usually the other student's first name.
+ */
+data class DealEvent(val text: Int, val millis: Long, val arg: String? = null)
+
+/**
  * A finished exchange, shown under Profile > Completed and on its
  * Transaction details screen.
  *
  * @param kind one of the Exchange.SOLD ... SWAPPED constants.
  * @param partner the other student, or null for a listing you closed yourself.
+ * @param finishedMillis when the item changed hands (or came back, for loans).
  * @param theirRating stars the other student gave you, 0 if not rated yet.
- * @param yourRating stars you gave them, 0 if not rated yet.
+ * @param yourRating stars you gave them, 0 if not rated yet. A rating given
+ *        this session lives in [UserState] instead; see [Reliability.yourStars].
+ * @param onTime you kept to the meetup or the return date.
+ * @param proof how the handover was confirmed: one of the PROOF_ constants.
+ * @param listingId the listing this came from, when it is one in [Listings.ALL].
+ * @param events the deal's history; sample exchanges get a made-up one.
  */
 data class Exchange(
     val id: String,
@@ -141,13 +157,19 @@ data class Exchange(
     val price: Int,
     val kind: Int,
     val partner: Seller?,
-    val date: String,
+    val finishedMillis: Long,
     val meetup: String,
     val theirRating: Int,
-    val yourRating: Int
+    val yourRating: Int,
+    val onTime: Boolean = true,
+    val proof: Int = PROOF_CODE,
+    val listingId: String? = null,
+    val events: List<DealEvent> = emptyList()
 ) {
     /** You gave the item (sold, lent or swapped) rather than received it. */
     val giving get() = kind == SOLD || kind == LENT || kind == SWAPPED
+
+    val isLoan get() = kind == LENT || kind == BORROWED
 
     companion object {
         const val SOLD = 0
@@ -155,8 +177,55 @@ data class Exchange(
         const val LENT = 2
         const val BORROWED = 3
         const val SWAPPED = 4
+
+        /** The giver typed in the receiver's handover code. */
+        const val PROOF_CODE = 0
+        /** The giver confirmed without a code (no signal, forgot the app...). */
+        const val PROOF_MANUAL = 1
+        /** You confirmed you received it; the giver checks your code on their side. */
+        const val PROOF_RECEIVED = 2
     }
 }
+
+/**
+ * Someone asking for one of Mika's listings: to buy it, borrow it, or swap
+ * one of their own items for it. The other student never acts in the
+ * prototype, so every request starts as sample data and only Mika answers.
+ *
+ * @param meetMillis the meetup they proposed; accepting agrees to it.
+ * @param weeks loans only: how long they want to borrow it.
+ * @param offerId swaps only: their listing they are offering.
+ */
+data class Request(
+    val id: String,
+    val listingId: String,
+    val from: Seller,
+    val sentMillis: Long,
+    val meetup: String,
+    val meetMillis: Long,
+    val message: String,
+    val weeks: Int = 0,
+    val offerId: String? = null
+) {
+    val expiresMillis get() = sentMillis + Deals.ANSWER_WITHIN_MS
+}
+
+/**
+ * A problem raised with student support: a no-show, an item not returned,
+ * or something wrong with a finished exchange. Stays "Under review" in the
+ * prototype; the support team works on the backend later.
+ *
+ * @param subject the exchange or listing id it is about.
+ * @param reason a string resource naming the problem.
+ */
+data class Issue(
+    val ref: String,
+    val subject: String,
+    val reason: Int,
+    val partner: Seller?,
+    val millis: Long,
+    val details: String = ""
+)
 
 object Listings {
 
@@ -318,6 +387,18 @@ object Listings {
             "Complete reviewer with worked examples for Calculus 1 and 2. A few notes in pencil.",
             ME, "UC Library Lobby", 4,
             wants = "An electronics or Arduino kit"
+        ),
+        Listing(
+            "mine5", "Safety Goggles", 40, "COE", 1, 1,
+            "Clear anti-fog goggles for chem and shop labs. Cleaned after every use.",
+            ME, "CITCS Building Entrance", 1,
+            maxWeeks = 4
+        ),
+        Listing(
+            "mine6", "Drafting Triangles Set", 30, "CAFA", 1, 1,
+            "45\u00B0 and 30/60\u00B0 triangles with a protractor. Borrow it for your plates.",
+            ME, "UC Library Lobby", 9,
+            maxWeeks = 2
         )
     )
 
@@ -352,35 +433,109 @@ object Listings {
         isMine(it) && !UserState.isClosed(it.id) && UserState.rental(it.id) == null
     }
 
-    /** Mika's finished exchanges, shown under Profile > Completed. */
-    private val COMPLETED = listOf(
-        Exchange("ex1", "Calculus Textbook", 600, Exchange.SOLD, janelle, "Nov 12", "UC Library Lobby", 5, 5),
-        Exchange("ex2", "UC Type A Uniform", 500, Exchange.SOLD, aira, "Nov 9", "UC Main Gate Security Desk", 5, 4),
-        Exchange("ex3", "Lab Goggles", 150, Exchange.BOUGHT, miguel, "Nov 5", "CITCS Building Entrance", 4, 4),
-        Exchange("ex4", "Graphing Calculator", 400, Exchange.LENT, miguel, "Nov 1", "UC Main Gate Security Desk", 5, 5),
-        Exchange("ex5", "Intro to Programming", 450, Exchange.SWAPPED, paolo, "Oct 28", "CITCS Building Entrance", 5, 5),
-        Exchange("ex6", "Nursing Shoes", 700, Exchange.SOLD, janelle, "Oct 24", "UC Library Lobby", 4, 5),
-        Exchange("ex7", "Accounting Workbook", 300, Exchange.BOUGHT, aira, "Oct 20", "UC Canteen Area", 5, 4),
-        Exchange("ex8", "Stethoscope", 950, Exchange.SOLD, janelle, "Oct 15", "UC Library Lobby", 5, 5),
-        Exchange("ex9", "Scientific Calculator", 800, Exchange.SOLD, miguel, "Oct 11", "UC Main Gate Security Desk", 4, 0),
-        Exchange("ex10", "UC Lanyard and ID Case", 80, Exchange.SOLD, paolo, "Oct 6", "UC Canteen Area", 5, 5),
-        Exchange("ex11", "Physics Reviewer", 250, Exchange.BOUGHT, paolo, "Oct 2", "UC Library Lobby", 0, 5),
-        Exchange("ex12", "Engineering Ruler Set", 200, Exchange.SOLD, miguel, "Sep 27", "CITCS Building Entrance", 5, 4),
-        Exchange("ex13", "Business Math Book", 350, Exchange.SWAPPED, aira, "Sep 22", "UC Canteen Area", 5, 5),
-        Exchange("ex14", "White Lab Gown", 120, Exchange.BORROWED, janelle, "Sep 18", "UC Library Lobby", 5, 5)
-    )
+    /** Own listings you can still offer in a swap: open, and not promised to anyone. */
+    fun offerable(): List<Listing> = myActive().filter { UserState.accepted(it.id) == null }
 
-    /** Profile > Completed: anything you closed this session, then the history. */
-    fun completed(): List<Exchange> = ALL.filter { isMine(it) && UserState.isClosed(it.id) }.map {
-        val kind = when (it.type) {
-            1 -> Exchange.LENT
-            2 -> Exchange.SWAPPED
-            else -> Exchange.SOLD
+    private fun daysAgo(days: Int) = System.currentTimeMillis() - days * Rentals.DAY_MS
+
+    /**
+     * Mika's finished exchanges before this session, newest first. Dated
+     * from today so the 7-day rating window always makes sense: Calculus
+     * Textbook is recent and still waiting for Mika's rating, while the
+     * Scientific Calculator's window has closed. Accounting Workbook was a
+     * late meetup, so it counts against her on-time rate.
+     */
+    private val COMPLETED by lazy {
+        listOf(
+            Exchange("ex1", "Calculus Textbook", 600, Exchange.SOLD, janelle, daysAgo(4), "UC Library Lobby", 5, 0),
+            Exchange("ex2", "UC Type A Uniform", 500, Exchange.SOLD, aira, daysAgo(7), "UC Main Gate Security Desk", 5, 4),
+            Exchange("ex3", "Lab Goggles", 150, Exchange.BOUGHT, miguel, daysAgo(11), "CITCS Building Entrance", 4, 4),
+            Exchange("ex4", "Graphing Calculator", 400, Exchange.LENT, miguel, daysAgo(15), "UC Main Gate Security Desk", 5, 5),
+            Exchange("ex5", "Intro to Programming", 450, Exchange.SWAPPED, paolo, daysAgo(19), "CITCS Building Entrance", 5, 5),
+            Exchange("ex6", "Nursing Shoes", 700, Exchange.SOLD, janelle, daysAgo(23), "UC Library Lobby", 4, 5),
+            Exchange(
+                "ex7", "Accounting Workbook", 300, Exchange.BOUGHT, aira, daysAgo(27), "UC Canteen Area", 5, 4,
+                onTime = false
+            ),
+            Exchange("ex8", "Stethoscope", 950, Exchange.SOLD, janelle, daysAgo(32), "UC Library Lobby", 5, 5),
+            Exchange("ex9", "Scientific Calculator", 800, Exchange.SOLD, miguel, daysAgo(36), "UC Main Gate Security Desk", 4, 0),
+            Exchange("ex10", "UC Lanyard and ID Case", 80, Exchange.SOLD, paolo, daysAgo(41), "UC Canteen Area", 5, 5),
+            Exchange("ex11", "Physics Reviewer", 250, Exchange.BOUGHT, paolo, daysAgo(45), "UC Library Lobby", 0, 5),
+            Exchange("ex12", "Engineering Ruler Set", 200, Exchange.SOLD, miguel, daysAgo(50), "CITCS Building Entrance", 5, 4),
+            Exchange(
+                "ex13", "Business Math Book", 350, Exchange.SWAPPED, aira, daysAgo(55), "UC Canteen Area", 5, 5,
+                proof = Exchange.PROOF_MANUAL
+            ),
+            Exchange("ex14", "White Lab Gown", 120, Exchange.BORROWED, janelle, daysAgo(59), "UC Library Lobby", 5, 5)
+        )
+    }
+
+    /**
+     * Profile > Completed: exchanges finished this session, then listings you
+     * closed yourself (sold elsewhere, no partner on record), then history.
+     */
+    fun completed(): List<Exchange> {
+        val closedByYou = ALL.filter { isMine(it) && UserState.isClosedByYou(it.id) }.map {
+            val kind = when (it.type) {
+                1 -> Exchange.LENT
+                2 -> Exchange.SWAPPED
+                else -> Exchange.SOLD
+            }
+            Exchange(
+                "closed-${it.id}", it.title, it.price, kind, null, UserState.closedAt(it.id), it.meetup, 0, 0,
+                listingId = it.id
+            )
         }
-        Exchange("closed-${it.id}", it.title, it.price, kind, null, "Today", it.meetup, 0, 0)
-    }.let { UserState.finished() + it } + COMPLETED
+        return UserState.finished() + closedByYou + COMPLETED
+    }
 
     fun exchange(id: String?): Exchange = completed().firstOrNull { it.id == id } ?: COMPLETED.first()
+
+    /**
+     * Requests on Mika's listings, as they stood when the app opened.
+     * - Engineering Drawing Set: two open requests and one that expired
+     *   because nobody answered within 24 hours.
+     * - Introduction to Psychology: Carlo's request is already accepted
+     *   (meetup later today), Paolo waits on the waitlist.
+     * - Safety Goggles: Miguel wants to borrow them for two weeks.
+     * - Calculus Reviewer: Paolo offers his Chemistry lab manual. Mika has
+     *   also offered this reviewer to Carlo, so accepting Paolo withdraws that.
+     */
+    val REQUESTS: List<Request> by lazy {
+        val now = System.currentTimeMillis()
+        val hour = 60 * 60 * 1000L
+        listOf(
+            Request(
+                "rq1", "item1", miguel, now - 3 * hour, "UC Main Gate Security Desk",
+                Rentals.at(1, 14 * 60), "Hi! Is this still available? I can meet tomorrow after class."
+            ),
+            Request(
+                "rq2", "item1", aira, now - 1 * hour, "UC Library Lobby",
+                Rentals.at(2, 10 * 60), "I need it for my plates next week. Pwede sa library?"
+            ),
+            Request(
+                "rq3", "item1", janelle, now - 30 * hour, "UC Library Lobby",
+                Rentals.at(0, 11 * 60), "Hello, reserving this for my cousin in COE."
+            ),
+            Request(
+                "rq4", "mine3", carlo, now - 20 * hour, "CITCS Building Entrance",
+                (now + 3 * hour) / (30 * 60 * 1000L) * (30 * 60 * 1000L), "Thanks for accepting! See you at the CITCS entrance."
+            ),
+            Request(
+                "rq5", "mine3", paolo, now - 6 * hour, "UC Library Lobby",
+                Rentals.at(1, 15 * 60), "If it falls through, I'll take it."
+            ),
+            Request(
+                "rq6", "mine5", miguel, now - 2 * hour, "CITCS Building Entrance",
+                Rentals.at(1, 11 * 60), "For my chem lab next week and the one after.", weeks = 2
+            ),
+            Request(
+                "rq7", "mine4", paolo, now - 5 * hour, "CITCS Building Entrance",
+                Rentals.at(2, 13 * 60), "Not electronics, but my lab manual is complete and clean.",
+                offerId = "item11"
+            )
+        )
+    }
 
     val MEETUP_POINTS = listOf(
         "UC Main Gate Security Desk",
@@ -457,16 +612,36 @@ object Listings {
 }
 
 /**
- * Which listings the student saved or reserved during this session.
- * Kept in memory only: it resets when the app is closed, which is fine for
- * a front-end prototype. The backend will own this later.
+ * Everything the student did during this session: saved items,
+ * reservations, loans, answers to requests, finished exchanges, ratings
+ * and reported problems. Kept in memory only, so it resets when the app is
+ * closed, which is fine for a front-end prototype.
+ *
+ * Each function here stands in for one backend call. In the real app the
+ * server makes these state changes (and checks they are allowed), so the
+ * screens only ever ask for an action and redraw from the result.
  */
 object UserState {
 
     private val saved = mutableSetOf("item3", "item5")
 
-    /** A pending reservation or swap offer. [weeks] is the rental length for rent listings. */
-    data class Reservation(val summary: String, val weeks: Int = 0)
+    /**
+     * A reservation or swap offer Mika made on someone else's listing.
+     * Mika's reservations count as accepted straight away, since the other
+     * student never answers in the prototype.
+     *
+     * @param weeks loans only: how long she is borrowing it.
+     * @param meetMillis the agreed meetup, or null when none is set yet.
+     * @param offerId swaps only: Mika's listing she is offering.
+     * @param madeMillis when she reserved or offered.
+     */
+    data class Reservation(
+        val summary: String,
+        val weeks: Int = 0,
+        val meetMillis: Long? = null,
+        val offerId: String? = null,
+        val madeMillis: Long = System.currentTimeMillis()
+    )
 
     /**
      * An item that is out on loan. [lending] is true when Mika lent it to
@@ -477,29 +652,65 @@ object UserState {
         val dueMillis: Long,
         val lending: Boolean,
         /** The borrower says they gave it back; the lender has not confirmed yet. */
-        val returnPending: Boolean = false
+        val returnPending: Boolean = false,
+        val startMillis: Long = System.currentTimeMillis(),
+        /** When the borrower said it was returned. */
+        val reportedMillis: Long? = null,
+        /** History up to the pickup, carried into the finished exchange. */
+        val events: List<DealEvent> = emptyList(),
+        val proof: Int = Exchange.PROOF_CODE
     )
 
-    private val reserved = mutableMapOf(
-        "item2" to Reservation("UC Main Gate Security Desk \u2022 Tomorrow, 1:30 PM"),
-        "item14" to Reservation("Your Calculus Reviewer for their Arduino Starter Kit")
-    )
+    private val reserved: MutableMap<String, Reservation> by lazy {
+        val now = System.currentTimeMillis()
+        mutableMapOf(
+            "item2" to Reservation(
+                "UC Main Gate Security Desk • Tomorrow, 1:30 PM",
+                meetMillis = Rentals.at(1, 13 * 60 + 30), madeMillis = now - 2 * HOUR
+            ),
+            "item14" to Reservation(
+                "Your Calculus Reviewer for their Arduino Starter Kit",
+                offerId = "mine4", madeMillis = now - 26 * HOUR
+            ),
+            // The meetup was yesterday and nobody confirmed it: "Did it happen?"
+            "item7" to Reservation(
+                "UC Library Lobby • Yesterday, 10:00 AM",
+                meetMillis = Rentals.at(-1, 10 * 60), madeMillis = now - 3 * Rentals.DAY_MS
+            )
+        )
+    }
 
     /** Sample loans, dated from today so the countdowns always make sense. */
     private val rentals: MutableMap<String, Rental> by lazy {
         val now = System.currentTimeMillis()
         mutableMapOf(
-            "item5" to Rental(Listings.byId("item5").seller, now + 4 * Rentals.DAY_MS, lending = false),
-            "item10" to Rental(Listings.byId("item10").seller, now - 1 * Rentals.DAY_MS, lending = false),
+            "item5" to Rental(
+                Listings.byId("item5").seller, now + 4 * Rentals.DAY_MS, lending = false,
+                startMillis = now - 3 * Rentals.DAY_MS
+            ),
+            "item10" to Rental(
+                Listings.byId("item10").seller, now - 1 * Rentals.DAY_MS, lending = false,
+                startMillis = now - 8 * Rentals.DAY_MS
+            ),
             // Aira already tapped "I've returned it", so Mika has a return to confirm.
             "mine2" to Rental(
                 Listings.sellerByName("Aira Villanueva"), now + 2 * Rentals.DAY_MS,
-                lending = true, returnPending = true
+                lending = true, returnPending = true, startMillis = now - 5 * Rentals.DAY_MS,
+                reportedMillis = now - 4 * HOUR
+            ),
+            // Paolo is three days late: Mika can report a problem.
+            "mine6" to Rental(
+                Listings.sellerByName("Paolo Mendoza"), now - 3 * Rentals.DAY_MS,
+                lending = true, startMillis = now - 17 * Rentals.DAY_MS
             )
         )
     }
 
-    private val closed = mutableSetOf<String>()
+    /** Own listings taken off the market, with when. */
+    private val closed = mutableMapOf<String, Long>()
+
+    /** Closed by "Mark as sold" rather than by a deal in the app. */
+    private val closedByYou = mutableSetOf<String>()
 
     /** Exchanges finished this session, newest first. */
     private val finished = mutableListOf<Exchange>()
@@ -507,8 +718,28 @@ object UserState {
     /** Other people's listings Mika bought, borrowed or swapped for: gone from the market. */
     private val taken = mutableSetOf<String>()
 
+    /** Mika's answers to requests on her listings. Unanswered ones are not in here. */
+    private val answers: MutableMap<String, Int> by lazy { mutableMapOf("rq4" to Deals.ACCEPTED) }
+
+    private val acceptedAt: MutableMap<String, Long> by lazy {
+        mutableMapOf("rq4" to System.currentTimeMillis() - 19 * HOUR)
+    }
+
+    /** Cancellations close to the meetup, and meetups Mika missed. Both lower on-time. */
+    private var lateCancels = 0
+
+    /** Stars and an optional note Mika gave, by exchange id. */
+    private val ratings = mutableMapOf<String, Pair<Int, String>>()
+
+    private val ratedAt = mutableMapOf<String, Long>()
+
+    /** Problems reported to student support, by the exchange or listing they are about. */
+    private val issues = mutableMapOf<String, Issue>()
+
     /** Settings > Default meetup point. Used to prefill new listings. */
     var defaultMeetup = 0
+
+    // ---- Saved -------------------------------------------------------------
 
     fun saved(): List<Listing> = Listings.ALL.filter { it.id in saved }
 
@@ -518,6 +749,8 @@ object UserState {
         if (on) saved.add(id) else saved.remove(id)
     }
 
+    // ---- Mika's reservations and swap offers ------------------------------
+
     fun isReserved(id: String) = id in reserved
 
     fun reservation(id: String): Reservation? = reserved[id]
@@ -525,13 +758,38 @@ object UserState {
     /** Listings the student reserved from others, oldest first. */
     fun reservedListings(): List<Listing> = reserved.keys.map { Listings.byId(it) }
 
-    fun setReserved(id: String, detail: String, weeks: Int = 0) {
-        reserved[id] = Reservation(detail, weeks)
+    fun setReserved(id: String, detail: String, weeks: Int = 0, meetMillis: Long? = null, offerId: String? = null) {
+        reserved[id] = Reservation(detail, weeks, meetMillis, offerId)
     }
 
-    fun cancelReservation(id: String) {
-        reserved.remove(id)
+    /**
+     * Cancels or withdraws a reservation. Returns true when it was late
+     * (under two hours before the meetup, or after it), which counts
+     * against Mika's on-time rate.
+     */
+    fun cancelReservation(id: String): Boolean {
+        val reservation = reserved.remove(id) ?: return false
+        val late = Deals.isLate(reservation.meetMillis)
+        if (late) lateCancels++
+        return late
     }
+
+    /**
+     * "Did the meetup happen?" answered with a no. When the other student
+     * missed it, a no-show goes to student support; when Mika missed it,
+     * it counts against her on-time rate. Either way the reservation ends
+     * and the item goes back on the market.
+     */
+    fun reportNoShow(listing: Listing, theyMissed: Boolean) {
+        reserved.remove(listing.id) ?: return
+        if (theyMissed) {
+            report(listing.id, R.string.problem_no_show, listing.seller)
+        } else {
+            lateCancels++
+        }
+    }
+
+    // ---- Loans --------------------------------------------------------------
 
     fun rental(id: String): Rental? = rentals[id]
 
@@ -543,72 +801,381 @@ object UserState {
     fun lending(): List<Pair<Listing, Rental>> =
         rentals.filter { it.value.lending }.map { Listings.byId(it.key) to it.value }.sortedBy { it.second.dueMillis }
 
-    /** Own rent listing: hand it to [partner] for [weeks]. */
+    /** Own lend listing handed over without a request in the app ("Lend it out"). */
     fun lend(listing: Listing, partner: Seller, weeks: Int) {
-        rentals[listing.id] = Rental(partner, System.currentTimeMillis() + weeks * Rentals.WEEK_MS, lending = true)
+        val now = System.currentTimeMillis()
+        declineOpen(listing.id)
+        rentals[listing.id] = Rental(
+            partner, now + weeks * Rentals.WEEK_MS, lending = true, startMillis = now,
+            events = listOf(DealEvent(R.string.ev_lent_out, now, partner.first)), proof = Exchange.PROOF_MANUAL
+        )
     }
 
-    /**
-     * Item handed back. Moves the loan to Completed. A lent item becomes
-     * available to lend again; a borrowed one stays off the market.
-     */
     /**
      * Borrower: "I've returned it". The loan stays open until the lender
      * confirms, because only they know the item really came back.
      */
     fun reportReturned(listing: Listing) {
-        rentals[listing.id]?.let { rentals[listing.id] = it.copy(returnPending = true) }
+        rentals[listing.id]?.let {
+            rentals[listing.id] = it.copy(returnPending = true, reportedMillis = System.currentTimeMillis())
+        }
     }
 
     /** Lender: "Not received". The loan carries on as before. */
     fun rejectReturn(listing: Listing) {
-        rentals[listing.id]?.let { rentals[listing.id] = it.copy(returnPending = false) }
+        rentals[listing.id]?.let { rentals[listing.id] = it.copy(returnPending = false, reportedMillis = null) }
     }
 
-    /** Lender confirms the item is back (with or without the borrower's report). */
+    /**
+     * Lender confirms the item is back (with or without the borrower's
+     * report). The loan moves to Completed. A lent item can be lent again;
+     * a borrowed one stays off the market.
+     */
     fun markReturned(listing: Listing) {
         val rental = rentals.remove(listing.id) ?: return
+        val now = System.currentTimeMillis()
+        val returned = rental.reportedMillis ?: now
+        val events = rental.events.ifEmpty {
+            listOf(DealEvent(R.string.ev_picked_up, rental.startMillis))
+        } + listOfNotNull(
+            rental.reportedMillis?.let {
+                if (rental.lending) DealEvent(R.string.ev_they_returned, it, rental.partner.first)
+                else DealEvent(R.string.ev_you_returned, it)
+            },
+            DealEvent(R.string.ev_return_confirmed, now)
+        )
         finished.add(
             0, Exchange(
                 "done-${listing.id}-${finished.size}", listing.title, listing.price,
                 if (rental.lending) Exchange.LENT else Exchange.BORROWED,
-                rental.partner, "Today", listing.meetup, 0, 0
+                rental.partner, now, listing.meetup, 0, 0,
+                // Mika's on-time rate is about her own returns, not her borrowers'.
+                onTime = rental.lending || returned < rental.dueMillis + Rentals.DAY_MS,
+                proof = rental.proof, listingId = listing.id, events = events
             )
         )
     }
 
+    // ---- Receiving: Mika got the item she reserved -------------------------
+
     /**
-     * Reservation picked up / swap done. A rental starts its countdown;
-     * a purchase or swap goes straight to Completed.
+     * Reservation picked up / swap done. A loan starts its countdown; a
+     * purchase or swap goes straight to Completed. In a swap Mika's own
+     * item is gone too, so any requests on it are declined.
      */
     fun markReceived(listing: Listing) {
         val reservation = reserved.remove(listing.id) ?: return
+        val now = System.currentTimeMillis()
         taken.add(listing.id)
+        val start = DealEvent(if (listing.isSwap) R.string.ev_you_offered else R.string.ev_you_reserved, reservation.madeMillis)
         if (listing.isRent) {
             val weeks = reservation.weeks.coerceAtLeast(1)
-            rentals[listing.id] = Rental(listing.seller, System.currentTimeMillis() + weeks * Rentals.WEEK_MS, lending = false)
-        } else {
-            finished.add(
-                0, Exchange(
-                    "done-${listing.id}-${finished.size}", listing.title, listing.price,
-                    if (listing.isSwap) Exchange.SWAPPED else Exchange.BOUGHT,
-                    listing.seller, "Today", listing.meetup, 0, 0
-                )
+            rentals[listing.id] = Rental(
+                listing.seller, now + weeks * Rentals.WEEK_MS, lending = false, startMillis = now,
+                events = listOf(start, DealEvent(R.string.ev_you_picked_up, now)), proof = Exchange.PROOF_RECEIVED
             )
+            return
         }
+        reservation.offerId?.let {
+            closed[it] = now
+            declineOpen(it)
+        }
+        finished.add(
+            0, Exchange(
+                "done-${listing.id}-${finished.size}", listing.title, listing.price,
+                if (listing.isSwap) Exchange.SWAPPED else Exchange.BOUGHT,
+                listing.seller, now, listing.meetup, 0, 0,
+                proof = Exchange.PROOF_RECEIVED, listingId = listing.id,
+                events = listOf(start, DealEvent(if (listing.isSwap) R.string.ev_swap_done else R.string.ev_you_got_it, now))
+            )
+        )
     }
+
+    // ---- Requests on Mika's listings ---------------------------------------
+
+    /** Every request on a listing that has not been declined or completed, oldest first. */
+    fun requests(listingId: String): List<Request> = Listings.REQUESTS.filter {
+        it.listingId == listingId && answers[it.id].let { a -> a == null || a == Deals.ACCEPTED }
+    }
+
+    /** One of the Deals.PENDING ... EXPIRED states. */
+    fun status(request: Request): Int = answers[request.id] ?: when {
+        accepted(request.listingId) != null -> Deals.WAITLIST
+        System.currentTimeMillis() > request.expiresMillis -> Deals.EXPIRED
+        else -> Deals.PENDING
+    }
+
+    /** Requests still waiting for Mika's answer. */
+    fun pending(listingId: String): List<Request> = requests(listingId).filter { status(it) == Deals.PENDING }
+
+    /** The request Mika accepted on this listing, if any. Its meetup is on. */
+    fun accepted(listingId: String): Request? =
+        Listings.REQUESTS.firstOrNull { it.listingId == listingId && answers[it.id] == Deals.ACCEPTED }
+
+    fun acceptedAt(request: Request): Long = acceptedAt[request.id] ?: request.sentMillis
+
+    /** The latest request this student sent on this listing, for the chat thread. */
+    fun requestFrom(seller: Seller, listingId: String): Request? =
+        Listings.REQUESTS.lastOrNull { it.from == seller && it.listingId == listingId }
+
+    /**
+     * Swap offers Mika made that give away [listingId]. Accepting a request
+     * on that listing withdraws them, since one item cannot go to two people.
+     */
+    fun offersUsing(listingId: String): List<Listing> =
+        reserved.filter { it.value.offerId == listingId }.keys.map { Listings.byId(it) }
+
+    /**
+     * Accepts a request: the item is promised to them and everyone else
+     * waits on the waitlist. Returns the swap offers that were withdrawn.
+     */
+    fun accept(request: Request): List<Listing> {
+        val withdrawn = offersUsing(request.listingId)
+        withdrawn.forEach { reserved.remove(it.id) }
+        answers[request.id] = Deals.ACCEPTED
+        acceptedAt[request.id] = System.currentTimeMillis()
+        return withdrawn
+    }
+
+    fun decline(request: Request) {
+        answers[request.id] = Deals.DECLINED
+    }
+
+    /**
+     * Calls off an accepted request. Waitlisted requests are open again.
+     * Returns true when it was late, which counts against on-time.
+     */
+    fun cancelAccepted(listingId: String): Boolean {
+        val request = accepted(listingId) ?: return false
+        answers[request.id] = Deals.DECLINED
+        val late = Deals.isLate(request.meetMillis)
+        if (late) lateCancels++
+        return late
+    }
+
+    /** "Did the meetup happen?" on your own listing, answered with a no. */
+    fun reportOwnerNoShow(listing: Listing, theyMissed: Boolean) {
+        val request = accepted(listing.id) ?: return
+        answers[request.id] = Deals.DECLINED
+        if (theyMissed) report(listing.id, R.string.problem_no_show, request.from) else lateCancels++
+    }
+
+    /**
+     * Mika handed the item over to the student she accepted. [proof] says
+     * whether she checked their code. A sale or swap goes to Completed; a
+     * loan starts. Every other request on the listing is declined.
+     */
+    fun handOver(listing: Listing, proof: Int) {
+        val request = accepted(listing.id) ?: return
+        val now = System.currentTimeMillis()
+        answers[request.id] = Deals.COMPLETED
+        declineOpen(listing.id)
+        val events = listOf(
+            DealEvent(if (request.offerId != null) R.string.ev_they_offered else R.string.ev_they_requested, request.sentMillis, request.from.first),
+            DealEvent(R.string.ev_you_accepted, acceptedAt(request)),
+            DealEvent(if (proof == Exchange.PROOF_CODE) R.string.ev_handover_code else R.string.ev_handover_manual, now)
+        )
+        if (listing.isRent) {
+            rentals[listing.id] = Rental(
+                request.from, now + request.weeks.coerceAtLeast(1) * Rentals.WEEK_MS, lending = true,
+                startMillis = now, events = events, proof = proof
+            )
+            return
+        }
+        closed[listing.id] = now
+        request.offerId?.let { taken.add(it) }
+        finished.add(
+            0, Exchange(
+                "done-${listing.id}-${finished.size}", listing.title, listing.price,
+                if (listing.isSwap) Exchange.SWAPPED else Exchange.SOLD,
+                request.from, now, request.meetup, 0, 0,
+                proof = proof, listingId = listing.id, events = events
+            )
+        )
+    }
+
+    /** The item is gone, so nobody else can have it: open and waitlisted requests are declined. */
+    private fun declineOpen(listingId: String) {
+        Listings.REQUESTS.filter { it.listingId == listingId && it.id !in answers }.forEach { answers[it.id] = Deals.DECLINED }
+    }
+
+    // ---- Finished ------------------------------------------------------------
 
     fun finished(): List<Exchange> = finished
 
-    /** Reserved, borrowed, bought or swapped by Mika: not shown in the market. */
-    fun isTaken(id: String) = id in reserved || id in taken || rentals[id]?.lending == false
+    /**
+     * Not shown in the market: anything Mika reserved, borrowed, bought or
+     * swapped for, and items offered to her in a swap she accepted.
+     */
+    fun isTaken(id: String) = id in reserved || id in taken || rentals[id]?.lending == false ||
+        Listings.REQUESTS.any { it.offerId == id && answers[it.id] == Deals.ACCEPTED }
 
-    /** Own listings marked as sold, rented out or swapped. */
+    /** Mika bought, borrowed or swapped for this, and the exchange is done. */
+    fun hasReceived(id: String) = id in taken
+
+    /** Someone else's item Mika got by accepting their swap offer on her own listing. */
+    fun gotInSwap(id: String) = Listings.REQUESTS.any { it.offerId == id && answers[it.id] == Deals.COMPLETED }
+
+    /**
+     * Someone else's item coming to Mika because she accepted their swap
+     * offer on her own listing. The handover has not happened yet.
+     */
+    fun incomingOffer(id: String): Request? =
+        Listings.REQUESTS.firstOrNull { it.offerId == id && answers[it.id] == Deals.ACCEPTED }
+
+    /** Own listings sold, swapped or closed. */
     fun isClosed(id: String) = id in closed
 
+    /** Closed with "Mark as sold" / "Mark as swapped", not through a request. */
+    fun isClosedByYou(id: String) = id in closedByYou
+
+    fun closedAt(id: String): Long = closed[id] ?: System.currentTimeMillis()
+
+    /** "Mark as sold": taken off the market by hand. Waiting requests are declined. */
     fun close(id: String) {
-        closed.add(id)
+        closed[id] = System.currentTimeMillis()
+        closedByYou.add(id)
+        declineOpen(id)
     }
+
+    // ---- Ratings, reliability and problems -----------------------------------
+
+    fun rate(exchangeId: String, stars: Int, note: String) {
+        ratings[exchangeId] = stars to note
+        ratedAt[exchangeId] = System.currentTimeMillis()
+    }
+
+    fun ratedAt(exchangeId: String): Long = ratedAt[exchangeId] ?: System.currentTimeMillis()
+
+    fun rating(exchangeId: String): Pair<Int, String>? = ratings[exchangeId]
+
+    fun lateCancels() = lateCancels
+
+    /** Sends a problem to student support. Returns the new reference. */
+    fun report(subject: String, reason: Int, partner: Seller?, details: String = ""): Issue {
+        val issue = Issue(
+            "HTS-R%04d".format(4100 + issues.size + 1), subject, reason, partner,
+            System.currentTimeMillis(), details
+        )
+        issues[subject] = issue
+        return issue
+    }
+
+    fun issue(subject: String): Issue? = issues[subject]
+
+    private const val HOUR = 60 * 60 * 1000L
+}
+
+/**
+ * Rules for deals that the backend will enforce later: how long a request
+ * stays open, when a cancellation counts as late, when a meetup counts as
+ * missed, and the handover codes.
+ */
+object Deals {
+
+    /** Request states. Only Mika's answers are stored; the rest are worked out. */
+    const val PENDING = 0
+    const val WAITLIST = 1
+    const val ACCEPTED = 2
+    const val DECLINED = 3
+    const val EXPIRED = 4
+    const val COMPLETED = 5
+
+    private const val HOUR = 60 * 60 * 1000L
+
+    /** An unanswered request closes after a day. */
+    const val ANSWER_WITHIN_MS = 24 * HOUR
+
+    /** Cancelling less than this before the meetup counts against on-time. */
+    const val LATE_CANCEL_MS = 2 * HOUR
+
+    /** A meetup this long in the past without a handover asks "Did it happen?". */
+    const val NO_SHOW_AFTER_MS = 2 * HOUR
+
+    /** Both students can rate for a week after the exchange. */
+    const val RATING_WINDOW_MS = 7 * 24 * HOUR
+
+    fun isLate(meetMillis: Long?) = meetMillis != null && meetMillis - System.currentTimeMillis() < LATE_CANCEL_MS
+
+    fun meetupMissed(meetMillis: Long?) = meetMillis != null && System.currentTimeMillis() > meetMillis + NO_SHOW_AFTER_MS
+
+    /**
+     * The 4-digit code the receiver shows at the meetup. The giver types it
+     * in to prove they met. Made up from the deal id here; the server will
+     * issue a random one per deal.
+     */
+    fun code(dealId: String): String = "%04d".format(1000 + (dealId.hashCode() and 0x7fffffff) % 9000)
+
+    /** Mika's code for something she reserved. */
+    fun myCode(listingId: String) = code("me-$listingId")
+
+    /**
+     * Sample exchanges have no recorded history, so build a believable one
+     * from the finish date: requested two days before, accepted two hours
+     * later, then the handover (and the return, for loans).
+     */
+    fun timeline(exchange: Exchange): List<DealEvent> {
+        if (exchange.events.isNotEmpty()) return exchange.events
+        val first = exchange.partner?.first ?: return listOf(DealEvent(R.string.ev_closed_by_you, exchange.finishedMillis))
+        val end = exchange.finishedMillis
+        val start = end - (if (exchange.isLoan) 9 else 2) * Rentals.DAY_MS
+        val asked = when {
+            exchange.giving -> DealEvent(if (exchange.kind == Exchange.SWAPPED) R.string.ev_they_offered else R.string.ev_they_requested, start, first)
+            else -> DealEvent(if (exchange.kind == Exchange.SWAPPED) R.string.ev_you_offered else R.string.ev_you_reserved, start)
+        }
+        val handover = DealEvent(
+            if (exchange.proof == Exchange.PROOF_MANUAL) R.string.ev_handover_manual else R.string.ev_handover_code,
+            if (exchange.isLoan) start + 2 * Rentals.DAY_MS else end
+        )
+        return listOfNotNull(
+            asked,
+            DealEvent(if (exchange.giving) R.string.ev_you_accepted else R.string.ev_they_accepted, start + 2 * HOUR, first),
+            handover,
+            if (exchange.isLoan) DealEvent(R.string.ev_return_confirmed, end) else null
+        )
+    }
+}
+
+/**
+ * Mika's reliability card: rating, on-time rate and completed count. Worked
+ * out from her history instead of typed in, which is why the card says it
+ * cannot be edited. The server will compute these for everyone.
+ */
+object Reliability {
+
+    /** Exchanges with another student; ones you closed yourself do not count. */
+    private fun deals() = Listings.completed().filter { it.partner != null }
+
+    /** Stars Mika gave, including a rating given this session. */
+    fun yourStars(exchange: Exchange): Int = UserState.rating(exchange.id)?.first ?: exchange.yourRating
+
+    fun ratingClosesAt(exchange: Exchange) = exchange.finishedMillis + Deals.RATING_WINDOW_MS
+
+    fun ratingOpen(exchange: Exchange) = System.currentTimeMillis() < ratingClosesAt(exchange)
+
+    fun canRate(exchange: Exchange) = exchange.partner != null && yourStars(exchange) == 0 && ratingOpen(exchange)
+
+    /**
+     * Ratings are blind: you see theirs once you have rated, or once the
+     * week is over, so nobody rates in revenge.
+     */
+    fun theirVisible(exchange: Exchange) = yourStars(exchange) > 0 || !ratingOpen(exchange)
+
+    /** "4.8", from every rating Mika can see. */
+    fun rating(): String {
+        val stars = deals().filter { it.theirRating > 0 && theirVisible(it) }.map { it.theirRating }
+        return if (stars.isEmpty()) "–" else "%.1f".format(java.util.Locale.US, stars.average())
+    }
+
+    /** "93%": exchanges where Mika was on time, out of all of them plus late cancels and missed meetups. */
+    fun onTime(): String {
+        val all = deals()
+        val total = all.size + UserState.lateCancels()
+        if (total == 0) return "–"
+        return "${Math.round(all.count { it.onTime } * 100.0 / total)}%"
+    }
+
+    fun completed(): Int = deals().size
 }
 
 /** Dates and countdowns for rentals: return dates, "3 days left", "Overdue". */
@@ -616,6 +1183,38 @@ object Rentals {
 
     const val DAY_MS = 24L * 60 * 60 * 1000
     const val WEEK_MS = 7 * DAY_MS
+
+    /** Today plus [days] (negative for the past) at [minutes] after midnight. */
+    fun at(days: Int, minutes: Int): Long = java.util.Calendar.getInstance().apply {
+        add(java.util.Calendar.DAY_OF_MONTH, days)
+        set(java.util.Calendar.HOUR_OF_DAY, minutes / 60); set(java.util.Calendar.MINUTE, minutes % 60)
+        set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
+    }.timeInMillis
+
+    /** "Today, 4:00 PM", "Tomorrow, 2:00 PM", "Yesterday, 10:00 AM" or "Wed, Nov 18, 2:00 PM". */
+    fun whenLabel(context: Context, millis: Long): String {
+        val cal = java.util.Calendar.getInstance().apply { timeInMillis = millis }
+        val time = Availability.time(cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE))
+        val day = when (daysUntil(millis)) {
+            0 -> context.getString(R.string.day_today_label)
+            1 -> context.getString(R.string.day_tomorrow_label)
+            -1 -> context.getString(R.string.day_yesterday_label)
+            else -> dateLabel(millis)
+        }
+        return "$day, $time"
+    }
+
+    /** "Nov 12", or "Today" for exchanges finished today. */
+    fun shortDate(context: Context, millis: Long): String =
+        if (daysUntil(millis) == 0) context.getString(R.string.day_today_label)
+        else java.text.SimpleDateFormat("MMM d", java.util.Locale.US).format(millis)
+
+    /** "21 h" or "40 min" until [millis], for request deadlines. */
+    fun timeLeft(context: Context, millis: Long): String {
+        val minutes = ((millis - System.currentTimeMillis()) / 60000).coerceAtLeast(1)
+        return if (minutes >= 60) context.getString(R.string.hours_short, (minutes / 60).toInt())
+        else context.getString(R.string.minutes_short, minutes.toInt())
+    }
 
     /** "Fri, Nov 20" */
     fun dateLabel(millis: Long): String =

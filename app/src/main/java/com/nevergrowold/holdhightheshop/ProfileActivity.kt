@@ -38,7 +38,7 @@ class ProfileActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Saved items can change on other screens, so redraw on return.
+        // Saved items and deals can change on other screens, so redraw on return.
         selectTab(tab)
     }
 
@@ -137,19 +137,48 @@ class ProfileActivity : BaseActivity() {
                 }
                 if (shows(GROUP_RESERVED) && reserved.isNotEmpty()) addSection(list, R.string.section_reserved, R.string.section_reserved_hint)
                 if (shows(GROUP_RESERVED)) reserved.forEachIndexed { i, item ->
-                    addRow(
-                        list, item.title, Listings.priceLabel(this, item),
-                        getString(R.string.reserved_from_format, item.seller.name),
+                    val reservation = UserState.reservation(item.id)
+                    val missed = Deals.meetupMissed(reservation?.meetMillis)
+                    val meta = when {
+                        missed -> getString(R.string.row_meetup_missed, item.seller.first)
+                        reservation?.meetMillis != null -> getString(
+                            R.string.row_reserved_when, item.seller.name, Rentals.whenLabel(this, reservation.meetMillis)
+                        )
+                        else -> getString(R.string.reserved_from_format, item.seller.name)
+                    }
+                    val row = addRow(
+                        list, item.title, Listings.priceLabel(this, item), meta,
                         i < reserved.size - 1, Listings.role(this, item), giving = false, swap = item.isSwap
                     ) { openListingById(item.id) }
+                    if (missed) row.findViewById<TextView>(R.id.rowMeta).setTextColor(getColor(R.color.swap_text))
                 }
                 if (shows(GROUP_MINE) && mine.isNotEmpty()) addSection(list, R.string.section_mine, R.string.section_mine_hint)
                 if (shows(GROUP_MINE)) mine.forEachIndexed { i, item ->
-                    addRow(
-                        list, item.title, Listings.priceLabel(this, item),
-                        getString(R.string.posted_days_format, item.postedDaysAgo + 2),
+                    // Promised to someone, or waiting for your answer: say so, in amber when it needs you.
+                    val deal = UserState.accepted(item.id)
+                    val pending = UserState.pending(item.id)
+                    val needsYou = (deal != null && Deals.meetupMissed(deal.meetMillis)) || pending.isNotEmpty()
+                    val meta = when {
+                        deal != null && Deals.meetupMissed(deal.meetMillis) -> getString(R.string.row_meetup_missed, deal.from.first)
+                        deal != null -> getString(
+                            when {
+                                item.isSwap -> R.string.row_deal_swapping
+                                item.isRent -> R.string.row_deal_lending
+                                else -> R.string.row_deal_reserved
+                            },
+                            deal.from.first, Rentals.whenLabel(this, deal.meetMillis)
+                        )
+                        pending.isNotEmpty() -> resources.getQuantityString(
+                            R.plurals.row_requests, pending.size, pending.size,
+                            Rentals.timeLeft(this, pending.minOf { it.expiresMillis })
+                        )
+                        else -> getString(R.string.posted_days_format, item.postedDaysAgo + 2)
+                    }
+                    val row = addRow(
+                        list, item.title, Listings.priceLabel(this, item), meta,
                         i < mine.size - 1, Listings.role(this, item), giving = true, swap = item.isSwap
                     ) { openListingById(item.id) }
+                    if (needsYou) row.findViewById<TextView>(R.id.rowMeta).setTextColor(getColor(R.color.swap_text))
                 }
             }
             TAB_COMPLETED -> completed.forEachIndexed { i, exchange ->

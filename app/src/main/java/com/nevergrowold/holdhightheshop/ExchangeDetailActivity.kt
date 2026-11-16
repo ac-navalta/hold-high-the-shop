@@ -33,7 +33,7 @@ class ExchangeDetailActivity : BaseActivity() {
         )
         findViewById<TextView>(R.id.exTitle).text = exchange.title
         findViewById<TextView>(R.id.exPrice).text = Listings.price(exchange.price)
-        findViewById<TextView>(R.id.exDate).text = getString(R.string.ex_completed_on, exchange.date)
+        findViewById<TextView>(R.id.exDate).text = getString(R.string.ex_completed_on, ExchangeText.date(this, exchange))
 
         findViewById<TextView>(R.id.exReference).text = "HTS-%05d".format(23000 + exchange.id.hashCode().mod(1000))
         findViewById<TextView>(R.id.exMeetup).text = exchange.meetup
@@ -101,7 +101,7 @@ object ExchangeText {
 
     fun summary(context: Context, exchange: Exchange): String {
         val who = exchange.partner?.name ?: return context.getString(
-            R.string.ex_summary_format, context.getString(R.string.ex_closed_by_you), exchange.date
+            R.string.ex_summary_format, context.getString(R.string.ex_closed_by_you), date(context, exchange)
         )
         val action = context.getString(
             when (exchange.kind) {
@@ -113,8 +113,11 @@ object ExchangeText {
             },
             who
         )
-        return context.getString(R.string.ex_summary_format, action, exchange.date)
+        return context.getString(R.string.ex_summary_format, action, date(context, exchange))
     }
+
+    /** "Nov 12", or "Today". */
+    fun date(context: Context, exchange: Exchange): String = Rentals.shortDate(context, exchange.finishedMillis)
 
     fun badge(context: Context, exchange: Exchange): String = context.getString(
         when (exchange.kind) {
