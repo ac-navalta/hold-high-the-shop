@@ -322,6 +322,7 @@ class ListingDetailActivity : BaseActivity() {
                 row(it, getString(R.string.request_expired)).apply {
                     alpha = 0.5f
                     isClickable = false
+                    findViewById<View>(R.id.optionRadio).visibility = View.INVISIBLE
                 }
             }
 
