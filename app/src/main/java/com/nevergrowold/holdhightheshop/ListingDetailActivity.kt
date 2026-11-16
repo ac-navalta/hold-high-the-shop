@@ -216,9 +216,8 @@ class ListingDetailActivity : BaseActivity() {
 
         // Only the days and times the seller said they are free.
         val days = upcomingDays()
-        val times = listing.availability.slots().map { Availability.time(it) }
         var place = Listings.MEETUP_POINTS.indexOf(listing.meetup).coerceAtLeast(0)
-        var dayLabel: String? = days.firstOrNull()
+        var picked: MeetDay? = days.firstOrNull()
         var timeLabel: String? = null
 
         Sheets.show(this, R.layout.sheet_reserve) { sheet, dialog ->
@@ -237,49 +236,54 @@ class ListingDetailActivity : BaseActivity() {
                 }
             }
 
-            // Quick picks, plus a last chip that opens the full date or time picker.
-            val dayChips = addChips(sheet.findViewById(R.id.reserveDays), days + getString(R.string.chip_pick_date))
-            var day = 0
-            fun bindDays() {
-                Choice.chips(dayChips, day) { picked ->
-                    if (picked < days.size) {
-                        day = picked
-                        dayLabel = days[picked]
-                    } else {
-                        bindDays() // keep the old choice until a date is confirmed
-                        pickDate { label ->
-                            dayChips.last().text = label
-                            day = days.size
-                            dayLabel = label
-                            bindDays()
-                        }
-                    }
-                }
-            }
-            bindDays()
-
-            val timeChips = addChips(sheet.findViewById(R.id.reserveTimes), times + getString(R.string.chip_pick_time))
-            var time = -1
+            // Times depend on the day: each day shows the seller's free slots for it.
+            val timeBox = sheet.findViewById<LinearLayout>(R.id.reserveTimes)
             fun bindTimes() {
-                Choice.chips(timeChips, time) { picked ->
-                    if (picked < times.size) {
-                        time = picked
-                        timeLabel = times[picked]
+                val day = picked ?: return
+                val slots = listing.availability.slots(day.weekday).map { Availability.time(it) }
+                timeBox.removeAllViews()
+                val chips = addChips(timeBox, slots + getString(R.string.chip_pick_time))
+                val selected = slots.indexOf(timeLabel).let { if (it < 0 && timeLabel != null) slots.size else it }
+                if (selected == slots.size) chips.last().text = timeLabel
+                Choice.chips(chips, selected) { index ->
+                    if (index < slots.size) {
+                        timeLabel = slots[index]
                     } else {
-                        bindTimes()
-                        pickTime { label ->
-                            timeChips.last().text = label
-                            time = times.size
+                        bindTimes() // keep the old choice until a time is confirmed
+                        pickTime(day.weekday) { label ->
                             timeLabel = label
                             bindTimes()
                         }
                     }
                 }
             }
+
+            // Quick picks, plus a last chip that opens the full calendar.
+            val dayChips = addChips(sheet.findViewById(R.id.reserveDays), days.map { it.label } + getString(R.string.chip_pick_date))
+            fun bindDays() {
+                val selected = days.indexOf(picked).let { if (it < 0 && picked != null) days.size else it }
+                Choice.chips(dayChips, selected) { index ->
+                    if (index < days.size) {
+                        picked = days[index]
+                    } else {
+                        bindDays()
+                        pickDate { day ->
+                            dayChips.last().text = day.label
+                            picked = day
+                            bindDays()
+                        }
+                        return@chips
+                    }
+                    // A time that the new day does not offer is cleared.
+                    if (picked?.let { listing.availability.isFreeAt(it.weekday, minutesOf(timeLabel)) } != true) timeLabel = null
+                    bindTimes()
+                }
+            }
+            bindDays()
             bindTimes()
 
             sheet.findViewById<View>(R.id.reserveConfirm).setOnClickListener {
-                val pickedDay = dayLabel
+                val pickedDay = picked?.label
                 val pickedTime = timeLabel
                 if (pickedDay == null || pickedTime == null) {
                     Toast.makeText(this, R.string.toast_pick_day_time, Toast.LENGTH_SHORT).show()
@@ -302,44 +306,56 @@ class ListingDetailActivity : BaseActivity() {
     }
 
     /** Calendar limited to future days the seller is free. */
-    private fun pickDate(onPicked: (String) -> Unit) {
-        val free = listing.availability
+    private fun pickDate(onPicked: (MeetDay) -> Unit) {
         val picker = MaterialDatePicker.Builder.datePicker()
             .setTitleText(R.string.pick_date_title)
             .setCalendarConstraints(
                 // Days the seller is not free are greyed out.
                 CalendarConstraints.Builder().setValidator(
                     CompositeDateValidator.allOf(
-                        listOf(DateValidatorPointForward.now(), FreeDaysValidator(free.days.toIntArray()))
+                        listOf(DateValidatorPointForward.now(), FreeDaysValidator(listing.availability.days.toIntArray()))
                     )
                 ).build()
             )
             .build()
         picker.addOnPositiveButtonClickListener { millis ->
-            val format = SimpleDateFormat("EEE, MMM d", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }
-            onPicked(format.format(millis))
+            val utc = TimeZone.getTimeZone("UTC")
+            val cal = Calendar.getInstance(utc).apply { timeInMillis = millis }
+            val format = SimpleDateFormat("EEE, MMM d", Locale.US).apply { timeZone = utc }
+            onPicked(MeetDay(format.format(millis), Availability.weekdayOf(cal.get(Calendar.DAY_OF_WEEK)), millis))
         }
         picker.show(supportFragmentManager, "date")
     }
 
-    /** Clock picker; times outside the seller's window are refused with a note. */
-    private fun pickTime(onPicked: (String) -> Unit) {
-        val free = listing.availability
+    /** Clock picker; times outside the seller's free time that day are refused with a note. */
+    private fun pickTime(weekday: Int, onPicked: (String) -> Unit) {
+        val start = listing.availability.slots(weekday).firstOrNull() ?: Availability.CAMPUS_OPENS
         val picker = MaterialTimePicker.Builder()
             .setTimeFormat(TimeFormat.CLOCK_12H)
-            .setHour(free.from / 60)
-            .setMinute(free.from % 60)
+            .setHour(start / 60)
+            .setMinute(start % 60)
             .setTitleText(R.string.pick_time_title)
             .build()
         picker.addOnPositiveButtonClickListener {
             val minutes = picker.hour * 60 + picker.minute
-            if (!free.isFreeAt(minutes)) {
-                Toast.makeText(this, freeLabel(), Toast.LENGTH_SHORT).show()
+            if (!listing.availability.isFreeAt(weekday, minutes)) {
+                val first = listing.seller.name.substringBefore(' ')
+                val msg = getString(
+                    R.string.toast_free_that_day, first, Availability.DAY_NAMES[weekday], listing.availability.labelFor(weekday)
+                )
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
             } else {
                 onPicked(Availability.time(minutes))
             }
         }
         picker.show(supportFragmentManager, "time")
+    }
+
+    /** "1:30 PM" back to minutes after midnight, or -1. */
+    private fun minutesOf(label: String?): Int {
+        val m = Regex("""(\d+):(\d+) (AM|PM)""").matchEntire(label ?: return -1) ?: return -1
+        val (h, min, ampm) = m.destructured
+        return (h.toInt() % 12 + if (ampm == "PM") 12 else 0) * 60 + min.toInt()
     }
 
     /** "Cancel reservation" on the reservation card. */
@@ -412,19 +428,24 @@ class ListingDetailActivity : BaseActivity() {
         }
 
     /** The next five weekdays, since the meetup points are open Mon–Fri. */
+    /** A day you can pick for a meetup. [millis] is that day, for rental return dates. */
+    data class MeetDay(val label: String, val weekday: Int, val millis: Long)
+
     /** The next five days the seller is free (up to four weeks ahead). */
-    private fun upcomingDays(): List<String> {
+    private fun upcomingDays(): List<MeetDay> {
         val format = SimpleDateFormat("EEE d", Locale.US)
         val cal = Calendar.getInstance()
-        val out = mutableListOf<String>()
+        val out = mutableListOf<MeetDay>()
         var offset = 0
         while (out.size < 5 && offset < 28) {
-            if (listing.availability.isFreeOn(Availability.weekdayOf(cal.get(Calendar.DAY_OF_WEEK)))) {
-                out += when (offset) {
+            val weekday = Availability.weekdayOf(cal.get(Calendar.DAY_OF_WEEK))
+            if (listing.availability.isFreeOn(weekday)) {
+                val label = when (offset) {
                     0 -> getString(R.string.day_today_label)
                     1 -> getString(R.string.day_tomorrow_label)
                     else -> format.format(cal.time)
                 }
+                out += MeetDay(label, weekday, cal.timeInMillis)
             }
             cal.add(Calendar.DAY_OF_MONTH, 1)
             offset++

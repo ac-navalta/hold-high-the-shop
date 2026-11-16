@@ -50,32 +50,64 @@ data class Listing(
 }
 
 /**
- * When a seller can meet, set on the Create listing form.
+ * One block of free time, e.g. Mon, Wed, Fri from 1:00 to 4:00 PM.
  *
- * @param days weekdays, 0 = Monday ... 4 = Friday (meetup desks are closed on weekends).
- * @param from start of the window, in minutes after midnight.
- * @param to end of the window, in minutes after midnight.
+ * @param days 0 = Monday ... 6 = Sunday.
+ * @param from start, in minutes after midnight.
+ * @param to end, in minutes after midnight.
  */
-data class Availability(val days: Set<Int>, val from: Int, val to: Int) {
-
-    fun isFreeOn(weekday: Int) = weekday in days
-
-    fun isFreeAt(minutes: Int) = minutes in from..to
-
-    /** Hourly start times inside the window, at least 30 minutes before it ends. */
-    fun slots(): List<Int> = (from..to - 30 step 60).toList().ifEmpty { listOf(from) }
+data class FreeTime(val days: Set<Int>, val from: Int, val to: Int) {
 
     /** "Mon, Wed, Fri • 1:00–4:00 PM" */
-    fun label(): String {
-        val names = if (days.size == 5) "Mon\u2013Fri" else days.sorted().joinToString(", ") { DAY_NAMES[it] }
-        return "$names \u2022 ${time(from, withMeridiem = (from < 720) != (to < 720))}\u2013${time(to)}"
+    fun label(): String =
+        "${Availability.daysLabel(days)} \u2022 " +
+            "${Availability.time(from, withMeridiem = (from < 720) != (to < 720))}\u2013${Availability.time(to)}"
+}
+
+/**
+ * When a seller can meet, set on the Create listing form as one or more
+ * blocks of free time. Reserving only offers days and times inside them.
+ */
+data class Availability(val times: List<FreeTime>) {
+
+    constructor(vararg times: FreeTime) : this(times.toList())
+
+    /** Every weekday covered by at least one block. */
+    val days: Set<Int> get() = times.flatMap { it.days }.toSet()
+
+    fun isFreeOn(weekday: Int) = times.any { weekday in it.days }
+
+    fun isFreeAt(weekday: Int, minutes: Int) = times.any { weekday in it.days && minutes in it.from..it.to }
+
+    /** Hourly start times on [weekday], at least 30 minutes before a block ends. */
+    fun slots(weekday: Int): List<Int> = times.filter { weekday in it.days }
+        .flatMap { block -> (block.from..block.to - 30 step 60).toList().ifEmpty { listOf(block.from) } }
+        .distinct()
+        .sorted()
+
+    /** All blocks, e.g. "Mon, Wed, Fri • 1:00–4:00 PM; Sat • 9:00 AM–12:00 PM". */
+    fun label(): String = times.joinToString("; ") { it.label() }
+
+    /** Free time on one weekday, e.g. "1:00–4:00 PM". */
+    fun labelFor(weekday: Int): String = times.filter { weekday in it.days }.joinToString(", ") {
+        "${time(it.from, withMeridiem = (it.from < 720) != (it.to < 720))}\u2013${time(it.to)}"
     }
 
     companion object {
-        val DAY_NAMES = listOf("Mon", "Tue", "Wed", "Thu", "Fri")
-        const val DESK_OPENS = 9 * 60
-        const val DESK_CLOSES = 16 * 60
-        val OFFICE_HOURS = Availability(setOf(0, 1, 2, 3, 4), DESK_OPENS, DESK_CLOSES)
+        val DAY_NAMES = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+
+        /** Meetup points are open daily from 7:00 AM to 7:00 PM. */
+        const val CAMPUS_OPENS = 7 * 60
+        const val CAMPUS_CLOSES = 19 * 60
+
+        val OFFICE_HOURS = Availability(FreeTime(setOf(0, 1, 2, 3, 4), 9 * 60, 16 * 60))
+
+        fun daysLabel(days: Set<Int>): String = when (days) {
+            (0..6).toSet() -> "Every day"
+            (0..4).toSet() -> "Mon\u2013Fri"
+            setOf(5, 6) -> "Sat\u2013Sun"
+            else -> days.sorted().joinToString(", ") { DAY_NAMES[it] }
+        }
 
         /** "1:30 PM", or "1:30" when the AM/PM is shown once for a range. */
         fun time(minutes: Int, withMeridiem: Boolean = true): String {
@@ -197,31 +229,31 @@ object Listings {
             "item2", "Casio fx-991EX", 1200, "CITCS", 1, 0,
             "Fully working scientific calculator. Used for two semesters only. Comes with original hard case and manual.",
             paolo, "UC Main Gate Security Desk", 0,
-            Availability(setOf(0, 2, 4), 13 * 60, 16 * 60)
+            Availability(FreeTime(setOf(0, 2, 4), 13 * 60, 16 * 60), FreeTime(setOf(5), 9 * 60, 12 * 60))
         ),
         Listing(
             "item3", "Anatomy & Physiology", 650, "CONAHS", 1, 0,
             "Latest edition. A few highlighted pages but no torn or missing pages.",
             janelle, "UC Library Lobby", 2,
-            Availability(setOf(1, 3), 9 * 60, 12 * 60)
+            Availability(FreeTime(setOf(1, 3), 9 * 60, 12 * 60))
         ),
         Listing(
             "item4", "UC PE Uniform", 450, "CBA", 0, 1,
             "Size M shirt and jogging pants. Washed and ironed. Available to rent for the semester.",
             aira, "UC Canteen Area", 3,
-            Availability(setOf(0, 1, 2), 10 * 60, 15 * 60)
+            Availability(FreeTime(setOf(0, 1, 2), 10 * 60, 15 * 60))
         ),
         Listing(
             "item5", "White Lab Gown", 380, "CONAHS", 1, 1,
             "Size S, long sleeves. Clean and without stains. Rent for a week or the whole term.",
             janelle, "UC Library Lobby", 4,
-            Availability(setOf(1, 3), 9 * 60, 12 * 60)
+            Availability(FreeTime(setOf(1, 3), 9 * 60, 12 * 60), FreeTime(setOf(6), 14 * 60, 17 * 60))
         ),
         Listing(
             "item6", "Data Structures Book", 520, "CITCS", 2, 2,
             "Some notes in pencil on the early chapters. Open to swapping for an Algorithms book.",
             paolo, "CITCS Building Entrance", 5,
-            Availability(setOf(0, 2, 4), 13 * 60, 16 * 60),
+            Availability(FreeTime(setOf(0, 2, 4), 13 * 60, 16 * 60), FreeTime(setOf(5), 9 * 60, 12 * 60)),
             wants = "An Algorithms or Discrete Math book"
         ),
         Listing(
@@ -274,7 +306,7 @@ object Listings {
             "item14", "Arduino Starter Kit", 900, "COE", 1, 2,
             "Uno board, breadboard, jumper wires and a box of sensors. All parts tested.",
             carlo, "CITCS Building Entrance", 2,
-            Availability(setOf(0, 1, 3), 10 * 60, 14 * 60),
+            Availability(FreeTime(setOf(0, 1, 3), 10 * 60, 14 * 60)),
             wants = "A Calculus or Physics reviewer"
         ),
         Listing(

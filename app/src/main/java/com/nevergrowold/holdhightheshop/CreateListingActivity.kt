@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
@@ -25,10 +26,10 @@ class CreateListingActivity : BaseActivity() {
 
     private val programs by lazy { Listings.PROGRAMS }
 
-    /** When the seller is free to meet. Starts at the meetup desks' hours. */
-    private var freeDays = Availability.OFFICE_HOURS.days
-    private var freeFrom = Availability.DESK_OPENS
-    private var freeTo = Availability.DESK_CLOSES
+    /** Blocks of free time, edited in place. Starts with one: Mon–Fri, 9:00 AM–4:00 PM. */
+    private class Block(var days: Set<Int>, var from: Int, var to: Int)
+
+    private val blocks = Availability.OFFICE_HOURS.times.map { Block(it.days, it.from, it.to) }.toMutableList()
 
     /** Set when opened from "Edit listing" on one of the student's listings. */
     private var editing: Listing? = null
@@ -43,7 +44,6 @@ class CreateListingActivity : BaseActivity() {
         BarInsets.apply(this)
 
         editing = intent.getStringExtra(EXTRA_LISTING)?.let { Listings.byId(it) }
-        bindFreeDays()
         bindFreeTimes()
         editing?.let { prefill(it) } ?: run {
             meetup = UserState.defaultMeetup
@@ -117,29 +117,47 @@ class CreateListingActivity : BaseActivity() {
         })
     }
 
-    private fun bindFreeDays() {
-        val chips = listOf(R.id.freeDay0, R.id.freeDay1, R.id.freeDay2, R.id.freeDay3, R.id.freeDay4)
-            .map { findViewById<TextView>(it) }
-        chips.forEachIndexed { index, chip ->
-            val on = index in freeDays
-            chip.setBackgroundResource(if (on) R.drawable.bg_chip_active else R.drawable.bg_input)
-            chip.setTextColor(getColor(if (on) R.color.white else R.color.text_primary))
-            chip.setOnClickListener {
-                freeDays = if (on) freeDays - index else freeDays + index
-                bindFreeDays()
+    /** Redraws the free-time cards. */
+    private fun bindFreeTimes() {
+        val box = findViewById<LinearLayout>(R.id.freeTimes)
+        box.removeAllViews()
+        blocks.forEachIndexed { index, block ->
+            val card = LayoutInflater.from(this).inflate(R.layout.item_free_time, box, false)
+            card.findViewById<TextView>(R.id.freeTitle).text = getString(R.string.free_time_title, index + 1)
+            card.findViewById<View>(R.id.freeRemove).apply {
+                isVisible = blocks.size > 1
+                setOnClickListener {
+                    blocks.removeAt(index)
+                    bindFreeTimes()
+                }
             }
+            DAY_IDS.forEachIndexed { day, id ->
+                val chip = card.findViewById<TextView>(id)
+                val on = day in block.days
+                chip.setBackgroundResource(if (on) R.drawable.bg_chip_active else R.drawable.bg_input)
+                chip.setTextColor(getColor(if (on) R.color.white else R.color.text_primary))
+                chip.setOnClickListener {
+                    block.days = if (on) block.days - day else block.days + day
+                    bindFreeTimes()
+                }
+            }
+            card.findViewById<TextView>(R.id.freeFromText).text = Availability.time(block.from)
+            card.findViewById<TextView>(R.id.freeToText).text = Availability.time(block.to)
+            card.findViewById<View>(R.id.freeFrom).setOnClickListener { pickBlockTime(block, isFrom = true) }
+            card.findViewById<View>(R.id.freeTo).setOnClickListener { pickBlockTime(block, isFrom = false) }
+            box.addView(card)
         }
     }
 
-    private fun bindFreeTimes() {
-        findViewById<TextView>(R.id.rowFreeFromText).text = Availability.time(freeFrom)
-        findViewById<TextView>(R.id.rowFreeToText).text = Availability.time(freeTo)
+    /** "Add available time": a new block, Sat–Sun mornings to start with. */
+    fun addFreeTime(view: View) {
+        blocks += Block(setOf(5, 6), 9 * 60, 12 * 60)
+        bindFreeTimes()
     }
 
-    /** From / To rows: clock picker kept inside the meetup desks' hours. */
-    fun pickFreeTime(view: View) {
-        val isFrom = view.id == R.id.rowFreeFrom
-        val current = if (isFrom) freeFrom else freeTo
+    /** From / To: clock picker kept inside the meetup points' opening hours. */
+    private fun pickBlockTime(block: Block, isFrom: Boolean) {
+        val current = if (isFrom) block.from else block.to
         val picker = MaterialTimePicker.Builder()
             .setTimeFormat(TimeFormat.CLOCK_12H)
             .setHour(current / 60)
@@ -149,12 +167,12 @@ class CreateListingActivity : BaseActivity() {
         picker.addOnPositiveButtonClickListener {
             val minutes = picker.hour * 60 + picker.minute
             when {
-                minutes < Availability.DESK_OPENS || minutes > Availability.DESK_CLOSES ->
+                minutes < Availability.CAMPUS_OPENS || minutes > Availability.CAMPUS_CLOSES ->
                     Toast.makeText(this, R.string.toast_desk_hours, Toast.LENGTH_SHORT).show()
-                (isFrom && minutes >= freeTo) || (!isFrom && minutes <= freeFrom) ->
+                (isFrom && minutes >= block.to) || (!isFrom && minutes <= block.from) ->
                     Toast.makeText(this, R.string.toast_time_order, Toast.LENGTH_SHORT).show()
-                isFrom -> freeFrom = minutes
-                else -> freeTo = minutes
+                isFrom -> block.from = minutes
+                else -> block.to = minutes
             }
             bindFreeTimes()
         }
@@ -178,10 +196,8 @@ class CreateListingActivity : BaseActivity() {
             listOf(findViewById(R.id.condition1), findViewById(R.id.condition2), findViewById(R.id.condition3)),
             condition
         ) { condition = it }
-        freeDays = listing.availability.days
-        freeFrom = listing.availability.from
-        freeTo = listing.availability.to
-        bindFreeDays()
+        blocks.clear()
+        listing.availability.times.forEach { blocks += Block(it.days, it.from, it.to) }
         bindFreeTimes()
         listingType = listing.type
         Choice.segments(
@@ -221,7 +237,7 @@ class CreateListingActivity : BaseActivity() {
             listingType == 2 && findViewById<EditText>(R.id.inputWants).text.isBlank() ->
                 missing(R.string.toast_need_wants, findViewById(R.id.inputWants))
             meetup < 0 -> missing(R.string.toast_need_meetup, findViewById(R.id.rowMeetup))
-            freeDays.isEmpty() -> missing(R.string.toast_need_days, findViewById(R.id.freeDay0))
+            blocks.any { it.days.isEmpty() } -> missing(R.string.toast_need_days, findViewById(R.id.freeTimes))
             editing != null -> {
                 hideKeyboard(view)
                 Toast.makeText(this, R.string.toast_changes_saved, Toast.LENGTH_SHORT).show()
@@ -246,6 +262,7 @@ class CreateListingActivity : BaseActivity() {
     }
 
     companion object {
+        private val DAY_IDS = listOf(R.id.day0, R.id.day1, R.id.day2, R.id.day3, R.id.day4, R.id.day5, R.id.day6)
         private const val MAX_PHOTOS = 4
         private const val PHOTO_TAG = "photo"
     }

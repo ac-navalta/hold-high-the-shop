@@ -64,7 +64,7 @@
 
     <string name="meetup_kicker">SAFE MEETUP POINT</string>
     <string name="meetup_place">UC Main Gate Security Desk</string>
-    <string name="meetup_hours">Mon\u2013Fri, 9:00 AM\u20134:00 PM</string>
+    <string name="meetup_hours">Open daily, 7:00 AM\u20137:00 PM</string>
 
     <string name="btn_report">Report</string>
     <string name="btn_reserve">Reserve for \u20B11,200</string>
@@ -328,7 +328,7 @@
     <string name="meetup_why2">Well lit and covered by CCTV</string>
     <string name="meetup_why3">Inside campus, so only UC students can join</string>
     <string name="btn_got_it">Got it</string>
-    <string name="meetup_hours_short">Mon\u2013Fri, 9:00 AM\u20134:00 PM</string>
+    <string name="meetup_hours_short">Open daily, 7:00 AM\u20137:00 PM</string>
 
     <!-- Saved -->
     <string name="saved_title">Saved items</string>
@@ -539,11 +539,11 @@
     <string name="you_free_format">You\u2019re free %1$s</string>
     <string name="toast_seller_not_free">%1$s is free %2$s</string>
     <string name="lbl_availability">When are you free to meet? *</string>
-    <string name="availability_hint">Buyers can only pick times inside this window.</string>
+    <string name="availability_hint">Buyers can only pick days and times you add here.</string>
     <string name="lbl_from">From</string>
     <string name="lbl_to">To</string>
-    <string name="toast_need_days">Pick at least one day you\u2019re free</string>
-    <string name="toast_desk_hours">Meetup desks are open 9:00 AM to 4:00 PM</string>
+    <string name="toast_need_days">Pick at least one day for each available time</string>
+    <string name="toast_desk_hours">Meetup points are open 7:00 AM to 7:00 PM</string>
     <string name="toast_time_order">The end time must be after the start time</string>
 
     <!-- Swap -->
@@ -577,4 +577,8 @@
     <string name="share_coming_soon">Sharing straight to Messenger, Viber and other apps is coming in a later version.</string>
     <string name="btn_copy_link">Copy link</string>
     <string name="toast_link_copied">Link copied</string>
+    <string name="toast_free_that_day">%1$s is free on %2$s %3$s</string>
+    <string name="btn_add_free_time">Add available time</string>
+    <string name="free_time_title">AVAILABLE TIME %1$d</string>
+    <string name="cd_remove_free_time">Remove this available time</string>
 </resources>

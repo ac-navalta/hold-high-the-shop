@@ -597,185 +597,42 @@
                 android:layout_marginTop="2dp"
                 android:text="@string/availability_hint" />
 
+            <!-- One card per block of free time, filled in by CreateListingActivity. -->
             <LinearLayout
+                android:id="@+id/freeTimes"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal">
-                <TextView
-                    android:id="@+id/freeDay0"
-                    android:layout_width="0dp"
-                    android:layout_height="44dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_input"
-                    android:gravity="center"
-                    android:fontFamily="@font/poppins_medium"
-                    android:text="Mon"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground" />
-                <TextView
-                    android:id="@+id/freeDay1"
-                    android:layout_width="0dp"
-                    android:layout_height="44dp"
-                    android:layout_weight="1"
-                    android:layout_marginStart="6dp"
-                    android:background="@drawable/bg_input"
-                    android:gravity="center"
-                    android:fontFamily="@font/poppins_medium"
-                    android:text="Tue"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground" />
-                <TextView
-                    android:id="@+id/freeDay2"
-                    android:layout_width="0dp"
-                    android:layout_height="44dp"
-                    android:layout_weight="1"
-                    android:layout_marginStart="6dp"
-                    android:background="@drawable/bg_input"
-                    android:gravity="center"
-                    android:fontFamily="@font/poppins_medium"
-                    android:text="Wed"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground" />
-                <TextView
-                    android:id="@+id/freeDay3"
-                    android:layout_width="0dp"
-                    android:layout_height="44dp"
-                    android:layout_weight="1"
-                    android:layout_marginStart="6dp"
-                    android:background="@drawable/bg_input"
-                    android:gravity="center"
-                    android:fontFamily="@font/poppins_medium"
-                    android:text="Thu"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground" />
-                <TextView
-                    android:id="@+id/freeDay4"
-                    android:layout_width="0dp"
-                    android:layout_height="44dp"
-                    android:layout_weight="1"
-                    android:layout_marginStart="6dp"
-                    android:background="@drawable/bg_input"
-                    android:gravity="center"
-                    android:fontFamily="@font/poppins_medium"
-                    android:text="Fri"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground" />
-            </LinearLayout>
+                android:orientation="vertical" />
 
             <LinearLayout
+                android:id="@+id/btnAddFreeTime"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="48dp"
                 android:layout_marginTop="10dp"
-                android:orientation="horizontal">
-                <LinearLayout
-                    android:id="@+id/rowFreeFrom"
-                    android:layout_width="0dp"
-                    android:layout_height="54dp"
-                    android:layout_weight="1"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:background="@drawable/bg_input"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:onClick="pickFreeTime"
-                    android:foreground="?attr/selectableItemBackground">
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="@drawable/bg_tile_dashed"
+                android:layerType="software"
+                android:clickable="true"
+                android:focusable="true"
+                android:onClick="addFreeTime"
+                android:foreground="?attr/selectableItemBackground">
 
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:src="@drawable/ic_clock"
-                        android:tint="@color/uc_green"
-                        android:contentDescription="@null" />
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_plus"
+                    android:tint="@color/uc_green"
+                    android:contentDescription="@null" />
 
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="10dp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_regular"
-                            android:text="@string/lbl_from"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="10sp" />
-
-                        <TextView
-                            android:id="@+id/rowFreeFromText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_medium"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-                </LinearLayout>
-                <LinearLayout
-                    android:id="@+id/rowFreeTo"
-                    android:layout_width="0dp"
-                    android:layout_height="54dp"
-                    android:layout_weight="1"
-                    android:layout_marginStart="10dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:background="@drawable/bg_input"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:onClick="pickFreeTime"
-                    android:foreground="?attr/selectableItemBackground">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:src="@drawable/ic_clock"
-                        android:tint="@color/uc_green"
-                        android:contentDescription="@null" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="10dp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_regular"
-                            android:text="@string/lbl_to"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="10sp" />
-
-                        <TextView
-                            android:id="@+id/rowFreeToText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_medium"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-                </LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:text="@string/btn_add_free_time"
+                    android:textColor="@color/uc_green"
+                    android:textSize="13sp" />
             </LinearLayout>
 
         </LinearLayout>
