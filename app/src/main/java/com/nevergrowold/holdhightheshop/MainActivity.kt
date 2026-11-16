@@ -2,7 +2,11 @@ package com.nevergrowold.holdhightheshop
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 
 class MainActivity : BaseActivity() {
@@ -12,6 +16,16 @@ class MainActivity : BaseActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
         BarInsets.apply(this, hideBottomOnKeyboard = true)
+
+        val row = findViewById<LinearLayout>(R.id.programRow)
+        Listings.COLLEGES.forEach { program ->
+            val tile = LayoutInflater.from(this).inflate(R.layout.item_program_tile, row, false)
+            tile.findViewById<ImageView>(R.id.programIcon).setImageResource(program.icon)
+            tile.findViewById<TextView>(R.id.programCode).text = program.code
+            tile.tag = program.code
+            tile.setOnClickListener { openProgram(it) }
+            row.addView(tile)
+        }
     }
 
     /** Opens the notifications screen. */

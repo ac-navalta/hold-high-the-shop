@@ -15,10 +15,6 @@
 
     <string name="browse_programs">Browse programs</string>
     <string name="see_all">See all →</string>
-    <string name="prog_citcs">CITCS</string>
-    <string name="prog_conahs">CONAHS</string>
-    <string name="prog_cba">CBA</string>
-    <string name="prog_cea">CEA</string>
 
     <string name="fresh_on_campus">Fresh on campus</string>
     <string name="view_market">View market →</string>
@@ -28,7 +24,7 @@
 
     <string name="item1_price">₱850</string>
     <string name="item1_title">Engineering Drawing Set</string>
-    <string name="item1_prog">CEA</string>
+    <string name="item1_prog">COE</string>
 
     <string name="item2_price">₱1,200</string>
     <string name="item2_title">Casio fx-991EX</string>

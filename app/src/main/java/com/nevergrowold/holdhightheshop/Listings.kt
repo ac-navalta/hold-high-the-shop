@@ -37,12 +37,30 @@ data class Listing(
     val postedDaysAgo: Int
 )
 
+/** A college, shown as a Home tile, a Market chip and a Create listing option. */
+data class Program(val code: String, val icon: Int)
+
 /** A finished exchange, shown under Profile > Completed. */
 data class Exchange(val title: String, val price: Int, val summary: String)
 
 object Listings {
 
-    val PROGRAMS = listOf("CITCS", "CONAHS", "CEA", "CBA")
+    /** UC colleges, in the order they appear across the app. */
+    val COLLEGES = listOf(
+        Program("CITCS", R.drawable.ic_prog_citcs),
+        Program("COA", R.drawable.ic_prog_coa),
+        Program("COE", R.drawable.ic_prog_coe),
+        Program("CAFA", R.drawable.ic_prog_cafa),
+        Program("CTE", R.drawable.ic_prog_cte),
+        Program("CONAHS", R.drawable.ic_prog_conahs),
+        Program("CBA", R.drawable.ic_prog_cba),
+        Program("CHTM", R.drawable.ic_prog_chtm),
+        Program("CAS", R.drawable.ic_prog_cas),
+        Program("CCJE", R.drawable.ic_prog_ccje),
+        Program("COL", R.drawable.ic_prog_col)
+    )
+
+    val PROGRAMS = COLLEGES.map { it.code }
 
     private val paolo = Seller(
         "Paolo Mendoza", "PM", "CITCS", "3rd Year", "4.6", "92%", 14,
@@ -53,7 +71,7 @@ object Listings {
         "Thank you ulit, Mika!", false
     )
     private val miguel = Seller(
-        "Miguel Santos", "MS", "CEA", "4th Year", "4.4", "88%", 9,
+        "Miguel Santos", "MS", "COE", "4th Year", "4.4", "88%", 9,
         "Can I see more photos of the gown?", true
     )
     private val aira = Seller(
@@ -65,7 +83,7 @@ object Listings {
 
     val ALL = listOf(
         Listing(
-            "item1", "Engineering Drawing Set", 850, "CEA", 0, 0,
+            "item1", "Engineering Drawing Set", 850, "COE", 0, 0,
             "Complete drafting set with T-square, triangles and compass. Barely used, still in the original case.",
             miguel, "UC Main Gate Security Desk", 1
         ),
@@ -93,6 +111,41 @@ object Listings {
             "item6", "Data Structures Book", 520, "CITCS", 2, 2,
             "Some notes in pencil on the early chapters. Open to swapping for an Algorithms book.",
             paolo, "CITCS Building Entrance", 5
+        ),
+        Listing(
+            "item7", "Fundamentals of Accounting", 400, "COA", 1, 0,
+            "Volumes 1 and 2. Answers to the exercises are not written in.",
+            aira, "UC Library Lobby", 6
+        ),
+        Listing(
+            "item8", "Sketching Pencil Set", 250, "CAFA", 0, 0,
+            "12 graphite pencils, 2H to 8B, plus a kneaded eraser. Used once.",
+            miguel, "UC Canteen Area", 7
+        ),
+        Listing(
+            "item9", "Lesson Plan Binder", 150, "CTE", 1, 2,
+            "Sample lesson plans and templates from practice teaching. Swap for any CTE reviewer.",
+            janelle, "UC Library Lobby", 8
+        ),
+        Listing(
+            "item10", "Chef Uniform and Toque", 600, "CHTM", 1, 1,
+            "Size M, white. Rent it for your kitchen lab days.",
+            aira, "UC Canteen Area", 9
+        ),
+        Listing(
+            "item11", "General Chemistry Lab Manual", 200, "CAS", 2, 0,
+            "Some pages filled in with pencil. Still usable for the procedures.",
+            paolo, "UC Library Lobby", 10
+        ),
+        Listing(
+            "item12", "CCJE Type B Uniform", 550, "CCJE", 1, 0,
+            "Size L polo and slacks. Badge not included.",
+            miguel, "UC Main Gate Security Desk", 11
+        ),
+        Listing(
+            "item13", "The 1987 Constitution, Annotated", 900, "COL", 0, 0,
+            "Hardbound, latest printing. Like new with no highlights.",
+            janelle, "UC Library Lobby", 12
         )
     )
 

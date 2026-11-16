@@ -55,10 +55,13 @@ class MarketActivity : BaseActivity() {
 
         search = findViewById(R.id.inputSearch)
         grid = findViewById(R.id.grid)
-        chips = listOf(
-            findViewById(R.id.chip1), findViewById(R.id.chip2), findViewById(R.id.chip3),
-            findViewById(R.id.chip4), findViewById(R.id.chip5)
-        )
+        val chipRow = findViewById<LinearLayout>(R.id.chipRow)
+        chips = (listOf(getString(R.string.chip_all)) + Listings.PROGRAMS).map { label ->
+            val chip = LayoutInflater.from(this).inflate(R.layout.item_market_chip, chipRow, false) as TextView
+            chip.text = label
+            chipRow.addView(chip)
+            chip
+        }
 
         findViewById<View>(R.id.searchIcon).setOnClickListener { showKeyboard(search) }
         search.addTextChangedListener(object : TextWatcher {
@@ -96,7 +99,7 @@ class MarketActivity : BaseActivity() {
     }
 
     private fun programIndex(name: String?): Int {
-        // Chip order on screen: All, CITCS, CONAHS, CEA, CBA.
+        // Chip order on screen: All, then Listings.PROGRAMS.
         return Listings.PROGRAMS.indexOf(name)
     }
 

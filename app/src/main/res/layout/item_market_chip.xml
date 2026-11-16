@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Program chip on the Campus Market. Same spec as the original chips. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="8dp"
+    android:background="@drawable/bg_chip"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="9dp"
+    android:paddingBottom="9dp"
+    android:fontFamily="@font/poppins_medium"
+    android:textColor="@color/text_primary"
+    android:textSize="13sp"
+    android:clickable="true"
+    android:focusable="true" />
