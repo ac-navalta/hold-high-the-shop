@@ -349,7 +349,9 @@ object Listings {
     )
 
     /** Mika's own listings that are still open, shown under Profile > Active. */
-    fun myActive(): List<Listing> = ALL.filter { isMine(it) && !UserState.isClosed(it.id) }
+    fun myActive(): List<Listing> = ALL.filter {
+        isMine(it) && !UserState.isClosed(it.id) && UserState.rental(it.id) == null
+    }
 
     /** Mika's finished exchanges, shown under Profile > Completed. */
     private val COMPLETED = listOf(
@@ -377,7 +379,7 @@ object Listings {
             else -> Exchange.SOLD
         }
         Exchange("closed-${it.id}", it.title, it.price, kind, null, "Today", it.meetup, 0, 0)
-    } + COMPLETED
+    }.let { UserState.finished() + it } + COMPLETED
 
     fun exchange(id: String?): Exchange = completed().firstOrNull { it.id == id } ?: COMPLETED.first()
 
@@ -460,16 +462,38 @@ object Listings {
 object UserState {
 
     private val saved = mutableSetOf("item3", "item5")
-    /** Listing id to meetup summary. Starts with the sample reservations. */
+
     /** A pending reservation or swap offer. [weeks] is the rental length for rent listings. */
     data class Reservation(val summary: String, val weeks: Int = 0)
 
+    /**
+     * An item that is out on loan. [lending] is true when Mika lent it to
+     * [partner]; false when she borrowed it from them.
+     */
+    data class Rental(val partner: Seller, val dueMillis: Long, val lending: Boolean)
+
     private val reserved = mutableMapOf(
         "item2" to Reservation("UC Main Gate Security Desk \u2022 Tomorrow, 1:30 PM"),
-        "item5" to Reservation("UC Library Lobby \u2022 Return by Friday", weeks = 1),
         "item14" to Reservation("Your Calculus Reviewer for their Arduino Starter Kit")
     )
+
+    /** Sample loans, dated from today so the countdowns always make sense. */
+    private val rentals: MutableMap<String, Rental> by lazy {
+        val now = System.currentTimeMillis()
+        mutableMapOf(
+            "item5" to Rental(Listings.byId("item5").seller, now + 4 * Rentals.DAY_MS, lending = false),
+            "item10" to Rental(Listings.byId("item10").seller, now - 1 * Rentals.DAY_MS, lending = false),
+            "mine2" to Rental(Listings.sellerByName("Aira Villanueva"), now + 7 * Rentals.DAY_MS, lending = true)
+        )
+    }
+
     private val closed = mutableSetOf<String>()
+
+    /** Exchanges finished this session, newest first. */
+    private val finished = mutableListOf<Exchange>()
+
+    /** Other people's listings Mika bought, borrowed or swapped for: gone from the market. */
+    private val taken = mutableSetOf<String>()
 
     /** Settings > Default meetup point. Used to prefill new listings. */
     var defaultMeetup = 0
@@ -496,6 +520,62 @@ object UserState {
     fun cancelReservation(id: String) {
         reserved.remove(id)
     }
+
+    fun rental(id: String): Rental? = rentals[id]
+
+    /** Things Mika borrowed, soonest due first. */
+    fun borrowing(): List<Pair<Listing, Rental>> =
+        rentals.filter { !it.value.lending }.map { Listings.byId(it.key) to it.value }.sortedBy { it.second.dueMillis }
+
+    /** Mika's things that are out on loan, soonest due first. */
+    fun lending(): List<Pair<Listing, Rental>> =
+        rentals.filter { it.value.lending }.map { Listings.byId(it.key) to it.value }.sortedBy { it.second.dueMillis }
+
+    /** Own rent listing: hand it to [partner] for [weeks]. */
+    fun lend(listing: Listing, partner: Seller, weeks: Int) {
+        rentals[listing.id] = Rental(partner, System.currentTimeMillis() + weeks * Rentals.WEEK_MS, lending = true)
+    }
+
+    /**
+     * Item handed back. Moves the loan to Completed. A lent item becomes
+     * available to lend again; a borrowed one stays off the market.
+     */
+    fun markReturned(listing: Listing) {
+        val rental = rentals.remove(listing.id) ?: return
+        finished.add(
+            0, Exchange(
+                "done-${listing.id}-${finished.size}", listing.title, listing.price,
+                if (rental.lending) Exchange.LENT else Exchange.BORROWED,
+                rental.partner, "Today", listing.meetup, 0, 0
+            )
+        )
+    }
+
+    /**
+     * Reservation picked up / swap done. A rental starts its countdown;
+     * a purchase or swap goes straight to Completed.
+     */
+    fun markReceived(listing: Listing) {
+        val reservation = reserved.remove(listing.id) ?: return
+        taken.add(listing.id)
+        if (listing.isRent) {
+            val weeks = reservation.weeks.coerceAtLeast(1)
+            rentals[listing.id] = Rental(listing.seller, System.currentTimeMillis() + weeks * Rentals.WEEK_MS, lending = false)
+        } else {
+            finished.add(
+                0, Exchange(
+                    "done-${listing.id}-${finished.size}", listing.title, listing.price,
+                    if (listing.isSwap) Exchange.SWAPPED else Exchange.BOUGHT,
+                    listing.seller, "Today", listing.meetup, 0, 0
+                )
+            )
+        }
+    }
+
+    fun finished(): List<Exchange> = finished
+
+    /** Reserved, borrowed, bought or swapped by Mika: not shown in the market. */
+    fun isTaken(id: String) = id in reserved || id in taken || rentals[id]?.lending == false
 
     /** Own listings marked as sold, rented out or swapped. */
     fun isClosed(id: String) = id in closed

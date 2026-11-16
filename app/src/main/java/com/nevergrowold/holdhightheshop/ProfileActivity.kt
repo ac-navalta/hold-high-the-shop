@@ -67,23 +67,42 @@ class ProfileActivity : BaseActivity() {
         val saved = UserState.saved()
         val mine = Listings.myActive()
         val reserved = UserState.reservedListings()
+        val borrowing = UserState.borrowing()
+        val lending = UserState.lending()
         val completed = Listings.completed()
-        findViewById<TextView>(R.id.tab1Count).text = (mine.size + reserved.size).toString()
+        findViewById<TextView>(R.id.tab1Count).text =
+            (borrowing.size + lending.size + reserved.size + mine.size).toString()
         findViewById<TextView>(R.id.tab2Count).text = completed.size.toString()
         findViewById<TextView>(R.id.tab3Count).text = saved.size.toString()
 
         val list = findViewById<LinearLayout>(R.id.profileList)
         list.removeAllViews()
         when (selected) {
-            // Active: what you give out, then what you get from others.
+            // Active: loans with due dates first, then reservations, then your open listings.
             TAB_ACTIVE -> {
-                if (mine.isNotEmpty()) addSection(list, R.string.section_mine, R.string.section_mine_hint)
-                mine.forEachIndexed { i, item ->
-                    addRow(
-                        list, item.title, Listings.priceLabel(this, item),
-                        getString(R.string.posted_days_format, item.postedDaysAgo + 2),
-                        i < mine.size - 1, Listings.role(this, item), giving = true, swap = item.isSwap
+                if (borrowing.isNotEmpty()) addSection(list, R.string.section_borrowing, R.string.section_borrowing_hint)
+                borrowing.forEachIndexed { i, (item, loan) ->
+                    val meta = getString(
+                        R.string.row_borrowed_meta, loan.partner.name.substringBefore(' '),
+                        Rentals.dateLabel(loan.dueMillis), Rentals.countdown(this, loan.dueMillis)
+                    )
+                    val row = addRow(
+                        list, item.title, Listings.priceLabel(this, item), meta,
+                        i < borrowing.size - 1, getString(R.string.role_borrowing), giving = false
                     ) { openListingById(item.id) }
+                    if (Rentals.isOverdue(loan.dueMillis)) row.findViewById<TextView>(R.id.rowMeta).setTextColor(getColor(R.color.danger))
+                }
+                if (lending.isNotEmpty()) addSection(list, R.string.section_lent, R.string.section_lent_hint)
+                lending.forEachIndexed { i, (item, loan) ->
+                    val meta = getString(
+                        R.string.row_lent_meta, loan.partner.name.substringBefore(' '),
+                        Rentals.dateLabel(loan.dueMillis), Rentals.countdown(this, loan.dueMillis)
+                    )
+                    val row = addRow(
+                        list, item.title, Listings.priceLabel(this, item), meta,
+                        i < lending.size - 1, getString(R.string.role_lent_out), giving = true
+                    ) { openListingById(item.id) }
+                    if (Rentals.isOverdue(loan.dueMillis)) row.findViewById<TextView>(R.id.rowMeta).setTextColor(getColor(R.color.danger))
                 }
                 if (reserved.isNotEmpty()) addSection(list, R.string.section_reserved, R.string.section_reserved_hint)
                 reserved.forEachIndexed { i, item ->
@@ -91,6 +110,14 @@ class ProfileActivity : BaseActivity() {
                         list, item.title, Listings.priceLabel(this, item),
                         getString(R.string.reserved_from_format, item.seller.name),
                         i < reserved.size - 1, Listings.role(this, item), giving = false, swap = item.isSwap
+                    ) { openListingById(item.id) }
+                }
+                if (mine.isNotEmpty()) addSection(list, R.string.section_mine, R.string.section_mine_hint)
+                mine.forEachIndexed { i, item ->
+                    addRow(
+                        list, item.title, Listings.priceLabel(this, item),
+                        getString(R.string.posted_days_format, item.postedDaysAgo + 2),
+                        i < mine.size - 1, Listings.role(this, item), giving = true, swap = item.isSwap
                     ) { openListingById(item.id) }
                 }
             }

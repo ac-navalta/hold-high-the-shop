@@ -301,6 +301,17 @@
                                 android:fontFamily="@font/poppins_regular"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="11sp" />
+
+                            <!-- Loans only: "4 days left", red when overdue. -->
+                            <TextView
+                                android:id="@+id/reservationDue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:fontFamily="@font/poppins_semibold"
+                                android:textColor="@color/uc_green"
+                                android:textSize="12sp"
+                                android:visibility="gone" />
                         </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
@@ -637,6 +648,26 @@
             android:focusable="true"
             android:onClick="reserve"
             android:foreground="?attr/selectableItemBackground" />
+
+        <!-- While an item is out on loan: Message the other person, Mark as returned. -->
+        <TextView
+            android:id="@+id/btnMessage"
+            style="@style/OutlineButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:onClick="messagePartner"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/btnReturned"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:onClick="markReturned"
+            android:text="@string/btn_mark_returned"
+            android:visibility="gone" />
 
         <!-- After reserving: cancel sits beside Message seller, same size, in red. -->
         <TextView

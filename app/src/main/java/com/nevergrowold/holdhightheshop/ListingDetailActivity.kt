@@ -91,30 +91,81 @@ class ListingDetailActivity : BaseActivity() {
      */
     private fun bindActions() {
         val closed = UserState.isClosed(listing.id)
+        val rental = UserState.rental(listing.id)
+        val reservation = UserState.reservation(listing.id)
+        val onLoan = rental != null
+
+        // Bottom bar. One set of buttons per state:
+        // own listing (edit / mark done), on loan (message / mark returned),
+        // reserved (message / cancel), or open (report / reserve).
         findViewById<View>(R.id.btnReport).isVisible = !isMine
-        findViewById<View>(R.id.btnReserve).isVisible = !isMine
-        findViewById<View>(R.id.btnEdit).isVisible = isMine && !closed
-        findViewById<View>(R.id.btnMarkDone).isVisible = isMine && !closed
+        findViewById<View>(R.id.btnReserve).isVisible = !isMine && !onLoan
+        findViewById<View>(R.id.btnEdit).isVisible = isMine && !closed && !onLoan
+        findViewById<View>(R.id.btnMarkDone).isVisible = isMine && !closed && !onLoan
         findViewById<View>(R.id.closedState).isVisible = isMine && closed
+        findViewById<View>(R.id.btnMessage).isVisible = onLoan
+        findViewById<View>(R.id.btnReturned).isVisible = onLoan
+        findViewById<View>(R.id.btnCancelReservation).isVisible = !isMine && reservation != null
         findViewById<TextView>(R.id.btnMarkDone).setText(
             when (listing.type) {
-                1 -> R.string.btn_mark_rented
+                1 -> R.string.btn_lend_out
                 2 -> R.string.btn_mark_swapped
                 else -> R.string.btn_mark_sold
             }
         )
-        if (!isMine) bindReserveButton()
-
-        val reservation = UserState.reservation(listing.id)
-        findViewById<View>(R.id.btnCancelReservation).isVisible = !isMine && reservation != null
         findViewById<TextView>(R.id.btnCancelReservation).setText(
             if (listing.isSwap) R.string.btn_withdraw_short else R.string.btn_cancel_short
         )
-        findViewById<TextView>(R.id.reservationTitle).setText(
-            if (listing.isSwap) R.string.swap_card_title else R.string.reservation_card_title
-        )
-        findViewById<View>(R.id.reservationCard).isVisible = !isMine && reservation != null
-        findViewById<TextView>(R.id.reservationDetail).text = reservation?.summary
+        if (!isMine && !onLoan) bindReserveButton()
+
+        // Status card above the seller: a loan with its due date, or a pending reservation.
+        val card = findViewById<View>(R.id.reservationCard)
+        val title = findViewById<TextView>(R.id.reservationTitle)
+        val detail = findViewById<TextView>(R.id.reservationDetail)
+        val due = findViewById<TextView>(R.id.reservationDue)
+        when {
+            rental != null -> {
+                card.isVisible = true
+                val who = rental.partner.name
+                val date = Rentals.dateLabel(rental.dueMillis)
+                title.text = getString(if (rental.lending) R.string.loan_lent_title else R.string.loan_borrowed_title, who)
+                detail.text = getString(if (rental.lending) R.string.loan_lent_due else R.string.loan_borrowed_due, date)
+                due.isVisible = true
+                due.text = Rentals.countdown(this, rental.dueMillis)
+                due.setTextColor(getColor(if (Rentals.isOverdue(rental.dueMillis)) R.color.danger else R.color.uc_green))
+                findViewById<TextView>(R.id.btnMessage).text = getString(R.string.btn_message_seller, who.substringBefore(' '))
+            }
+            !isMine && reservation != null -> {
+                card.isVisible = true
+                title.setText(if (listing.isSwap) R.string.swap_card_title else R.string.reservation_card_title)
+                detail.text = reservation.summary
+                due.isVisible = false
+            }
+            else -> card.isVisible = false
+        }
+    }
+
+    /** On loan: chat with whoever has it, or whoever you borrowed it from. */
+    fun messagePartner(view: View) {
+        UserState.rental(listing.id)?.let { openChatWith(it.partner, listing.id) }
+    }
+
+    /** On loan: confirm the item came back (or that you gave it back). */
+    fun markReturned(view: View) {
+        val rental = UserState.rental(listing.id) ?: return
+        val first = rental.partner.name.substringBefore(' ')
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.return_title)
+            .setMessage(
+                getString(if (rental.lending) R.string.return_lent_message else R.string.return_borrowed_message, first, listing.title)
+            )
+            .setNegativeButton(R.string.return_not_yet, null)
+            .setPositiveButton(R.string.return_confirm) { _, _ ->
+                UserState.markReturned(listing)
+                bindActions()
+                notify(getString(R.string.toast_returned))
+            }
+            .show()
     }
 
     private fun bindReserveButton() {
@@ -162,6 +213,45 @@ class ListingDetailActivity : BaseActivity() {
         }
     }
 
+    /** Own rent listing: pick who is borrowing it and for how long. */
+    private fun lendOut() {
+        val people = Listings.SELLERS
+        val weekOptions = Listings.RENT_WEEKS.filter { it <= listing.maxWeeks }.ifEmpty { listOf(1) }
+        var person = -1
+        var weeks = weekOptions.first()
+        Sheets.show(this, R.layout.sheet_lend) { sheet, dialog ->
+            sheet.findViewById<TextView>(R.id.lendItem).text = listing.title
+            val box = sheet.findViewById<LinearLayout>(R.id.lendPeople)
+            val rows = people.map { p ->
+                val row = LayoutInflater.from(this).inflate(R.layout.item_swap_option, box, false)
+                row.findViewById<TextView>(R.id.optionTitle).text = p.name
+                row.findViewById<TextView>(R.id.optionMeta).text = getString(R.string.seller_meta_format, p.program, p.year)
+                box.addView(row)
+                row
+            }
+            Choice.rows(rows, rows.map { it.findViewById(R.id.optionRadio) }, person) { person = it }
+
+            val dueText = sheet.findViewById<TextView>(R.id.lendDue)
+            fun bindDue() {
+                dueText.text = getString(R.string.lend_due_format, Rentals.dateLabel(System.currentTimeMillis() + weeks * Rentals.WEEK_MS))
+            }
+            val chips = addChips(sheet.findViewById(R.id.lendWeeks), weekOptions.map { Listings.weeksLabel(this, it) })
+            Choice.chips(chips, 0) { weeks = weekOptions[it]; bindDue() }
+            bindDue()
+
+            sheet.findViewById<View>(R.id.lendStart).setOnClickListener {
+                if (person < 0) {
+                    Toast.makeText(this, R.string.toast_pick_borrower, Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                UserState.lend(listing, people[person], weeks)
+                bindActions()
+                dialog.dismiss()
+                notify(getString(R.string.toast_lent, people[person].name.substringBefore(' ')))
+            }
+        }
+    }
+
     /** Seller card: opens the seller's profile, or your own on your listing. */
     fun openSellerProfile(view: View) {
         if (isMine) openProfile(view) else openSeller(listing.seller)
@@ -174,6 +264,10 @@ class ListingDetailActivity : BaseActivity() {
 
     /** Own listing: confirm, then take it off the market. */
     fun markDone(view: View) {
+        if (listing.isRent) {
+            lendOut()
+            return
+        }
         MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.mark_sold_title, listing.title))
             .setMessage(R.string.mark_sold_message)

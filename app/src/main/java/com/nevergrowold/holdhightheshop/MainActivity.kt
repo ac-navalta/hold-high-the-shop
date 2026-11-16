@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
+import androidx.core.view.isVisible
 
 class MainActivity : BaseActivity() {
 
@@ -30,6 +31,12 @@ class MainActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        bindReturnReminder()
+        // Same numbers as Profile: everything finished, and your listings still out there.
+        findViewById<TextView>(R.id.statExchanged).text = Listings.completed().size.toString()
+        findViewById<TextView>(R.id.statListings).text =
+            (Listings.myActive().size + UserState.lending().size).toString()
+
         // Fresh on campus: the newest listings from other students.
         val fresh = findViewById<LinearLayout>(R.id.freshRow)
         fresh.removeAllViews()
@@ -39,6 +46,30 @@ class MainActivity : BaseActivity() {
                 .apply { marginEnd = dp(this@MainActivity, 4) }
             fresh.addView(card)
         }
+    }
+
+    /**
+     * Shows the most urgent thing you borrowed when it is due within three
+     * days or overdue. Tapping it opens that listing.
+     */
+    private fun bindReturnReminder() {
+        val card = findViewById<View>(R.id.returnReminder)
+        val (item, loan) = UserState.borrowing().firstOrNull { Rentals.isDueSoon(it.second.dueMillis) }
+            ?: run { card.isVisible = false; return }
+        val overdue = Rentals.isOverdue(loan.dueMillis)
+        card.isVisible = true
+        card.setBackgroundResource(if (overdue) R.drawable.bg_reminder_overdue else R.drawable.bg_badge_swap)
+        findViewById<TextView>(R.id.reminderTitle).text = if (overdue) {
+            getString(R.string.reminder_overdue_title, item.title)
+        } else {
+            getString(R.string.reminder_title, item.title, loan.partner.name.substringBefore(' '))
+        }
+        findViewById<TextView>(R.id.reminderDue).apply {
+            text = getString(R.string.row_borrowed_meta, loan.partner.name.substringBefore(' '), Rentals.dateLabel(loan.dueMillis), Rentals.countdown(this@MainActivity, loan.dueMillis))
+            setTextColor(getColor(if (overdue) R.color.danger else R.color.swap_text))
+        }
+        findViewById<ImageView>(R.id.reminderIcon).setColorFilter(getColor(if (overdue) R.color.danger else R.color.swap_text))
+        card.setOnClickListener { openListingById(item.id) }
     }
 
     companion object {

@@ -392,7 +392,6 @@
     <string name="seller_you_format">%1$s (You)</string>
     <string name="btn_edit_listing">Edit listing</string>
     <string name="btn_mark_sold">Mark as sold</string>
-    <string name="btn_mark_rented">Mark as rented</string>
     <string name="btn_mark_swapped">Mark as swapped</string>
     <string name="mark_sold_title">Mark \u201C%1$s\u201D as done?</string>
     <string name="mark_sold_message">It will leave the Campus Market and move to your Completed tab.</string>
@@ -607,4 +606,34 @@
     </plurals>
     <string name="due_tomorrow">Due tomorrow</string>
     <string name="due_today">Due today</string>
+
+    <!-- Loans: lending and borrowing -->
+    <string name="btn_lend_out">Lend it out</string>
+    <string name="btn_mark_returned">Mark as returned</string>
+    <string name="loan_lent_title">Lent to %1$s</string>
+    <string name="loan_borrowed_title">Borrowed from %1$s</string>
+    <string name="loan_lent_due">Due back %1$s</string>
+    <string name="loan_borrowed_due">Return by %1$s</string>
+    <string name="return_title">Mark as returned?</string>
+    <string name="return_lent_message">Did %1$s give the %2$s back? It will move to Completed and you can lend it again.</string>
+    <string name="return_borrowed_message">Did you give the %2$s back to %1$s? It will move to Completed.</string>
+    <string name="return_confirm">Yes, returned</string>
+    <string name="return_not_yet">Not yet</string>
+    <string name="toast_returned">Marked as returned</string>
+    <string name="lend_kicker">LEND IT OUT</string>
+    <string name="lend_who">Who\u2019s borrowing it?</string>
+    <string name="lend_how_long">For how long?</string>
+    <string name="lend_due_format">Due back %1$s</string>
+    <string name="btn_start_lending">Start lending</string>
+    <string name="toast_pick_borrower">Pick who is borrowing it</string>
+    <string name="toast_lent">Lent to %1$s. We\u2019ll remind you both before it\u2019s due.</string>
+    <string name="section_borrowing">Borrowing</string>
+    <string name="section_borrowing_hint">Return these on time to keep your reliability up</string>
+    <string name="section_lent">Lent out</string>
+    <string name="section_lent_hint">Your things other students have right now</string>
+    <string name="row_borrowed_meta">Return to %1$s by %2$s \u2022 %3$s</string>
+    <string name="row_lent_meta">With %1$s, back by %2$s \u2022 %3$s</string>
+    <string name="role_lent_out">LENT OUT</string>
+    <string name="reminder_title">Return %1$s to %2$s</string>
+    <string name="reminder_overdue_title">%1$s is overdue</string>
 </resources>
