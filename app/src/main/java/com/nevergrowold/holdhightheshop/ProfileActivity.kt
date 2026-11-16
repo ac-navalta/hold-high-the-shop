@@ -67,25 +67,38 @@ class ProfileActivity : BaseActivity() {
 
         val saved = UserState.saved()
         val mine = Listings.myActive()
+        val reserved = UserState.reservedListings()
         val completed = closedExchanges() + Listings.COMPLETED
-        findViewById<TextView>(R.id.tab1Count).text = mine.size.toString()
+        findViewById<TextView>(R.id.tab1Count).text = (mine.size + reserved.size).toString()
         findViewById<TextView>(R.id.tab2Count).text = completed.size.toString()
         findViewById<TextView>(R.id.tab3Count).text = saved.size.toString()
 
         val list = findViewById<LinearLayout>(R.id.profileList)
         list.removeAllViews()
         when (selected) {
-            TAB_ACTIVE -> mine.forEachIndexed { i, item ->
-                addRow(
-                    list, item.title, Listings.price(item.price),
-                    getString(R.string.posted_days_format, item.postedDaysAgo + 2),
-                    i < mine.size - 1
-                ) { openListingById(item.id) }
+            // Active: what you give out, then what you get from others.
+            TAB_ACTIVE -> {
+                if (mine.isNotEmpty()) addSection(list, R.string.section_mine, R.string.section_mine_hint)
+                mine.forEachIndexed { i, item ->
+                    addRow(
+                        list, item.title, Listings.price(item.price),
+                        getString(R.string.posted_days_format, item.postedDaysAgo + 2),
+                        i < mine.size - 1, Listings.role(this, item), giving = true
+                    ) { openListingById(item.id) }
+                }
+                if (reserved.isNotEmpty()) addSection(list, R.string.section_reserved, R.string.section_reserved_hint)
+                reserved.forEachIndexed { i, item ->
+                    addRow(
+                        list, item.title, Listings.price(item.price),
+                        getString(R.string.reserved_from_format, item.seller.name),
+                        i < reserved.size - 1, Listings.role(this, item), giving = false
+                    ) { openListingById(item.id) }
+                }
             }
             TAB_COMPLETED -> completed.forEachIndexed { i, exchange ->
                 addRow(
                     list, exchange.title, Listings.price(exchange.price), exchange.summary,
-                    i < completed.size - 1, null
+                    i < completed.size - 1, onClick = null
                 )
             }
             else -> saved.forEachIndexed { i, item ->

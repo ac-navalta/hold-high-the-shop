@@ -122,4 +122,23 @@
         <item name="android:textColor">@color/text_secondary</item>
         <item name="android:textSize">11sp</item>
     </style>
+
+    <!--
+        Small role tag, e.g. LENDING or BORROWING. Things you give out use the
+        outlined style (RoleBadge.Giving); things you get from others use the
+        mint fill (RoleBadge.Getting), so the two read differently at a glance.
+    -->
+    <style name="RoleBadge">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:paddingTop">2dp</item>
+        <item name="android:paddingBottom">2dp</item>
+        <item name="android:fontFamily">@font/poppins_semibold</item>
+        <item name="android:textColor">@color/uc_green</item>
+        <item name="android:textSize">9sp</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="android:background">@drawable/bg_badge_mint</item>
+    </style>
 </resources>

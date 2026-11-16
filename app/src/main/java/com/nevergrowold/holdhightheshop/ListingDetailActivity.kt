@@ -187,7 +187,10 @@ class ListingDetailActivity : BaseActivity() {
                     Toast.makeText(this, R.string.toast_pick_day_time, Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
-                UserState.setReserved(listing.id, true)
+                UserState.setReserved(
+                    listing.id,
+                    getString(R.string.sys_reserved_detail, Listings.MEETUP_POINTS[place], days[day], times[time])
+                )
                 bindActions()
                 dialog.dismiss()
                 Toast.makeText(this, getString(R.string.toast_reserved, listing.seller.name), Toast.LENGTH_SHORT).show()

@@ -167,6 +167,21 @@ object Listings {
 
     fun isMine(listing: Listing) = listing.seller == ME
 
+    /**
+     * What the student is doing with a listing, for the role badge:
+     * giving (selling / lending) on their own, getting (buying / borrowing)
+     * on someone else's.
+     */
+    fun role(context: Context, listing: Listing): String = context.getString(
+        when {
+            listing.type == 2 -> R.string.role_swapping
+            isMine(listing) && listing.type == 1 -> R.string.role_lending
+            isMine(listing) -> R.string.role_selling
+            listing.type == 1 -> R.string.role_borrowing
+            else -> R.string.role_buying
+        }
+    )
+
     /** Mika's own listings that are still open, shown under Profile > Active. */
     fun myActive(): List<Listing> = ALL.filter { isMine(it) && !UserState.isClosed(it.id) }
 
@@ -226,7 +241,11 @@ object Listings {
 object UserState {
 
     private val saved = mutableSetOf("item3", "item5")
-    private val reserved = mutableSetOf<String>()
+    /** Listing id to meetup summary. Starts with the sample reservations. */
+    private val reserved = mutableMapOf(
+        "item2" to "UC Main Gate Security Desk \u2022 Tomorrow, 1:30 PM",
+        "item5" to "UC Library Lobby \u2022 Return by Friday"
+    )
     private val closed = mutableSetOf<String>()
 
     fun saved(): List<Listing> = Listings.ALL.filter { it.id in saved }
@@ -239,8 +258,17 @@ object UserState {
 
     fun isReserved(id: String) = id in reserved
 
-    fun setReserved(id: String, on: Boolean) {
-        if (on) reserved.add(id) else reserved.remove(id)
+    fun reservation(id: String): String? = reserved[id]
+
+    /** Listings the student reserved from others, oldest first. */
+    fun reservedListings(): List<Listing> = reserved.keys.map { Listings.byId(it) }
+
+    fun setReserved(id: String, detail: String) {
+        reserved[id] = detail
+    }
+
+    fun cancelReservation(id: String) {
+        reserved.remove(id)
     }
 
     /** Own listings marked as sold, rented out or swapped. */

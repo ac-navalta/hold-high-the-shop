@@ -92,6 +92,8 @@ open class BaseActivity : AppCompatActivity() {
         price: String,
         meta: String,
         showDivider: Boolean,
+        badge: String? = null,
+        giving: Boolean = false,
         onClick: (() -> Unit)?
     ): View {
         val row = LayoutInflater.from(this).inflate(R.layout.item_listing_row, list, false)
@@ -99,6 +101,7 @@ open class BaseActivity : AppCompatActivity() {
         row.findViewById<TextView>(R.id.rowPrice).text = price
         row.findViewById<TextView>(R.id.rowMeta).text = meta
         row.findViewById<View>(R.id.rowDivider).visibility = if (showDivider) View.VISIBLE else View.GONE
+        if (badge != null) styleBadge(row.findViewById(R.id.rowBadge), badge, giving)
         val body = row.findViewById<View>(R.id.rowBody)
         if (onClick != null) {
             body.setOnClickListener { onClick() }
@@ -108,6 +111,24 @@ open class BaseActivity : AppCompatActivity() {
         }
         list.addView(row, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         return row
+    }
+
+    /**
+     * Role tag such as LENDING or BORROWING. Giving (your own things) is
+     * outlined; getting (things from others) is filled mint.
+     */
+    protected fun styleBadge(view: TextView, label: String, giving: Boolean) {
+        view.text = label
+        view.setBackgroundResource(if (giving) R.drawable.bg_badge_outline else R.drawable.bg_badge_mint)
+        view.visibility = View.VISIBLE
+    }
+
+    /** Adds a heading with a one-line hint to a list. */
+    protected fun addSection(list: LinearLayout, title: Int, hint: Int) {
+        val header = LayoutInflater.from(this).inflate(R.layout.item_section_header, list, false)
+        header.findViewById<TextView>(R.id.sectionTitle).setText(title)
+        header.findViewById<TextView>(R.id.sectionHint).setText(hint)
+        list.addView(header)
     }
 
     companion object {
