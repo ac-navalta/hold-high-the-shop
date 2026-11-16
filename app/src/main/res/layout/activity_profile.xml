@@ -516,6 +516,25 @@
                 android:layout_marginEnd="@dimen/screen_margin"
                 android:background="@color/divider" />
 
+            <!-- ACTIVE TAB: jump to one group (borrowing, lent out, reserved, your listings) -->
+            <HorizontalScrollView
+                android:id="@+id/activeFiltersScroll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:paddingStart="@dimen/screen_margin"
+                android:paddingEnd="@dimen/screen_margin"
+                android:clipToPadding="false"
+                android:scrollbars="none"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/activeFilters"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
             <!-- TAB CONTENT, filled in by ProfileActivity -->
             <LinearLayout
                 android:id="@+id/profileList"

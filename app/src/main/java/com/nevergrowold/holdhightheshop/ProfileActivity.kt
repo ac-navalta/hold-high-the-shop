@@ -2,6 +2,7 @@ package com.nevergrowold.holdhightheshop
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -12,6 +13,9 @@ import androidx.core.view.isVisible
 class ProfileActivity : BaseActivity() {
 
     private var tab = TAB_ACTIVE
+
+    /** Active tab: which group to show. One of the GROUP_ constants. */
+    private var group = GROUP_ALL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,13 +79,26 @@ class ProfileActivity : BaseActivity() {
         findViewById<TextView>(R.id.tab2Count).text = completed.size.toString()
         findViewById<TextView>(R.id.tab3Count).text = saved.size.toString()
 
+        findViewById<View>(R.id.activeFiltersScroll).isVisible = selected == TAB_ACTIVE
         val list = findViewById<LinearLayout>(R.id.profileList)
         list.removeAllViews()
         when (selected) {
             // Active: loans with due dates first, then reservations, then your open listings.
+            // The chips above narrow it to one group; "All" shows every group with its heading.
             TAB_ACTIVE -> {
-                if (borrowing.isNotEmpty()) addSection(list, R.string.section_borrowing, R.string.section_borrowing_hint)
-                borrowing.forEachIndexed { i, (item, loan) ->
+                bindGroupChips(
+                    listOf(
+                        GROUP_ALL to getString(R.string.filter_all_format, borrowing.size + lending.size + reserved.size + mine.size),
+                        GROUP_BORROWING to getString(R.string.filter_borrowing_format, borrowing.size),
+                        GROUP_LENT to getString(R.string.filter_lent_format, lending.size),
+                        GROUP_RESERVED to getString(R.string.filter_reserved_format, reserved.size),
+                        GROUP_MINE to getString(R.string.filter_mine_format, mine.size)
+                    ),
+                    listOf(1, borrowing.size, lending.size, reserved.size, mine.size)
+                )
+                fun shows(g: Int) = group == GROUP_ALL || group == g
+                if (shows(GROUP_BORROWING) && borrowing.isNotEmpty()) addSection(list, R.string.section_borrowing, R.string.section_borrowing_hint)
+                if (shows(GROUP_BORROWING)) borrowing.forEachIndexed { i, (item, loan) ->
                     val meta = if (loan.returnPending) {
                         getString(R.string.row_return_pending, loan.partner.name.substringBefore(' '))
                     } else {
@@ -98,8 +115,8 @@ class ProfileActivity : BaseActivity() {
                         row.findViewById<TextView>(R.id.rowMeta).setTextColor(getColor(R.color.danger))
                     }
                 }
-                if (lending.isNotEmpty()) addSection(list, R.string.section_lent, R.string.section_lent_hint)
-                lending.forEachIndexed { i, (item, loan) ->
+                if (shows(GROUP_LENT) && lending.isNotEmpty()) addSection(list, R.string.section_lent, R.string.section_lent_hint)
+                if (shows(GROUP_LENT)) lending.forEachIndexed { i, (item, loan) ->
                     val meta = if (loan.returnPending) {
                         getString(R.string.row_confirm_return, loan.partner.name.substringBefore(' '))
                     } else {
@@ -118,16 +135,16 @@ class ProfileActivity : BaseActivity() {
                         Rentals.isOverdue(loan.dueMillis) -> metaView.setTextColor(getColor(R.color.danger))
                     }
                 }
-                if (reserved.isNotEmpty()) addSection(list, R.string.section_reserved, R.string.section_reserved_hint)
-                reserved.forEachIndexed { i, item ->
+                if (shows(GROUP_RESERVED) && reserved.isNotEmpty()) addSection(list, R.string.section_reserved, R.string.section_reserved_hint)
+                if (shows(GROUP_RESERVED)) reserved.forEachIndexed { i, item ->
                     addRow(
                         list, item.title, Listings.priceLabel(this, item),
                         getString(R.string.reserved_from_format, item.seller.name),
                         i < reserved.size - 1, Listings.role(this, item), giving = false, swap = item.isSwap
                     ) { openListingById(item.id) }
                 }
-                if (mine.isNotEmpty()) addSection(list, R.string.section_mine, R.string.section_mine_hint)
-                mine.forEachIndexed { i, item ->
+                if (shows(GROUP_MINE) && mine.isNotEmpty()) addSection(list, R.string.section_mine, R.string.section_mine_hint)
+                if (shows(GROUP_MINE)) mine.forEachIndexed { i, item ->
                     addRow(
                         list, item.title, Listings.priceLabel(this, item),
                         getString(R.string.posted_days_format, item.postedDaysAgo + 2),
@@ -157,6 +174,27 @@ class ProfileActivity : BaseActivity() {
         findViewById<View>(R.id.profileEmpty).isVisible = selected == TAB_SAVED && saved.isEmpty()
     }
 
+    /**
+     * Chips above the Active list. Groups with nothing in them are hidden;
+     * if the chosen group empties out, the list falls back to All.
+     */
+    private fun bindGroupChips(groups: List<Pair<Int, String>>, counts: List<Int>) {
+        val box = findViewById<LinearLayout>(R.id.activeFilters)
+        box.removeAllViews()
+        val shown = groups.filterIndexed { i, _ -> counts[i] > 0 }
+        if (shown.none { it.first == group }) group = GROUP_ALL
+        val chips = shown.map { (_, label) ->
+            (LayoutInflater.from(this).inflate(R.layout.item_chip, box, false) as TextView).also {
+                it.text = label
+                box.addView(it)
+            }
+        }
+        Choice.chips(chips, shown.indexOfFirst { it.first == group }) {
+            group = shown[it].first
+            selectTab(TAB_ACTIVE)
+        }
+    }
+
     /** The "..." button in the header. */
     fun openMenu(view: View) {
         val options = listOf(
@@ -178,5 +216,11 @@ class ProfileActivity : BaseActivity() {
         const val TAB_ACTIVE = 0
         const val TAB_COMPLETED = 1
         const val TAB_SAVED = 2
+
+        private const val GROUP_ALL = 0
+        private const val GROUP_BORROWING = 1
+        private const val GROUP_LENT = 2
+        private const val GROUP_RESERVED = 3
+        private const val GROUP_MINE = 4
     }
 }

@@ -665,4 +665,11 @@
     <string name="toast_not_received">%1$s has been told it\u2019s not back yet</string>
     <string name="row_return_pending">Returned to %1$s \u2022 waiting for them to confirm</string>
     <string name="row_confirm_return">%1$s says it\u2019s returned \u2022 tap to confirm</string>
+
+    <!-- Profile > Active filter chips -->
+    <string name="filter_all_format">All \u00B7 %1$d</string>
+    <string name="filter_borrowing_format">Borrowing \u00B7 %1$d</string>
+    <string name="filter_lent_format">Lent out \u00B7 %1$d</string>
+    <string name="filter_reserved_format">Reserved \u00B7 %1$d</string>
+    <string name="filter_mine_format">Your listings \u00B7 %1$d</string>
 </resources>
