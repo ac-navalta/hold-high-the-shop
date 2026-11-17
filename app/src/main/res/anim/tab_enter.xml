@@ -1,19 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<set xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+    Tabs are peers: the new tab screen simply fades in over the old one.
+    The movement (the pill sliding, the page drifting in) is played by the
+    arriving screen itself, so the tab bar looks like it never changed.
+-->
+<alpha xmlns:android="http://schemas.android.com/apk/res/android"
     android:zAdjustment="top"
-    android:shareInterpolator="false">
-    <alpha
-        android:fromAlpha="0"
-        android:toAlpha="1"
-        android:duration="210"
-        android:interpolator="@interpolator/ease_out" />
-    <scale
-        android:fromXScale="0.97"
-        android:toXScale="1"
-        android:fromYScale="0.97"
-        android:toYScale="1"
-        android:pivotX="50%"
-        android:pivotY="50%"
-        android:duration="260"
-        android:interpolator="@interpolator/emphasized_decelerate" />
-</set>
+    android:fromAlpha="0"
+    android:toAlpha="1"
+    android:duration="200"
+    android:interpolator="@interpolator/ease_out" />

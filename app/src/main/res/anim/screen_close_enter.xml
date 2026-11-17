@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<set xmlns:android="http://schemas.android.com/apk/res/android">
+<!-- Back: the screen underneath comes forward again and brightens. -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@interpolator/standard">
     <translate
-        android:fromXDelta="-6%"
+        android:fromXDelta="-25%"
         android:toXDelta="0"
-        android:duration="280"
-        android:interpolator="@interpolator/emphasized_decelerate" />
+        android:duration="360" />
+    <alpha
+        android:fromAlpha="0.82"
+        android:toAlpha="1"
+        android:duration="360" />
 </set>

@@ -81,6 +81,11 @@ class CreateListingActivity : BaseActivity() {
             val added = LayoutInflater.from(this).inflate(R.layout.item_photo_added, tile, false)
             added.tag = PHOTO_TAG
             tile.addView(added)
+            Motion.pop(added, 0.6f)
+            Motion.confirm(tile)
+        } else {
+            for (i in 0 until tile.childCount) Motion.pop(tile.getChildAt(i), 0.7f)
+            Motion.tick(tile)
         }
         Motion.rollText(findViewById(R.id.photoCounter), getString(R.string.photo_counter_format, photos.count { it }))
     }

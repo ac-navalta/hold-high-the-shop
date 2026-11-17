@@ -17,7 +17,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
-        android:id="@+id/postedContent"
+        android:id="@+id/celebrateContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -38,27 +38,27 @@
             android:clipChildren="false">
 
             <View
-                android:id="@+id/postedRing"
+                android:id="@+id/celebrateRing"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/bg_ring_mint"
                 android:alpha="0" />
 
             <View
-                android:id="@+id/postedRing2"
+                android:id="@+id/celebrateRing2"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/bg_ring_mint"
                 android:alpha="0" />
 
             <FrameLayout
-                android:id="@+id/postedBadge"
+                android:id="@+id/celebrateBadge"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/bg_circle_mint">
 
                 <ImageView
-                    android:id="@+id/postedCheck"
+                    android:id="@+id/celebrateCheck"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:layout_gravity="center"

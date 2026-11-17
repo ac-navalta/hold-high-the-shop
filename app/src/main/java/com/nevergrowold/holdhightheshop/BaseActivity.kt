@@ -32,17 +32,32 @@ open class BaseActivity : AppCompatActivity() {
 
     override fun onPostCreate(savedInstanceState: android.os.Bundle?) {
         super.onPostCreate(savedInstanceState)
-        growTabIndicator()
+        arriveOnTab(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        growTabIndicator()
+        arriveOnTab(intent)
     }
 
-    /** On tab screens, the green pill behind the current tab grows in as the screen arrives. */
-    private fun growTabIndicator() {
-        findViewById<View>(R.id.navIndicator)?.let { Motion.grow(it, delay = 60) }
+    /**
+     * On tab screens: arriving from another tab, the green pill slides over
+     * from that tab and the page drifts in from that side, so the tab bar
+     * reads as one bar that stayed put. Arriving any other way, the pill grows in.
+     */
+    private fun arriveOnTab(intent: Intent?) {
+        val pill = findViewById<View>(R.id.navIndicator) ?: return
+        val from = intent?.getIntExtra(EXTRA_FROM_TAB, -1) ?: -1
+        intent?.removeExtra(EXTRA_FROM_TAB)
+        val to = currentTab()
+        if (from < 0 || from == to) Motion.grow(pill, delay = 60) else Motion.navSlide(this, from, to)
+    }
+
+    /** Index of this screen's tab in the bar (Home 0 … Profile 3), or -1 off the tab screens. */
+    private fun currentTab(): Int {
+        val nav = findViewById<ViewGroup>(R.id.bottomNav) ?: return -1
+        val pill = findViewById<View>(R.id.navIndicator) ?: return -1
+        return (0 until nav.childCount).firstOrNull { nav.getChildAt(it) === pill.parent } ?: -1
     }
 
     fun openHome(view: View) = switchTab(MainActivity::class.java)
@@ -78,27 +93,12 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     /**
-     * Opens a listing from its card with a container transform: the card
-     * itself grows into the listing screen, and Back shrinks it back into the
-     * card (Android's counterpart of a navigation zoom). With animations off,
-     * it opens like any other screen.
+     * Opens a listing from its card: the card grows into the listing screen,
+     * and Back shrinks the screen into the card again ([ZoomTransition]).
+     * With animations off, it opens like any other screen.
      */
     fun openListingFromCard(card: View, id: String) {
-        if (!Motion.enabled(this)) return openListingById(id)
-        // Only one view may carry the shared name at a time.
-        window.decorView.findViewWithTag<View>(LISTING_ZOOM)?.let { it.transitionName = null; it.tag = null }
-        card.transitionName = LISTING_ZOOM
-        card.tag = LISTING_ZOOM
-        zoomedListing = id
-        setExitSharedElementCallback(com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback())
-        window.sharedElementsUseOverlay = false
-        val options = android.app.ActivityOptions.makeSceneTransitionAnimation(this, card, LISTING_ZOOM)
-        startActivity(
-            Intent(this, ListingDetailActivity::class.java)
-                .putExtra(EXTRA_LISTING, id)
-                .putExtra(EXTRA_ZOOM, true),
-            options.toBundle()
-        )
+        ZoomTransition.launch(this, card, Intent(this, ListingDetailActivity::class.java).putExtra(EXTRA_LISTING, id))
     }
 
     /** Opens the saved items list. */
@@ -134,9 +134,9 @@ open class BaseActivity : AppCompatActivity() {
             .show()
     }
 
-    /** Closes the current screen, reversing a shared-element entrance when there was one. */
-    fun goBack(view: View) {
-        supportFinishAfterTransition()
+    /** Closes the current screen (the back arrow). Screens with their own exit motion override it. */
+    open fun goBack(view: View) {
+        finish()
     }
 
     protected fun switchTab(target: Class<*>, extras: Intent.() -> Unit = {}) {
@@ -144,6 +144,8 @@ open class BaseActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         intent.extras()
         if (javaClass == target && intent.extras == null) return
+        currentTab().takeIf { it >= 0 }?.let { intent.putExtra(EXTRA_FROM_TAB, it) }
+        Motion.tick(window.decorView)
         startActivity(intent)
         Motion.tabSwitch(this)
     }
@@ -161,11 +163,6 @@ open class BaseActivity : AppCompatActivity() {
             listing.isSwap -> styleBadge(type, getString(R.string.tag_for_swap), giving = false, swap = true)
             listing.isRent -> styleBadge(type, getString(R.string.tag_for_rent), giving = true)
             else -> styleBadge(type, getString(R.string.tag_for_sale), giving = false)
-        }
-        // The card that opened the listing keeps its name, so going back can shrink into it again.
-        if (listing.id == zoomedListing) {
-            card.transitionName = LISTING_ZOOM
-            card.tag = LISTING_ZOOM
         }
         card.setOnClickListener { openListingFromCard(card, listing.id) }
         return card
@@ -287,12 +284,7 @@ open class BaseActivity : AppCompatActivity() {
         const val EXTRA_SELLER = "seller"
         const val EXTRA_RESERVED = "reserved"
         const val EXTRA_TAB = "tab"
-        const val EXTRA_ZOOM = "zoom"
+        const val EXTRA_FROM_TAB = "from_tab"
 
-        /** Shared-element name for the card → listing container transform. */
-        const val LISTING_ZOOM = "listing_zoom"
-
-        /** Listing last opened from a card, so a rebuilt list can name the card again for the return. */
-        var zoomedListing: String? = null
     }
 }

@@ -4,6 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
+    android:clipChildren="false"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/uc_cream"
@@ -16,10 +17,13 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
+        android:id="@+id/celebrateContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center_horizontal"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:paddingStart="28dp"
         android:paddingEnd="28dp"
         app:layout_constraintTop_toTopOf="parent"
@@ -27,18 +31,41 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- Badge with two rings that ripple out once when the screen opens. -->
         <FrameLayout
             android:layout_width="78dp"
             android:layout_height="78dp"
-            android:background="@drawable/bg_circle_mint">
+            android:clipChildren="false">
 
-            <ImageView
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_verified"
-                android:tint="@color/uc_green"
-                android:contentDescription="@null" />
+            <View
+                android:id="@+id/celebrateRing"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_ring_mint"
+                android:alpha="0" />
+
+            <View
+                android:id="@+id/celebrateRing2"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_ring_mint"
+                android:alpha="0" />
+
+            <FrameLayout
+                android:id="@+id/celebrateBadge"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_circle_mint">
+
+                <ImageView
+                    android:id="@+id/celebrateCheck"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_verified"
+                    android:tint="@color/uc_green"
+                    android:contentDescription="@null" />
+            </FrameLayout>
         </FrameLayout>
 
         <TextView

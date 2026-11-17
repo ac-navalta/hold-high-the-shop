@@ -47,11 +47,18 @@ class MainActivity : BaseActivity() {
         bindReturnReminder()
         // Same numbers as Profile: everything finished, and your listings still out there.
         // A changed count rolls to its new value.
-        Motion.rollText(findViewById(R.id.statExchanged), Listings.completed().size.toString())
-        Motion.rollText(
-            findViewById(R.id.statListings),
-            (Listings.myActive().size + UserState.lending().size).toString()
-        )
+        // First visit counts the numbers up; later visits roll only what changed.
+        val exchanged = findViewById<TextView>(R.id.statExchanged)
+        val active = findViewById<TextView>(R.id.statListings)
+        val exchangedValue = Listings.completed().size.toString()
+        val activeValue = (Listings.myActive().size + UserState.lending().size).toString()
+        if (exchanged.isLaidOut) {
+            Motion.rollText(exchanged, exchangedValue)
+            Motion.rollText(active, activeValue)
+        } else {
+            Motion.countUp(exchanged, exchangedValue, delay = 200)
+            Motion.countUp(active, activeValue, delay = 260)
+        }
 
         // Fresh on campus: the newest listings from other students.
         val fresh = findViewById<LinearLayout>(R.id.freshRow)

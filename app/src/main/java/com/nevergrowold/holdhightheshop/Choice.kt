@@ -20,6 +20,8 @@ object Choice {
         views.forEachIndexed { index, view ->
             view.setOnClickListener {
                 pills(views, index, true, onPick)
+                Motion.tick(view)
+                Motion.pop(view, 0.92f)
                 onPick(index)
             }
             val isOn = index == selected
@@ -38,13 +40,20 @@ object Choice {
                 onPick(index)
             }
             val isOn = index == selected
-            if (isOn) {
-                Motion.background(view, R.drawable.bg_segment_active, animate)
-            } else {
-                Motion.backgroundColor(view, android.graphics.Color.TRANSPARENT, animate)
+            if (!animate) {
+                if (isOn) view.setBackgroundResource(R.drawable.bg_segment_active)
+                else view.setBackgroundColor(android.graphics.Color.TRANSPARENT)
             }
             Motion.textColor(view, view.context.getColor(if (isOn) R.color.white else R.color.text_secondary), animate)
         }
+        // The green pill slides from the old option to the new one.
+        val track = views.first().parent as? View
+        val previous = track?.getTag(R.id.choice_on) as? Int
+        if (animate && previous != null && previous != selected) {
+            Motion.slidePill(views[previous], views[selected], R.drawable.bg_segment_active)
+            Motion.tick(views[selected])
+        }
+        track?.setTag(R.id.choice_on, selected)
     }
 
     /** Filter chips on the Campus Market. */
@@ -54,6 +63,8 @@ object Choice {
         views.forEachIndexed { index, view ->
             view.setOnClickListener {
                 chips(views, index, true, onPick)
+                Motion.tick(view)
+                Motion.pop(view, 0.92f)
                 onPick(index)
             }
             val isOn = index == selected
@@ -70,6 +81,8 @@ object Choice {
         views.forEachIndexed { index, view ->
             val isOn = index in selected
             view.setOnClickListener {
+                Motion.tick(view)
+                Motion.pop(view, 0.92f)
                 onChange(if (isOn) selected - index else selected + index)
             }
             // Only the chip whose state actually changes animates; the rest are re-bound as they were.
@@ -99,6 +112,7 @@ object Choice {
         rows.forEachIndexed { index, row ->
             row.setOnClickListener {
                 rows(rows, icons, index, true, onPick)
+                Motion.tick(row)
                 onPick(index)
             }
             val isOn = index == selected

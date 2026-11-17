@@ -113,6 +113,7 @@ class ChatThreadActivity : BaseActivity() {
         if (text.isEmpty()) return
         addBubble(text, outgoing = true)
         input.setText("")
+        Motion.tick(view)
         // The arrow flicks toward the message it just sent, then springs home.
         findViewById<View>(R.id.sendIcon)?.let {
             it.translationX = 0f

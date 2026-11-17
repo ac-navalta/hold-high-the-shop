@@ -46,6 +46,7 @@ class SavedActivity : BaseActivity() {
             }
             row.findViewById<View>(R.id.rowAction).setOnClickListener { action ->
                 action.isEnabled = false
+                Motion.tick(action)
                 UserState.setSaved(item.id, false)
                 // The row slides away and the list closes up before it is rebuilt.
                 Motion.remove(row) { render() }

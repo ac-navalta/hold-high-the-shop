@@ -1,17 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Leaves the way it came in, a little faster. -->
-<set xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Back: the top screen slides off to the right, the way it came. -->
+<translate xmlns:android="http://schemas.android.com/apk/res/android"
     android:zAdjustment="top"
-    android:shareInterpolator="false">
-    <translate
-        android:fromXDelta="0"
-        android:toXDelta="12%"
-        android:duration="220"
-        android:interpolator="@interpolator/emphasized_accelerate" />
-    <alpha
-        android:fromAlpha="1"
-        android:toAlpha="0"
-        android:startOffset="40"
-        android:duration="180"
-        android:interpolator="@interpolator/ease_out" />
-</set>
+    android:fromXDelta="0"
+    android:toXDelta="100%"
+    android:duration="360"
+    android:interpolator="@interpolator/standard" />

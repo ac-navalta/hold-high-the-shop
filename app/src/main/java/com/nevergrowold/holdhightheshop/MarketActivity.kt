@@ -87,6 +87,7 @@ class MarketActivity : BaseActivity() {
         program = programIndex(intent.getStringExtra(EXTRA_PROGRAM))
         bindChips()
         render()
+        Motion.hideOnScroll(findViewById(R.id.marketScroll), findViewById(R.id.fabPost))
     }
 
     /** Arriving from a program tile on Home while the market is already open. */
