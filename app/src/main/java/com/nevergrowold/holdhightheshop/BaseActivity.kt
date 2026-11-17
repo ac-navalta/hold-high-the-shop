@@ -77,6 +77,30 @@ open class BaseActivity : AppCompatActivity() {
         )
     }
 
+    /**
+     * Opens a listing from its card with a container transform: the card
+     * itself grows into the listing screen, and Back shrinks it back into the
+     * card (Android's counterpart of a navigation zoom). With animations off,
+     * it opens like any other screen.
+     */
+    fun openListingFromCard(card: View, id: String) {
+        if (!Motion.enabled(this)) return openListingById(id)
+        // Only one view may carry the shared name at a time.
+        window.decorView.findViewWithTag<View>(LISTING_ZOOM)?.let { it.transitionName = null; it.tag = null }
+        card.transitionName = LISTING_ZOOM
+        card.tag = LISTING_ZOOM
+        zoomedListing = id
+        setExitSharedElementCallback(com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback())
+        window.sharedElementsUseOverlay = false
+        val options = android.app.ActivityOptions.makeSceneTransitionAnimation(this, card, LISTING_ZOOM)
+        startActivity(
+            Intent(this, ListingDetailActivity::class.java)
+                .putExtra(EXTRA_LISTING, id)
+                .putExtra(EXTRA_ZOOM, true),
+            options.toBundle()
+        )
+    }
+
     /** Opens the saved items list. */
     fun openSaved(view: View) {
         startActivity(Intent(this, SavedActivity::class.java))
@@ -110,9 +134,9 @@ open class BaseActivity : AppCompatActivity() {
             .show()
     }
 
-    /** Closes the current screen. */
+    /** Closes the current screen, reversing a shared-element entrance when there was one. */
     fun goBack(view: View) {
-        finish()
+        supportFinishAfterTransition()
     }
 
     protected fun switchTab(target: Class<*>, extras: Intent.() -> Unit = {}) {
@@ -138,7 +162,12 @@ open class BaseActivity : AppCompatActivity() {
             listing.isRent -> styleBadge(type, getString(R.string.tag_for_rent), giving = true)
             else -> styleBadge(type, getString(R.string.tag_for_sale), giving = false)
         }
-        card.setOnClickListener { openListingById(listing.id) }
+        // The card that opened the listing keeps its name, so going back can shrink into it again.
+        if (listing.id == zoomedListing) {
+            card.transitionName = LISTING_ZOOM
+            card.tag = LISTING_ZOOM
+        }
+        card.setOnClickListener { openListingFromCard(card, listing.id) }
         return card
     }
 
@@ -258,5 +287,12 @@ open class BaseActivity : AppCompatActivity() {
         const val EXTRA_SELLER = "seller"
         const val EXTRA_RESERVED = "reserved"
         const val EXTRA_TAB = "tab"
+        const val EXTRA_ZOOM = "zoom"
+
+        /** Shared-element name for the card → listing container transform. */
+        const val LISTING_ZOOM = "listing_zoom"
+
+        /** Listing last opened from a card, so a rebuilt list can name the card again for the return. */
+        var zoomedListing: String? = null
     }
 }

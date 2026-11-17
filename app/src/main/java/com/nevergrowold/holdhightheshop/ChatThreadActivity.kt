@@ -113,6 +113,12 @@ class ChatThreadActivity : BaseActivity() {
         if (text.isEmpty()) return
         addBubble(text, outgoing = true)
         input.setText("")
+        // The arrow flicks toward the message it just sent, then springs home.
+        findViewById<View>(R.id.sendIcon)?.let {
+            it.translationX = 0f
+            Motion.spring(it, androidx.dynamicanimation.animation.DynamicAnimation.TRANSLATION_X, 0f, Motion.SNAPPY,
+                startVelocity = 900 * resources.displayMetrics.density)
+        }
     }
 
     private fun addBubble(text: String, outgoing: Boolean) {
@@ -120,12 +126,16 @@ class ChatThreadActivity : BaseActivity() {
         val bubble = LayoutInflater.from(this).inflate(layout, messages, false)
         bubble.findViewById<TextView>(R.id.bubbleText).text = text
         messages.addView(bubble)
+        // Your own messages grow out of your side of the screen; history loads still.
+        if (outgoing) Motion.insert(bubble, fromEnd = true)
         scrollToEnd()
     }
 
     /** Placeholder photo message. Real photos come with the backend. */
     private fun addPhoto() {
-        messages.addView(LayoutInflater.from(this).inflate(R.layout.item_bubble_photo, messages, false))
+        val photo = LayoutInflater.from(this).inflate(R.layout.item_bubble_photo, messages, false)
+        messages.addView(photo)
+        Motion.insert(photo, fromEnd = true)
         scrollToEnd()
     }
 

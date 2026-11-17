@@ -31,7 +31,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Badge with a ring that ripples out once when the screen opens. -->
+        <!-- Badge with two rings that ripple out once when the screen opens. -->
         <FrameLayout
             android:layout_width="78dp"
             android:layout_height="78dp"
@@ -39,6 +39,13 @@
 
             <View
                 android:id="@+id/postedRing"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_ring_mint"
+                android:alpha="0" />
+
+            <View
+                android:id="@+id/postedRing2"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/bg_ring_mint"

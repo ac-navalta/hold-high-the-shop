@@ -157,12 +157,22 @@ class MarketActivity : BaseActivity() {
         if (animate) Motion.enter(cards)
 
         val narrowed = query.isNotEmpty() || programName != null || filters.isActive
-        findViewById<TextView>(R.id.itemsCount).text = if (narrowed) {
+        Motion.rollText(findViewById(R.id.itemsCount), if (narrowed) {
             resources.getQuantityString(R.plurals.items_found, items.size, items.size)
         } else {
             getString(R.string.items_near_you)
+        })
+        val empty = findViewById<View>(R.id.emptyState)
+        val wasEmpty = empty.isVisible
+        empty.isVisible = items.isEmpty()
+        // The empty state settles in when a filter first leaves nothing to show.
+        if (items.isEmpty() && !wasEmpty && animate) {
+            empty.alpha = 0f
+            empty.scaleX = 0.96f
+            empty.scaleY = 0.96f
+            Motion.spring(empty, androidx.dynamicanimation.animation.DynamicAnimation.ALPHA, 1f, Motion.SMOOTH)
+            Motion.springScale(empty, 1f, Motion.SMOOTH)
         }
-        findViewById<View>(R.id.emptyState).isVisible = items.isEmpty()
         findViewById<View>(R.id.filterDot).isVisible = filters.isActive
         findViewById<TextView>(R.id.sortLabel).text = sortOptions()[sort]
     }

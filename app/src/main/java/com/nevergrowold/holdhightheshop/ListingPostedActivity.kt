@@ -4,7 +4,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.OvershootInterpolator
+import android.animation.Keyframe
+import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
 import androidx.activity.enableEdgeToEdge
 
 class ListingPostedActivity : BaseActivity() {
@@ -18,36 +20,60 @@ class ListingPostedActivity : BaseActivity() {
     }
 
     /**
-     * The one celebratory moment in the app, earned by finishing a listing:
-     * the badge springs in, a ring ripples out from it like the listing going
-     * live, then the details and actions settle in underneath.
+     * The one celebratory moment in the app, earned by finishing a listing.
+     * Built as keyframe tracks, each property on its own timeline:
+     * - the badge overshoots to 112%, dips, then settles;
+     * - the check twists in a beat later, as if being stamped;
+     * - two rings ripple out, like the listing reaching the market;
+     * - then the details and actions settle in underneath.
      */
     private fun celebrate() {
         if (!Motion.enabled(this)) return
         val badge = findViewById<View>(R.id.postedBadge)
         val check = findViewById<View>(R.id.postedCheck)
-        val ring = findViewById<View>(R.id.postedRing)
 
-        badge.alpha = 0f
-        badge.scaleX = 0.5f
-        badge.scaleY = 0.5f
-        badge.animate().alpha(1f).scaleX(1f).scaleY(1f)
-            .setStartDelay(120).setDuration(480).setInterpolator(OvershootInterpolator(1.6f)).start()
-
-        check.scaleX = 0.3f
-        check.scaleY = 0.3f
-        check.rotation = -25f
-        check.animate().scaleX(1f).scaleY(1f).rotation(0f)
-            .setStartDelay(260).setDuration(420).setInterpolator(OvershootInterpolator(2f)).start()
-
-        ring.scaleX = 1f
-        ring.scaleY = 1f
-        ring.animate().withStartAction { ring.alpha = 0.9f }
-            .alpha(0f).scaleX(2.1f).scaleY(2.1f)
-            .setStartDelay(380).setDuration(900).setInterpolator(Motion.EASE_OUT).start()
+        track(badge, 640, 120,
+            View.SCALE_X to floatArrayOf(0f, 0.5f, 0.45f, 1.12f, 0.72f, 0.97f, 1f, 1f),
+            View.SCALE_Y to floatArrayOf(0f, 0.5f, 0.45f, 1.12f, 0.72f, 0.97f, 1f, 1f),
+            View.ALPHA to floatArrayOf(0f, 0f, 0.3f, 1f, 1f, 1f))
+        track(check, 560, 260,
+            View.ROTATION to floatArrayOf(0f, -30f, 0.55f, 8f, 1f, 0f),
+            View.SCALE_X to floatArrayOf(0f, 0.3f, 0.6f, 1.15f, 1f, 1f),
+            View.SCALE_Y to floatArrayOf(0f, 0.3f, 0.6f, 1.15f, 1f, 1f))
+        ripple(findViewById(R.id.postedRing), 380, 0.9f)
+        ripple(findViewById(R.id.postedRing2), 560, 0.5f)
 
         val content = findViewById<ViewGroup>(R.id.postedContent)
-        Motion.enter((1 until content.childCount).map { content.getChildAt(it) }, delay = 300, rise = 14)
+        Motion.enter((1 until content.childCount).map { content.getChildAt(it) }, delay = 340, rise = 14)
+    }
+
+    /**
+     * One keyframe track per property. Each array is pairs of (fraction, value);
+     * segments between keyframes use the emphasized curve.
+     */
+    private fun track(view: View, duration: Long, delay: Long, vararg tracks: Pair<android.util.Property<View, Float>, FloatArray>) {
+        val holders = tracks.map { (property, pairs) ->
+            val frames = (pairs.indices step 2).map { i ->
+                Keyframe.ofFloat(pairs[i], pairs[i + 1]).apply { if (i > 0) interpolator = Motion.EMPHASIZED }
+            }
+            PropertyValuesHolder.ofKeyframe(property, *frames.toTypedArray())
+        }
+        // Hold the first frame during the delay so nothing flashes at full size.
+        tracks.forEach { (property, pairs) -> property.set(view, pairs[1]) }
+        ObjectAnimator.ofPropertyValuesHolder(view, *holders.toTypedArray()).apply {
+            this.duration = duration
+            startDelay = delay
+            start()
+        }
+    }
+
+    private fun ripple(ring: View, delay: Long, strength: Float) {
+        ring.scaleX = 1f
+        ring.scaleY = 1f
+        ring.alpha = 0f
+        ring.animate().withStartAction { ring.alpha = strength }
+            .alpha(0f).scaleX(2.2f).scaleY(2.2f)
+            .setStartDelay(delay).setDuration(900).setInterpolator(Motion.EASE_OUT).start()
     }
 
     /** Opens the listing that was just posted. */

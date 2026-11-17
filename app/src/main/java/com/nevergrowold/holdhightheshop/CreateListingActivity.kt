@@ -82,8 +82,7 @@ class CreateListingActivity : BaseActivity() {
             added.tag = PHOTO_TAG
             tile.addView(added)
         }
-        findViewById<TextView>(R.id.photoCounter).text =
-            getString(R.string.photo_counter_format, photos.count { it })
+        Motion.rollText(findViewById(R.id.photoCounter), getString(R.string.photo_counter_format, photos.count { it }))
     }
 
     /** Lets the seller pick which college the item belongs to. */

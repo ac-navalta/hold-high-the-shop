@@ -32,6 +32,7 @@ class ListingDetailActivity : BaseActivity() {
     private lateinit var listing: Listing
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (intent.getBooleanExtra(EXTRA_ZOOM, false)) growFromCard()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_listing_detail)
@@ -78,6 +79,27 @@ class ListingDetailActivity : BaseActivity() {
         getString(R.string.you_free_format, listing.availability.label())
     } else {
         getString(R.string.seller_free_format, listing.seller.name.substringBefore(' '), listing.availability.label())
+    }
+
+    /**
+     * Opened from a card: the whole screen is the far end of a container
+     * transform, so the card's photo and shape grow into this page. Must run
+     * before super.onCreate.
+     */
+    private fun growFromCard() {
+        findViewById<View>(android.R.id.content).transitionName = LISTING_ZOOM
+        setEnterSharedElementCallback(com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback())
+        fun transform(ms: Long) = com.google.android.material.transition.platform.MaterialContainerTransform().apply {
+            addTarget(android.R.id.content)
+            duration = ms
+            interpolator = Motion.EMPHASIZED
+            setAllContainerColors(getColor(R.color.uc_cream))
+            scrimColor = android.graphics.Color.TRANSPARENT
+            fadeMode = com.google.android.material.transition.platform.MaterialContainerTransform.FADE_MODE_THROUGH
+        }
+        window.sharedElementEnterTransition = transform(420)
+        // Going back is quicker than coming in.
+        window.sharedElementReturnTransition = transform(320)
     }
 
     private fun bindSaved() {
@@ -653,8 +675,8 @@ class ListingDetailActivity : BaseActivity() {
     fun toggleSave(view: View) {
         val nowSaved = !UserState.isSaved(listing.id)
         UserState.setSaved(listing.id, nowSaved)
-        bindSaved()
-        Motion.pop(findViewById(R.id.saveIcon))
+        // Outline and filled bookmark swap with a bounce, like a symbol replace.
+        Motion.replaceIcon(findViewById(R.id.saveIcon)) { bindSaved() }
         if (nowSaved) {
             notify(getString(R.string.toast_saved), getString(R.string.action_view)) { openSaved(view) }
         } else {

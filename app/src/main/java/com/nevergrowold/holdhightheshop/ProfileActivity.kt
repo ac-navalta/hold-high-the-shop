@@ -84,10 +84,9 @@ class ProfileActivity : BaseActivity() {
         val borrowing = UserState.borrowing()
         val lending = UserState.lending()
         val completed = Listings.completed()
-        findViewById<TextView>(R.id.tab1Count).text =
-            (borrowing.size + lending.size + reserved.size + mine.size).toString()
-        findViewById<TextView>(R.id.tab2Count).text = completed.size.toString()
-        findViewById<TextView>(R.id.tab3Count).text = saved.size.toString()
+        Motion.rollText(findViewById(R.id.tab1Count), (borrowing.size + lending.size + reserved.size + mine.size).toString())
+        Motion.rollText(findViewById(R.id.tab2Count), completed.size.toString())
+        Motion.rollText(findViewById(R.id.tab3Count), saved.size.toString())
 
         findViewById<View>(R.id.activeFiltersScroll).isVisible = selected == TAB_ACTIVE
         val list = findViewById<LinearLayout>(R.id.profileList)

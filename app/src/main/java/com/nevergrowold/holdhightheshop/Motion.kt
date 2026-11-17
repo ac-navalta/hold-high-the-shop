@@ -13,13 +13,15 @@ import android.provider.Settings
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import android.view.animation.OvershootInterpolator
 import android.view.animation.PathInterpolator
 import android.widget.AdapterView
 import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.dynamicanimation.animation.DynamicAnimation
+import androidx.dynamicanimation.animation.SpringAnimation
+import androidx.dynamicanimation.animation.SpringForce
 
 /**
  * The app's motion language, kept in one place so every screen moves the same way.
@@ -28,13 +30,19 @@ import android.widget.TextView
  * - State: chips, segments and tabs crossfade to their new look instead of
  *   snapping ([background], [textColor]).
  * - Continuity: lists that change arrive in a short stagger ([enter]); tabs
- *   fade through and pushed screens slide on one axis (themes.xml, [tabSwitch]).
+ *   fade through and pushed screens slide on one axis (themes.xml, [tabSwitch]);
+ *   a listing card grows into its screen (BaseActivity.openListingFromCard).
+ * - Springs ([spring]): toggles, indicators and inserted rows settle on
+ *   interruptible springs that keep their velocity when tapped again.
+ * - Content: counters roll to new values ([rollText]); rows grow in and slide
+ *   out ([insert], [remove]); icons wiggle, breathe or swap ([wiggle],
+ *   [breathe], [replaceIcon]).
  * - Moments: the splash hand-off and "Listing posted" are the only places
  *   that move just to be seen; both happen rarely.
  *
  * When the user turns animations off in system settings, every animator here
- * finishes at once, and the helpers skip setting hidden start states, so
- * nothing is ever left invisible.
+ * finishes at once, springs jump to their target, loops never start, and the
+ * helpers skip setting hidden start states, so nothing is ever left invisible.
  */
 object Motion {
 
@@ -159,30 +167,258 @@ object Motion {
         anim.start()
     }
 
+    // ---------------------------------------------------------------- springs
+
     /**
-     * Grows a tab underline or indicator out from its centre. Used when the
-     * chosen tab changes, so the eye follows the selection.
+     * A spring described the way designers talk about it: how long it takes
+     * to settle and how much it bounces (0 = none). Springs keep their
+     * velocity when retargeted, so a second tap mid-animation carries on
+     * smoothly instead of restarting.
      */
-    fun grow(view: View, delay: Long = 0) {
-        if (!enabled(view.context)) return
-        view.animate().cancel()
-        view.scaleX = 0.3f
-        view.alpha = 0f
-        view.animate().scaleX(1f).alpha(1f)
-            .setStartDelay(delay).setDuration(260).setInterpolator(EMPHASIZED).start()
+    class Spring(val duration: Float, val bounce: Float) {
+        // Perceptual to physical: a unit-mass spring with this period and damping.
+        val stiffness = ((2 * Math.PI / duration) * (2 * Math.PI / duration)).toFloat()
+        val damping = 1f - bounce
+    }
+
+    /** Fluid, no overshoot: indicators, things settling into place. */
+    val SMOOTH = Spring(0.45f, 0f)
+
+    /** Responsive with a hint of overshoot: feedback on a tap. */
+    val SNAPPY = Spring(0.35f, 0.15f)
+
+    /** Playful, visible bounce: kept for toggles and the posted badge. */
+    val BOUNCY = Spring(0.5f, 0.32f)
+
+    /**
+     * Springs [property] of [view] to [target]. Reuses a running spring on the
+     * same property so interruptions keep their momentum. With animations
+     * switched off it jumps straight to the target (springs ignore the system
+     * animator scale, so this check is not optional).
+     */
+    fun spring(
+        view: View,
+        property: DynamicAnimation.ViewProperty,
+        target: Float,
+        spec: Spring = SNAPPY,
+        startVelocity: Float? = null,
+    ): SpringAnimation? {
+        if (!enabled(view.context)) {
+            property.setValue(view, target)
+            return null
+        }
+        val key = springKey(property)
+        val anim = (view.getTag(key) as? SpringAnimation) ?: SpringAnimation(view, property).also { view.setTag(key, it) }
+        anim.spring = (anim.spring ?: SpringForce()).apply {
+            stiffness = spec.stiffness
+            dampingRatio = spec.damping
+            finalPosition = target
+        }
+        if (property == DynamicAnimation.ALPHA) anim.setMinimumVisibleChange(DynamicAnimation.MIN_VISIBLE_CHANGE_ALPHA)
+        if (property == DynamicAnimation.SCALE_X || property == DynamicAnimation.SCALE_Y) {
+            anim.setMinimumVisibleChange(DynamicAnimation.MIN_VISIBLE_CHANGE_SCALE)
+        }
+        if (property == DynamicAnimation.ROTATION) anim.setMinimumVisibleChange(DynamicAnimation.MIN_VISIBLE_CHANGE_ROTATION_DEGREES)
+        startVelocity?.let { anim.setStartVelocity(it) }
+        anim.start()
+        return anim
+    }
+
+    private fun springKey(property: DynamicAnimation.ViewProperty) = when (property) {
+        DynamicAnimation.SCALE_X -> R.id.spring_scale_x
+        DynamicAnimation.SCALE_Y -> R.id.spring_scale_y
+        DynamicAnimation.ALPHA -> R.id.spring_alpha
+        DynamicAnimation.ROTATION -> R.id.spring_rotation
+        DynamicAnimation.TRANSLATION_X -> R.id.spring_translation_x
+        else -> R.id.spring_translation_y
+    }
+
+    /** Springs both scale axes together. */
+    fun springScale(view: View, target: Float, spec: Spring = SNAPPY) {
+        spring(view, DynamicAnimation.SCALE_X, target, spec)
+        spring(view, DynamicAnimation.SCALE_Y, target, spec)
     }
 
     /**
-     * A quick sink-and-spring for toggles the user just flipped, such as the
-     * bookmark. Feedback, so it is short; the spring is small on purpose.
+     * Grows a tab underline or indicator out from its centre on a smooth
+     * spring. Used when the chosen tab changes, so the eye follows the selection.
      */
+    fun grow(view: View, delay: Long = 0) {
+        if (!enabled(view.context)) return
+        view.scaleX = 0.3f
+        view.alpha = 0f
+        view.postDelayed({
+            spring(view, DynamicAnimation.SCALE_X, 1f, SMOOTH)
+            spring(view, DynamicAnimation.ALPHA, 1f, SMOOTH)
+        }, delay)
+    }
+
+    // ---------------------------------------------------------------- icon effects
+
+    /**
+     * Icon swap with a bounce, like an SF Symbol `.replace` + `.bounce`: the
+     * old glyph shrinks away, the new one is set, and it springs back in.
+     * For toggles such as the bookmark.
+     */
+    fun replaceIcon(view: android.widget.ImageView, swap: () -> Unit) {
+        if (!enabled(view.context)) {
+            swap()
+            return
+        }
+        view.animate().cancel()
+        view.animate().scaleX(0.6f).scaleY(0.6f).alpha(0.4f).setDuration(90).setStartDelay(0)
+            .setInterpolator(EASE_OUT)
+            .withEndAction {
+                swap()
+                view.alpha = 1f
+                springScale(view, 1f, BOUNCY)
+            }.start()
+    }
+
+    /** A sink-and-spring for something the user just flipped. */
     fun pop(view: View) {
         if (!enabled(view.context)) return
-        view.animate().cancel()
         view.scaleX = 0.8f
         view.scaleY = 0.8f
-        view.animate().scaleX(1f).scaleY(1f)
-            .setStartDelay(0).setDuration(320).setInterpolator(OvershootInterpolator(2.2f)).start()
+        springScale(view, 1f, BOUNCY)
+    }
+
+    /**
+     * A bell-style wiggle (SF Symbol `.wiggle`): swings from its top a few
+     * times, each smaller. Draws the eye to something new once, on arrival.
+     */
+    fun wiggle(view: View, delay: Long = 0) {
+        if (!enabled(view.context)) return
+        view.pivotX = view.width / 2f
+        view.pivotY = 0f
+        val rotation = android.animation.PropertyValuesHolder.ofKeyframe(
+            View.ROTATION,
+            android.animation.Keyframe.ofFloat(0f, 0f),
+            android.animation.Keyframe.ofFloat(0.15f, 16f),
+            android.animation.Keyframe.ofFloat(0.32f, -13f),
+            android.animation.Keyframe.ofFloat(0.5f, 9f),
+            android.animation.Keyframe.ofFloat(0.68f, -5f),
+            android.animation.Keyframe.ofFloat(0.84f, 2f),
+            android.animation.Keyframe.ofFloat(1f, 0f),
+        )
+        android.animation.ObjectAnimator.ofPropertyValuesHolder(view, rotation).apply {
+            duration = 720
+            startDelay = delay
+            interpolator = android.view.animation.LinearInterpolator()
+            start()
+        }
+    }
+
+    /**
+     * A slow breathe that runs while a condition holds, such as an overdue
+     * loan (SF Symbol `.breathe`, a repeating PhaseAnimator). The caller stops
+     * it when the screen pauses or the condition clears. Never runs with
+     * animations off: a looping cue is exactly what that setting asks to remove.
+     */
+    fun breathe(view: View): android.animation.Animator? {
+        if (!enabled(view.context)) return null
+        val scale = android.animation.PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.14f)
+        val scaleY = android.animation.PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.14f)
+        val alpha = android.animation.PropertyValuesHolder.ofFloat(View.ALPHA, 1f, 0.7f)
+        return android.animation.ObjectAnimator.ofPropertyValuesHolder(view, scale, scaleY, alpha).apply {
+            duration = 1100
+            repeatCount = android.animation.ValueAnimator.INFINITE
+            repeatMode = android.animation.ValueAnimator.REVERSE
+            interpolator = android.view.animation.PathInterpolator(0.37f, 0f, 0.63f, 1f)
+            addListener(object : android.animation.AnimatorListenerAdapter() {
+                override fun onAnimationCancel(animation: android.animation.Animator) {
+                    view.scaleX = 1f; view.scaleY = 1f; view.alpha = 1f
+                }
+            })
+            start()
+        }
+    }
+
+    // ---------------------------------------------------------------- content
+
+    /**
+     * Rolls a number to its new value in place (SwiftUI `.numericText`): the
+     * old text slides out one way, the new one in from the other. Going up,
+     * digits roll upward; going down, downward. Anything else just swaps.
+     */
+    fun rollText(view: TextView, text: CharSequence) {
+        // A newer value always wins: stop any roll in flight and put the text back at rest first.
+        view.animate().cancel()
+        view.alpha = 1f
+        view.translationY = 0f
+        val old = view.text?.toString().orEmpty()
+        if (old == text.toString()) return
+        if (!enabled(view.context) || old.isEmpty() || !view.isLaidOut) {
+            view.text = text
+            return
+        }
+        val before = Regex("\\d+").find(old)?.value?.toIntOrNull()
+        val after = Regex("\\d+").find(text)?.value?.toIntOrNull()
+        val up = before == null || after == null || after >= before
+        val dy = view.height * 0.6f * (if (up) -1 else 1)
+        view.animate().translationY(dy).alpha(0f).setDuration(110).setStartDelay(0)
+            .setInterpolator(EASE_OUT)
+            .withEndAction {
+                view.text = text
+                view.translationY = -dy
+                view.animate().translationY(0f).alpha(1f).setDuration(240)
+                    .setInterpolator(EMPHASIZED).start()
+            }.start()
+    }
+
+    // ---------------------------------------------------------------- insert / remove
+
+    /**
+     * Inserts a view by growing it from a corner (a chat bubble from the side
+     * it was sent from). Asymmetric with [remove] on purpose: arrivals are
+     * springy and noticed, departures are quick.
+     */
+    fun insert(view: View, fromEnd: Boolean) {
+        if (!enabled(view.context)) return
+        view.alpha = 0f
+        view.scaleX = 0.85f
+        view.scaleY = 0.85f
+        view.translationY = 12 * view.resources.displayMetrics.density
+        view.post {
+            view.pivotX = if (fromEnd) view.width.toFloat() else 0f
+            view.pivotY = view.height.toFloat()
+            spring(view, DynamicAnimation.ALPHA, 1f, SMOOTH)
+            spring(view, DynamicAnimation.TRANSLATION_Y, 0f, SNAPPY)
+            springScale(view, 1f, SNAPPY)
+        }
+    }
+
+    /**
+     * Removes a row: it slides aside and fades, then the space closes up,
+     * then [onEnd] runs (usually a re-render). Quick, so it never blocks.
+     */
+    fun remove(view: View, onEnd: () -> Unit) {
+        if (!enabled(view.context)) {
+            onEnd()
+            return
+        }
+        val parent = view.parent as? ViewGroup
+        val dx = view.width * 0.25f
+        view.animate().cancel()
+        view.animate().translationX(dx).alpha(0f).setDuration(180).setStartDelay(0)
+            .setInterpolator(EASE_OUT).withLayer()
+            .withEndAction {
+                val start = view.height
+                ValueAnimator.ofInt(start, 0).apply {
+                    duration = 200
+                    interpolator = EMPHASIZED
+                    addUpdateListener {
+                        view.layoutParams.height = it.animatedValue as Int
+                        view.requestLayout()
+                    }
+                    addListener(object : android.animation.AnimatorListenerAdapter() {
+                        override fun onAnimationEnd(animation: android.animation.Animator) {
+                            parent?.post(onEnd) ?: onEnd()
+                        }
+                    })
+                    start()
+                }
+            }.start()
     }
 
     // ---------------------------------------------------------------- arrivals

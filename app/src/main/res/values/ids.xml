@@ -5,4 +5,11 @@
     <item name="motion_color" type="id" />
     <item name="choice_on" type="id" />
     <item name="touch_target" type="id" />
+    <!-- One running spring per animated property, so a retarget keeps its velocity. -->
+    <item name="spring_scale_x" type="id" />
+    <item name="spring_scale_y" type="id" />
+    <item name="spring_alpha" type="id" />
+    <item name="spring_rotation" type="id" />
+    <item name="spring_translation_x" type="id" />
+    <item name="spring_translation_y" type="id" />
 </resources>

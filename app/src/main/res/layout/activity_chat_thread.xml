@@ -403,6 +403,7 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_gravity="center"
+                android:id="@+id/sendIcon"
                 android:src="@drawable/ic_send"
                 android:tint="@color/white"
                 android:contentDescription="@string/cd_send" />
