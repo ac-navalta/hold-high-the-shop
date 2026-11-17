@@ -14,55 +14,62 @@ import android.widget.TextView
 object Choice {
 
     /** Pill buttons such as the Condition options on the create form. */
-    fun pills(views: List<TextView>, selected: Int, onPick: (Int) -> Unit = {}) {
+    fun pills(views: List<TextView>, selected: Int, onPick: (Int) -> Unit = {}) = pills(views, selected, false, onPick)
+
+    private fun pills(views: List<TextView>, selected: Int, animate: Boolean, onPick: (Int) -> Unit) {
         views.forEachIndexed { index, view ->
             view.setOnClickListener {
-                pills(views, index, onPick)
+                pills(views, index, true, onPick)
+                Motion.tick(view)
+                Motion.pop(view, 0.92f)
                 onPick(index)
             }
             val isOn = index == selected
-            view.setBackgroundResource(
-                if (isOn) R.drawable.bg_chip_active else R.drawable.bg_input
-            )
-            view.setTextColor(
-                view.context.getColor(if (isOn) R.color.white else R.color.text_primary)
-            )
+            Motion.background(view, if (isOn) R.drawable.bg_chip_active else R.drawable.bg_input, animate)
+            Motion.textColor(view, view.context.getColor(if (isOn) R.color.white else R.color.text_primary), animate)
         }
     }
 
     /** The Sell / Rent / Swap segmented control. */
-    fun segments(views: List<TextView>, selected: Int, onPick: (Int) -> Unit = {}) {
+    fun segments(views: List<TextView>, selected: Int, onPick: (Int) -> Unit = {}) = segments(views, selected, false, onPick)
+
+    private fun segments(views: List<TextView>, selected: Int, animate: Boolean, onPick: (Int) -> Unit) {
         views.forEachIndexed { index, view ->
             view.setOnClickListener {
-                segments(views, index, onPick)
+                segments(views, index, true, onPick)
                 onPick(index)
             }
             val isOn = index == selected
-            if (isOn) {
-                view.setBackgroundResource(R.drawable.bg_segment_active)
-            } else {
-                view.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            if (!animate) {
+                if (isOn) view.setBackgroundResource(R.drawable.bg_segment_active)
+                else view.setBackgroundColor(android.graphics.Color.TRANSPARENT)
             }
-            view.setTextColor(
-                view.context.getColor(if (isOn) R.color.white else R.color.text_secondary)
-            )
+            Motion.textColor(view, view.context.getColor(if (isOn) R.color.white else R.color.text_secondary), animate)
         }
+        // The green pill slides from the old option to the new one.
+        val track = views.first().parent as? View
+        val previous = track?.getTag(R.id.choice_on) as? Int
+        if (animate && previous != null && previous != selected) {
+            Motion.slidePill(views[previous], views[selected], R.drawable.bg_segment_active)
+            Motion.tick(views[selected])
+        }
+        track?.setTag(R.id.choice_on, selected)
     }
 
     /** Filter chips on the Campus Market. */
-    fun chips(views: List<TextView>, selected: Int, onPick: (Int) -> Unit = {}) {
+    fun chips(views: List<TextView>, selected: Int, onPick: (Int) -> Unit = {}) = chips(views, selected, false, onPick)
+
+    private fun chips(views: List<TextView>, selected: Int, animate: Boolean, onPick: (Int) -> Unit) {
         views.forEachIndexed { index, view ->
             view.setOnClickListener {
-                chips(views, index, onPick)
+                chips(views, index, true, onPick)
+                Motion.tick(view)
+                Motion.pop(view, 0.92f)
                 onPick(index)
             }
             val isOn = index == selected
-            view.setBackgroundResource(
-                if (isOn) R.drawable.bg_chip_active else R.drawable.bg_chip
-            )
-            view.setTextColor(
-                view.context.getColor(if (isOn) R.color.white else R.color.text_primary)
-            )
+            Motion.background(view, if (isOn) R.drawable.bg_chip_active else R.drawable.bg_chip, animate)
+            Motion.textColor(view, view.context.getColor(if (isOn) R.color.white else R.color.text_primary), animate)
         }
     }
 
@@ -74,10 +81,16 @@ object Choice {
         views.forEachIndexed { index, view ->
             val isOn = index in selected
             view.setOnClickListener {
+                Motion.tick(view)
+                Motion.pop(view, 0.92f)
                 onChange(if (isOn) selected - index else selected + index)
             }
-            view.setBackgroundResource(if (isOn) R.drawable.bg_chip_active else R.drawable.bg_chip)
-            view.setTextColor(view.context.getColor(if (isOn) R.color.white else R.color.text_primary))
+            // Only the chip whose state actually changes animates; the rest are re-bound as they were.
+            val was = view.getTag(R.id.choice_on) as? Boolean
+            val animate = was != null && was != isOn
+            view.setTag(R.id.choice_on, isOn)
+            Motion.background(view, if (isOn) R.drawable.bg_chip_active else R.drawable.bg_chip, animate)
+            Motion.textColor(view, view.context.getColor(if (isOn) R.color.white else R.color.text_primary), animate)
         }
     }
 
@@ -87,16 +100,24 @@ object Choice {
         icons: List<android.widget.ImageView>,
         selected: Int,
         onPick: (Int) -> Unit = {}
+    ) = rows(rows, icons, selected, false, onPick)
+
+    private fun rows(
+        rows: List<View>,
+        icons: List<android.widget.ImageView>,
+        selected: Int,
+        animate: Boolean,
+        onPick: (Int) -> Unit
     ) {
         rows.forEachIndexed { index, row ->
             row.setOnClickListener {
-                rows(rows, icons, index, onPick)
+                rows(rows, icons, index, true, onPick)
+                Motion.tick(row)
                 onPick(index)
             }
             val isOn = index == selected
-            row.setBackgroundResource(
-                if (isOn) R.drawable.bg_input_selected else R.drawable.bg_input
-            )
+            Motion.background(row, if (isOn) R.drawable.bg_input_selected else R.drawable.bg_input, animate)
+            if (animate && isOn) Motion.pop(icons[index])
             icons[index].setImageResource(
                 if (isOn) R.drawable.ic_radio_on else R.drawable.ic_radio_off
             )

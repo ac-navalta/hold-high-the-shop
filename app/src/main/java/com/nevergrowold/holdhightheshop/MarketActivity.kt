@@ -67,7 +67,8 @@ class MarketActivity : BaseActivity() {
         search.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 findViewById<View>(R.id.btnClearSearch).isVisible = !s.isNullOrEmpty()
-                render()
+                // Typing narrows the grid in place; a stagger on every keystroke would only flicker.
+                render(animate = false)
             }
 
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
@@ -86,6 +87,7 @@ class MarketActivity : BaseActivity() {
         program = programIndex(intent.getStringExtra(EXTRA_PROGRAM))
         bindChips()
         render()
+        Motion.hideOnScroll(findViewById(R.id.marketScroll), findViewById(R.id.fabPost))
     }
 
     /** Arriving from a program tile on Home while the market is already open. */
@@ -110,8 +112,12 @@ class MarketActivity : BaseActivity() {
         }
     }
 
-    /** Rebuilds the grid from the current search, chip, filters and sort. */
-    private fun render() {
+    /**
+     * Rebuilds the grid from the current search, chip, filters and sort.
+     * With [animate], the new cards arrive in a short stagger so a changed
+     * filter visibly lands.
+     */
+    private fun render(animate: Boolean = true) {
         val query = search.text.toString().trim().lowercase()
         val programName = Listings.PROGRAMS.getOrNull(program)
 
@@ -130,13 +136,14 @@ class MarketActivity : BaseActivity() {
         }
 
         grid.removeAllViews()
+        val cards = mutableListOf<View>()
         items.chunked(2).forEach { pair ->
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 clipChildren = false
                 clipToPadding = false
             }
-            pair.forEachIndexed { index, listing -> row.addView(card(listing, index)) }
+            pair.forEachIndexed { index, listing -> row.addView(card(listing, index).also { cards += it }) }
             if (grid.childCount > 0) {
                 row.layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
@@ -148,13 +155,25 @@ class MarketActivity : BaseActivity() {
             grid.addView(row)
         }
 
+        if (animate) Motion.enter(cards)
+
         val narrowed = query.isNotEmpty() || programName != null || filters.isActive
-        findViewById<TextView>(R.id.itemsCount).text = if (narrowed) {
+        Motion.rollText(findViewById(R.id.itemsCount), if (narrowed) {
             resources.getQuantityString(R.plurals.items_found, items.size, items.size)
         } else {
             getString(R.string.items_near_you)
+        })
+        val empty = findViewById<View>(R.id.emptyState)
+        val wasEmpty = empty.isVisible
+        empty.isVisible = items.isEmpty()
+        // The empty state settles in when a filter first leaves nothing to show.
+        if (items.isEmpty() && !wasEmpty && animate) {
+            empty.alpha = 0f
+            empty.scaleX = 0.96f
+            empty.scaleY = 0.96f
+            Motion.spring(empty, androidx.dynamicanimation.animation.DynamicAnimation.ALPHA, 1f, Motion.SMOOTH)
+            Motion.springScale(empty, 1f, Motion.SMOOTH)
         }
-        findViewById<View>(R.id.emptyState).isVisible = items.isEmpty()
         findViewById<View>(R.id.filterDot).isVisible = filters.isActive
         findViewById<TextView>(R.id.sortLabel).text = sortOptions()[sort]
     }

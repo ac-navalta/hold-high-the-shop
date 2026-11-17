@@ -19,6 +19,47 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
  */
 open class BaseActivity : AppCompatActivity() {
 
+    /**
+     * Every screen gets the shared press feedback ([Motion.installPress]) and
+     * 48dp touch areas for its small controls ([TouchTargets]).
+     */
+    override fun setContentView(layoutResID: Int) {
+        super.setContentView(layoutResID)
+        val content = findViewById<View>(android.R.id.content)
+        Motion.installPress(content)
+        TouchTargets.install(content)
+    }
+
+    override fun onPostCreate(savedInstanceState: android.os.Bundle?) {
+        super.onPostCreate(savedInstanceState)
+        arriveOnTab(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        arriveOnTab(intent)
+    }
+
+    /**
+     * On tab screens: arriving from another tab, the green pill slides over
+     * from that tab and the page drifts in from that side, so the tab bar
+     * reads as one bar that stayed put. Arriving any other way, the pill grows in.
+     */
+    private fun arriveOnTab(intent: Intent?) {
+        val pill = findViewById<View>(R.id.navIndicator) ?: return
+        val from = intent?.getIntExtra(EXTRA_FROM_TAB, -1) ?: -1
+        intent?.removeExtra(EXTRA_FROM_TAB)
+        val to = currentTab()
+        if (from < 0 || from == to) Motion.grow(pill, delay = 60) else Motion.navSlide(this, from, to)
+    }
+
+    /** Index of this screen's tab in the bar (Home 0 … Profile 3), or -1 off the tab screens. */
+    private fun currentTab(): Int {
+        val nav = findViewById<ViewGroup>(R.id.bottomNav) ?: return -1
+        val pill = findViewById<View>(R.id.navIndicator) ?: return -1
+        return (0 until nav.childCount).firstOrNull { nav.getChildAt(it) === pill.parent } ?: -1
+    }
+
     fun openHome(view: View) = switchTab(MainActivity::class.java)
 
     fun openMarket(view: View) = switchTab(MarketActivity::class.java)
@@ -49,6 +90,15 @@ open class BaseActivity : AppCompatActivity() {
         startActivity(
             Intent(this, ListingDetailActivity::class.java).putExtra(EXTRA_LISTING, id ?: Listings.DEFAULT_ID)
         )
+    }
+
+    /**
+     * Opens a listing from its card: the card grows into the listing screen,
+     * and Back shrinks the screen into the card again ([ZoomTransition]).
+     * With animations off, it opens like any other screen.
+     */
+    fun openListingFromCard(card: View, id: String) {
+        ZoomTransition.launch(this, card, Intent(this, ListingDetailActivity::class.java).putExtra(EXTRA_LISTING, id))
     }
 
     /** Opens the saved items list. */
@@ -84,8 +134,8 @@ open class BaseActivity : AppCompatActivity() {
             .show()
     }
 
-    /** Closes the current screen. */
-    fun goBack(view: View) {
+    /** Closes the current screen (the back arrow). Screens with their own exit motion override it. */
+    open fun goBack(view: View) {
         finish()
     }
 
@@ -94,7 +144,10 @@ open class BaseActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         intent.extras()
         if (javaClass == target && intent.extras == null) return
+        currentTab().takeIf { it >= 0 }?.let { intent.putExtra(EXTRA_FROM_TAB, it) }
+        Motion.tick(window.decorView)
         startActivity(intent)
+        Motion.tabSwitch(this)
     }
 
     /** A product card (photo, condition, price, title, program) that opens the listing. */
@@ -111,7 +164,7 @@ open class BaseActivity : AppCompatActivity() {
             listing.isRent -> styleBadge(type, getString(R.string.tag_for_rent), giving = true)
             else -> styleBadge(type, getString(R.string.tag_for_sale), giving = false)
         }
-        card.setOnClickListener { openListingById(listing.id) }
+        card.setOnClickListener { openListingFromCard(card, listing.id) }
         return card
     }
 
@@ -231,5 +284,7 @@ open class BaseActivity : AppCompatActivity() {
         const val EXTRA_SELLER = "seller"
         const val EXTRA_RESERVED = "reserved"
         const val EXTRA_TAB = "tab"
+        const val EXTRA_FROM_TAB = "from_tab"
+
     }
 }

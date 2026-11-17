@@ -143,7 +143,7 @@
         <item name="android:paddingBottom">2dp</item>
         <item name="android:fontFamily">@font/poppins_semibold</item>
         <item name="android:textColor">@color/uc_green</item>
-        <item name="android:textSize">9sp</item>
+        <item name="android:textSize">10sp</item>
         <item name="android:letterSpacing">0.06</item>
         <item name="android:background">@drawable/bg_badge_mint</item>
     </style>

@@ -32,13 +32,33 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    /** The overdue icon's breathing loop; only runs while this screen is showing. */
+    private var reminderPulse: android.animation.Animator? = null
+
+    override fun onPostCreate(savedInstanceState: Bundle?) {
+        super.onPostCreate(savedInstanceState)
+        // Unread notifications: the bell swings once as Home arrives.
+        val bell = findViewById<View>(R.id.bellIcon)
+        bell.post { Motion.wiggle(bell, delay = 420) }
+    }
+
     override fun onResume() {
         super.onResume()
         bindReturnReminder()
         // Same numbers as Profile: everything finished, and your listings still out there.
-        findViewById<TextView>(R.id.statExchanged).text = Listings.completed().size.toString()
-        findViewById<TextView>(R.id.statListings).text =
-            (Listings.myActive().size + UserState.lending().size).toString()
+        // A changed count rolls to its new value.
+        // First visit counts the numbers up; later visits roll only what changed.
+        val exchanged = findViewById<TextView>(R.id.statExchanged)
+        val active = findViewById<TextView>(R.id.statListings)
+        val exchangedValue = Listings.completed().size.toString()
+        val activeValue = (Listings.myActive().size + UserState.lending().size).toString()
+        if (exchanged.isLaidOut) {
+            Motion.rollText(exchanged, exchangedValue)
+            Motion.rollText(active, activeValue)
+        } else {
+            Motion.countUp(exchanged, exchangedValue, delay = 200)
+            Motion.countUp(active, activeValue, delay = 260)
+        }
 
         // Fresh on campus: the newest listings from other students.
         val fresh = findViewById<LinearLayout>(R.id.freshRow)
@@ -71,8 +91,19 @@ class MainActivity : BaseActivity() {
             text = getString(R.string.row_borrowed_meta, loan.partner.name.substringBefore(' '), Rentals.dateLabel(loan.dueMillis), Rentals.countdown(this@MainActivity, loan.dueMillis))
             setTextColor(getColor(if (overdue) R.color.danger else R.color.swap_text))
         }
-        findViewById<ImageView>(R.id.reminderIcon).setColorFilter(getColor(if (overdue) R.color.danger else R.color.swap_text))
+        findViewById<ImageView>(R.id.reminderIcon).let { icon ->
+            icon.setColorFilter(getColor(if (overdue) R.color.danger else R.color.swap_text))
+            // Overdue is the one state that keeps asking for attention: the clock breathes until it is returned.
+            reminderPulse?.cancel()
+            reminderPulse = if (overdue) Motion.breathe(icon) else null
+        }
         card.setOnClickListener { openListingById(item.id) }
+    }
+
+    override fun onPause() {
+        reminderPulse?.cancel()
+        reminderPulse = null
+        super.onPause()
     }
 
     companion object {

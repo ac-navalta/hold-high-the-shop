@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The screen being covered drifts a quarter left (parallax) and dims a
+    little: lowering its opacity lets the dark window behind show through.
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@interpolator/emphasized_decelerate">
+    <translate
+        android:fromXDelta="0"
+        android:toXDelta="-25%"
+        android:duration="420" />
+    <alpha
+        android:fromAlpha="1"
+        android:toAlpha="0.82"
+        android:duration="420" />
+</set>

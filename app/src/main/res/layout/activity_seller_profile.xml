@@ -155,7 +155,9 @@
                 android:layout_marginEnd="@dimen/screen_margin"
                 android:layout_marginTop="20dp"
                 app:cardCornerRadius="20dp"
-                app:cardElevation="5dp"
+                app:cardElevation="2dp"
+                android:outlineSpotShadowColor="@color/shadow_green"
+                android:outlineAmbientShadowColor="@color/shadow_green"
                 app:cardBackgroundColor="@color/white"
                 app:cardUseCompatPadding="false"
                 app:strokeWidth="0dp">
@@ -195,7 +197,7 @@
                             android:fontFamily="@font/poppins_regular"
                             android:text="@string/reliability_basis"
                             android:textColor="@color/text_secondary"
-                            android:textSize="9sp" />
+                            android:textSize="10sp" />
                     </LinearLayout>
 
                     <LinearLayout

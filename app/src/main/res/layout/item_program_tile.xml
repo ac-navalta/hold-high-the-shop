@@ -9,7 +9,9 @@
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
     app:cardCornerRadius="16dp"
-    app:cardElevation="4dp"
+    app:cardElevation="2dp"
+    android:outlineSpotShadowColor="@color/shadow_green"
+    android:outlineAmbientShadowColor="@color/shadow_green"
     app:cardBackgroundColor="@color/white"
     app:cardUseCompatPadding="false"
     app:strokeWidth="0dp">

@@ -106,9 +106,15 @@ object Dropdown {
         val height = minOf(listHeight, if (below) spaceBelow else spaceAbove)
         popup.height = height
 
+        // Grow out of the anchor: downward when below it, upward when above.
+        popup.animationStyle = if (below) R.style.DropdownBelow else R.style.DropdownAbove
+
         val x = loc[0] + if (alignEnd) anchor.width - width else 0
         val y = if (below) loc[1] + anchor.height + gap else loc[1] - gap - height
         popup.showAtLocation(anchor, Gravity.TOP or Gravity.START, x, y)
+        // Rows follow the list out of the field, nearest first.
+        val order = (0 until rows.childCount).map { rows.getChildAt(it) }
+        Motion.settle(if (below) order else order.reversed(), delay = 30, rise = if (below) 8 else -8, gap = 18)
     }
 
     /** About seven rows; longer lists scroll inside the card. */
@@ -135,6 +141,8 @@ object Sheets {
             dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
             dialog.behavior.skipCollapsed = true
         }
+        // As the sheet rises, its contents settle into it a beat behind, row by row.
+        (view as? ViewGroup)?.let { sheet -> Motion.settle((0 until sheet.childCount).map { sheet.getChildAt(it) }, delay = 90) }
         dialog.show()
     }
 }

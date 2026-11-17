@@ -35,6 +35,11 @@ class ListingDetailActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_listing_detail)
+        // Opened from a card: grow out of it, and shrink back into it on Back.
+        zoom = ZoomTransition.enter(this)
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() = goBack(window.decorView)
+        })
         BarInsets.apply(this)
 
         listing = Listings.byId(intent.getStringExtra(EXTRA_LISTING))
@@ -78,6 +83,13 @@ class ListingDetailActivity : BaseActivity() {
         getString(R.string.you_free_format, listing.availability.label())
     } else {
         getString(R.string.seller_free_format, listing.seller.name.substringBefore(' '), listing.availability.label())
+    }
+
+    /** Set when this screen grew out of a card. */
+    private var zoom: ZoomTransition.Zoom? = null
+
+    override fun goBack(view: View) {
+        zoom?.close() ?: finish()
     }
 
     private fun bindSaved() {
@@ -653,7 +665,9 @@ class ListingDetailActivity : BaseActivity() {
     fun toggleSave(view: View) {
         val nowSaved = !UserState.isSaved(listing.id)
         UserState.setSaved(listing.id, nowSaved)
-        bindSaved()
+        // Outline and filled bookmark swap with a bounce, like a symbol replace.
+        Motion.replaceIcon(findViewById(R.id.saveIcon)) { bindSaved() }
+        if (nowSaved) Motion.confirm(view) else Motion.tick(view)
         if (nowSaved) {
             notify(getString(R.string.toast_saved), getString(R.string.action_view)) { openSaved(view) }
         } else {

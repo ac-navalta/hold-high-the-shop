@@ -12,6 +12,8 @@ class ReportReceivedActivity : BaseActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_report_received)
         BarInsets.apply(this)
+        // Same stamp as "Listing posted": the report is in.
+        Celebration.play(this)
     }
 
     /** Returns to the listing that was reported. */

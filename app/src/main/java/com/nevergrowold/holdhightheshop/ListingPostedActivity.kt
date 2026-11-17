@@ -12,6 +12,7 @@ class ListingPostedActivity : BaseActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_listing_posted)
         BarInsets.apply(this)
+        Celebration.play(this)
     }
 
     /** Opens the listing that was just posted. */

@@ -26,7 +26,7 @@ class SavedActivity : BaseActivity() {
         render()
     }
 
-    private fun render() {
+    private fun render(restored: String? = null) {
         val saved = UserState.saved()
         val list = findViewById<LinearLayout>(R.id.savedList)
         list.removeAllViews()
@@ -44,14 +44,18 @@ class SavedActivity : BaseActivity() {
                 setColorFilter(getColor(R.color.uc_green))
                 contentDescription = getString(R.string.cd_unsave)
             }
-            row.findViewById<View>(R.id.rowAction).setOnClickListener {
+            row.findViewById<View>(R.id.rowAction).setOnClickListener { action ->
+                action.isEnabled = false
+                Motion.tick(action)
                 UserState.setSaved(item.id, false)
-                render()
+                // The row slides away and the list closes up before it is rebuilt.
+                Motion.remove(row) { render() }
                 notify(getString(R.string.toast_unsaved), getString(R.string.action_undo)) {
                     UserState.setSaved(item.id, true)
-                    render()
+                    render(restored = item.id)
                 }
             }
+            if (item.id == restored) Motion.insert(row, fromEnd = false)
         }
 
         findViewById<TextView>(R.id.savedCount).apply {

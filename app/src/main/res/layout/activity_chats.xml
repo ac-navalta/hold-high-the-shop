@@ -852,6 +852,7 @@
             <FrameLayout
                 android:layout_width="46dp"
                 android:layout_height="30dp"
+                android:id="@+id/navIndicator"
                 android:background="@drawable/bg_nav_active">
 
                 <ImageView

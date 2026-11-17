@@ -14,6 +14,9 @@ class ProfileActivity : BaseActivity() {
 
     private var tab = TAB_ACTIVE
 
+    /** The tab currently drawn as selected, so only a real change animates. -1 before the first draw. */
+    private var shownTab = -1
+
     /** Active tab: which group to show. One of the GROUP_ constants. */
     private var group = GROUP_ALL
 
@@ -39,9 +42,10 @@ class ProfileActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         // Saved items, deals and ratings can change on other screens, so redraw on return.
-        findViewById<TextView>(R.id.profileRating).text = Reliability.rating()
-        findViewById<TextView>(R.id.profileOnTime).text = Reliability.onTime()
-        findViewById<TextView>(R.id.profileCompleted).text = Reliability.completed().toString()
+        // The reliability card counts up the first time you see it.
+        Motion.countUp(findViewById(R.id.profileRating), Reliability.rating(), delay = 150)
+        Motion.countUp(findViewById(R.id.profileOnTime), Reliability.onTime(), delay = 210)
+        Motion.countUp(findViewById(R.id.profileCompleted), Reliability.completed().toString(), delay = 270)
         selectTab(tab)
     }
 
@@ -60,12 +64,16 @@ class ProfileActivity : BaseActivity() {
         )
         val bars = listOf<View>(findViewById(R.id.tab1Bar), findViewById(R.id.tab2Bar), findViewById(R.id.tab3Bar))
 
+        val changed = selected != shownTab && shownTab >= 0
+        shownTab = selected
         rows.forEachIndexed { index, row ->
             row.setOnClickListener { selectTab(index) }
             val isOn = index == selected
-            labels[index].setTextColor(getColor(if (isOn) R.color.uc_green else R.color.text_secondary))
+            Motion.textColor(labels[index], getColor(if (isOn) R.color.uc_green else R.color.text_secondary), changed)
             if (isOn) {
                 bars[index].setBackgroundResource(R.drawable.bg_tab_active)
+                // The underline grows under the newly chosen tab.
+                if (changed) Motion.grow(bars[index])
             } else {
                 bars[index].setBackgroundColor(android.graphics.Color.TRANSPARENT)
             }
@@ -77,10 +85,9 @@ class ProfileActivity : BaseActivity() {
         val borrowing = UserState.borrowing()
         val lending = UserState.lending()
         val completed = Listings.completed()
-        findViewById<TextView>(R.id.tab1Count).text =
-            (borrowing.size + lending.size + reserved.size + mine.size).toString()
-        findViewById<TextView>(R.id.tab2Count).text = completed.size.toString()
-        findViewById<TextView>(R.id.tab3Count).text = saved.size.toString()
+        Motion.rollText(findViewById(R.id.tab1Count), (borrowing.size + lending.size + reserved.size + mine.size).toString())
+        Motion.rollText(findViewById(R.id.tab2Count), completed.size.toString())
+        Motion.rollText(findViewById(R.id.tab3Count), saved.size.toString())
 
         findViewById<View>(R.id.activeFiltersScroll).isVisible = selected == TAB_ACTIVE
         val list = findViewById<LinearLayout>(R.id.profileList)
@@ -204,6 +211,8 @@ class ProfileActivity : BaseActivity() {
             }
         }
         findViewById<View>(R.id.profileEmpty).isVisible = selected == TAB_SAVED && saved.isEmpty()
+        // Switching tabs swaps the whole list: let the new one land so the change is visible.
+        if (changed) Motion.enter((0 until list.childCount).map { list.getChildAt(it) }, rise = 10)
     }
 
     /**
