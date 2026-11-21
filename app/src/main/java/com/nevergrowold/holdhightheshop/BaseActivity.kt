@@ -19,6 +19,11 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
  */
 open class BaseActivity : AppCompatActivity() {
 
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (intent.hasExtra(EXTRA_FROM_TAB)) Motion.noOpenTransition(this)
+    }
+
     /**
      * Every screen gets the shared press feedback ([Motion.installPress]) and
      * 48dp touch areas for its small controls ([TouchTargets]).
@@ -149,7 +154,7 @@ open class BaseActivity : AppCompatActivity() {
         currentTab().takeIf { it >= 0 }?.let { intent.putExtra(EXTRA_FROM_TAB, it) }
         Motion.tick(window.decorView)
         startActivity(intent)
-        Motion.noTransition(this)
+        Motion.noPendingTransition(this)
     }
 
     /** A product card (photo, condition, price, title, program) that opens the listing. */

@@ -48,16 +48,14 @@ object ZoomTransition {
 
     /** Launches [intent] by expanding directly out of [card]. */
     fun launch(activity: Activity, card: View, intent: Intent) {
-        if (!Motion.enabled(activity) || card.width <= 0 || card.height <= 0) {
+        val decor = activity.window.decorView
+        if (!Motion.enabled(activity) || card.width <= 0 || card.height <= 0 || decor.width <= 0 || decor.height <= 0) {
             activity.startActivity(intent)
             return
         }
-        val decor = activity.window.decorView
         val behindBmp = capture(decor, 0.75f)
         val cardBmp = capture(card, 1f)
         if (behindBmp == null || cardBmp == null) {
-            behindBmp?.recycle()
-            cardBmp?.recycle()
             activity.startActivity(intent)
             return
         }
@@ -77,7 +75,7 @@ object ZoomTransition {
         intent.putExtra(EXTRA_BOTTOM, loc[1] + card.height)
 
         activity.startActivity(intent)
-        Motion.noTransition(activity)
+        Motion.noPendingTransition(activity)
     }
 
     private fun capture(view: View, scale: Float): Bitmap? = try {
@@ -88,7 +86,7 @@ object ZoomTransition {
             canvas.scale(scale, scale)
             view.draw(canvas)
         }
-    } catch (_: OutOfMemoryError) {
+    } catch (_: Throwable) {
         null
     }
 
@@ -258,8 +256,7 @@ object ZoomTransition {
             page.clipToOutline = true
             run(0f, Motion.Spatial.EXIT) {
                 snapshots.remove(transitionId)
-                activity.finish()
-                Motion.noCloseTransition(activity)
+                Motion.finishWithoutTransition(activity)
             }
         }
 
@@ -291,6 +288,7 @@ object ZoomTransition {
             activity.intent.getIntExtra(EXTRA_BOTTOM, 0),
         )
         if (start.width() <= 0 || start.height() <= 0) return null
+        Motion.noOpenTransition(activity)
 
         val decor = activity.window.decorView as? ViewGroup ?: return null
         val page = activity.findViewById<View>(R.id.main) ?: return null

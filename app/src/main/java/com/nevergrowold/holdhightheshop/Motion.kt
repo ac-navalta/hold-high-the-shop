@@ -130,8 +130,8 @@ object Motion {
         force.finalPosition = target
         if (startVelocity != null) {
             anim.setStartVelocity(startVelocity)
-            anim.start()
-        } else if (anim.isRunning) {
+        }
+        if (anim.isRunning) {
             anim.animateToFinalPosition(target)
         } else {
             anim.start()
@@ -500,23 +500,32 @@ object Motion {
     // ---------------------------------------------------------------- bottom nav transition
 
     /**
-     * Disables the default window slide so peer tabs hand off cleanly without
-     * fading or flickering the shared bottom bar.
+     * Suppresses the open window transition on API 34+ (called on the
+     * destination Activity inside `onCreate` / `ZoomTransition.enter`).
      */
-    @Suppress("DEPRECATION")
-    fun noTransition(activity: Activity) {
+    fun noOpenTransition(activity: Activity) {
         if (Build.VERSION.SDK_INT >= 34) {
             activity.overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, 0, 0)
-        } else {
-            activity.overridePendingTransition(0, 0)
         }
     }
 
+    /**
+     * Suppresses the pending transition right after `startActivity` on API < 34
+     * and when bringing an existing tab Activity forward with `CLEAR_TOP`.
+     */
     @Suppress("DEPRECATION")
-    fun noCloseTransition(activity: Activity) {
+    fun noPendingTransition(activity: Activity) {
+        activity.overridePendingTransition(0, 0)
+    }
+
+    /** Finishes [activity] without a default slide-out animation on all API levels. */
+    @Suppress("DEPRECATION")
+    fun finishWithoutTransition(activity: Activity) {
         if (Build.VERSION.SDK_INT >= 34) {
             activity.overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, 0, 0)
+            activity.finish()
         } else {
+            activity.finish()
             activity.overridePendingTransition(0, 0)
         }
     }
@@ -580,12 +589,19 @@ object Motion {
                 pill.pivotY = pill.height * 0.5f
 
                 // Velocity-driven stretch on the pill ONLY (never the icon).
-                val anim = spring(pill, DynamicAnimation.TRANSLATION_X, 0f, Spatial.RESPONSIVE)
-                if (anim != null) {
-                    (pill.getTag(R.id.motion_slide_anim) as? PillStretch)?.detach(anim)
-                    val stretch = PillStretch(pill, dp).also { it.attach(anim) }
-                    pill.setTag(R.id.motion_slide_anim, stretch)
+                // Listeners MUST be added before start() per DynamicAnimation contract.
+                cancelSpring(pill, DynamicAnimation.TRANSLATION_X)
+                ensureAttachCleanup(pill)
+                val pillAnim = SpringAnimation(pill, DynamicAnimation.TRANSLATION_X).apply {
+                    configureMinVisibleChange(this, DynamicAnimation.TRANSLATION_X)
+                    spring = SpringForce(0f).apply {
+                        stiffness = Spatial.RESPONSIVE.stiffness
+                        dampingRatio = Spatial.RESPONSIVE.dampingRatio
+                    }
+                    PillStretch(pill, dp).attach(this)
                 }
+                pill.setTag(R.id.spring_translation_x, pillAnim)
+                pillAnim.start()
 
                 activeIcon?.let { icon ->
                     cancelAllSprings(icon)
@@ -635,11 +651,6 @@ object Motion {
         fun attach(anim: SpringAnimation) {
             anim.addUpdateListener(this)
             anim.addEndListener(this)
-        }
-
-        fun detach(anim: SpringAnimation) {
-            anim.removeUpdateListener(this)
-            anim.removeEndListener(this)
         }
 
         override fun onAnimationUpdate(animation: DynamicAnimation<*>?, value: Float, velocity: Float) {
