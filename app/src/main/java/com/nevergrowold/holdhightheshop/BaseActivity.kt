@@ -47,6 +47,7 @@ open class BaseActivity : AppCompatActivity() {
 
     /** Opens the Create listing form. */
     fun openCreateListing(view: View) {
+        Motion.tick(view)
         startActivity(Intent(this, CreateListingActivity::class.java))
     }
 
@@ -63,10 +64,14 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     /** Opens a listing from its card using the app's sleek Shared-Axis Z transition. */
-    fun openListingFromCard(card: View, id: String) = openListingById(id)
+    fun openListingFromCard(card: View, id: String) {
+        Motion.tick(card)
+        openListingById(id)
+    }
 
     /** Opens the saved items list. */
     fun openSaved(view: View) {
+        Motion.tick(view)
         startActivity(Intent(this, SavedActivity::class.java))
     }
 
@@ -100,6 +105,7 @@ open class BaseActivity : AppCompatActivity() {
 
     /** Closes the current screen (the back arrow). */
     open fun goBack(view: View) {
+        Motion.tick(view)
         finish()
     }
 

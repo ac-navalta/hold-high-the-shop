@@ -27,13 +27,15 @@ class MotionSpecsTest {
         assertTrue(Motion.Spatial.EXIT.stiffness > Motion.Spatial.STANDARD.stiffness)
         assertTrue(Motion.Spatial.EXIT.dampingRatio >= Motion.Spatial.STANDARD.dampingRatio)
 
-        // Micro-interactions are crisper than tracked pills, which are crisper than full-screen transitions.
-        assertTrue(Motion.Spatial.SNAPPY.stiffness > Motion.Spatial.RESPONSIVE.stiffness)
+        // Micro-interactions are crisper than tactile button rebounds, tracked pills, and larger transitions.
+        assertTrue(Motion.Spatial.SNAPPY.stiffness > Motion.Spatial.TACTILE.stiffness)
+        assertTrue(Motion.Spatial.TACTILE.stiffness > Motion.Spatial.RESPONSIVE.stiffness)
         assertTrue(Motion.Spatial.RESPONSIVE.stiffness > Motion.Spatial.STANDARD.stiffness)
 
-        // No spatial spring should be overly sluggish (< 300) or cartoonishly underdamped (< 0.55).
+        // No spatial spring should be overly sluggish (< 350) or cartoonishly underdamped (< 0.58).
         val allSpatial = listOf(
             Motion.Spatial.SNAPPY,
+            Motion.Spatial.TACTILE,
             Motion.Spatial.RESPONSIVE,
             Motion.Spatial.STANDARD,
             Motion.Spatial.EXIT,

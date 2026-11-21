@@ -142,8 +142,8 @@ class ChatThreadActivity : BaseActivity() {
             val dp = resources.displayMetrics.density
             icon.translationX = 0f
             icon.translationY = 0f
-            Motion.spring(icon, DynamicAnimation.TRANSLATION_X, 0f, Motion.Spatial.SNAPPY, startVelocity = 620f * dp)
-            Motion.spring(icon, DynamicAnimation.TRANSLATION_Y, 0f, Motion.Spatial.SNAPPY, startVelocity = -360f * dp)
+            Motion.spring(icon, DynamicAnimation.TRANSLATION_X, 0f, Motion.Spatial.EXPRESSIVE, startVelocity = 680f * dp)
+            Motion.spring(icon, DynamicAnimation.TRANSLATION_Y, 0f, Motion.Spatial.EXPRESSIVE, startVelocity = -400f * dp)
         }
     }
 

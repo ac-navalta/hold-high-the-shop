@@ -423,6 +423,7 @@ class MainActivity : BaseActivity() {
 
     /** Home: bell icon opens notifications. */
     fun openNotifications(view: View) {
+        Motion.tick(view)
         startActivity(Intent(this, NotificationsActivity::class.java))
     }
 

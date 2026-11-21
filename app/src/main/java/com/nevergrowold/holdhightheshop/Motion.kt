@@ -38,6 +38,7 @@ import androidx.dynamicanimation.animation.FloatValueHolder
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
 import com.google.android.material.card.MaterialCardView
+import kotlin.math.abs
 
 /**
  * Shared physics-based motion system built around Material 3 Expressive tokens
@@ -61,20 +62,23 @@ object Motion {
 
     /** Spatial springs: position, scale, rotation, indicator travel. */
     object Spatial {
-        /** Fast, crisp tactile settles: button release, chip focus, chevrons, badges. */
-        val SNAPPY = SpringSpec(stiffness = 1200f, dampingRatio = 0.78f)
+        /** Fast, springy settles: badges, icons, micro-reveals. */
+        val SNAPPY = SpringSpec(stiffness = 900f, dampingRatio = 0.66f)
 
-        /** Fluid tracked motion: bottom nav pill, segment pill, tab underline, FAB, chat bubbles. */
-        val RESPONSIVE = SpringSpec(stiffness = 650f, dampingRatio = 0.80f)
+        /** Addictive, juicy tactile rebound on button, chip, FAB, and card release. */
+        val TACTILE = SpringSpec(stiffness = 680f, dampingRatio = 0.58f)
 
-        /** Authoritative larger transitions: card zoom open, page shifts. */
-        val STANDARD = SpringSpec(stiffness = 460f, dampingRatio = 0.88f)
+        /** Fluid tracked motion matching the bottom nav pill: segments, tab underline, chat bubbles. */
+        val RESPONSIVE = SpringSpec(stiffness = 600f, dampingRatio = 0.72f)
 
-        /** Brisk, grounded exits: card zoom close, FAB dismiss. */
-        val EXIT = SpringSpec(stiffness = 580f, dampingRatio = 0.92f)
+        /** Authoritative larger transitions. */
+        val STANDARD = SpringSpec(stiffness = 480f, dampingRatio = 0.84f)
 
-        /** Playful highlight reserved for rare delight: bookmark save, rating stars, celebration stamp. */
-        val EXPRESSIVE = SpringSpec(stiffness = 520f, dampingRatio = 0.62f)
+        /** Brisk, grounded exits: FAB dismiss, badge hide. */
+        val EXIT = SpringSpec(stiffness = 620f, dampingRatio = 0.90f)
+
+        /** Playful highlight: selected chips/pills, bookmarks, rating stars, active nav icon, celebration. */
+        val EXPRESSIVE = SpringSpec(stiffness = 540f, dampingRatio = 0.58f)
     }
 
     /** Critically damped springs (zero overshoot): press sink, opacity, subtle settles. */
@@ -145,6 +149,20 @@ object Motion {
     ) {
         spring(view, DynamicAnimation.SCALE_X, target, spec, startVelocity)
         spring(view, DynamicAnimation.SCALE_Y, target, spec, startVelocity)
+    }
+
+    /**
+     * Gives an interactive control a crisp outward spring bloom (for example
+     * when a chip, toggle, switch or segment becomes selected) without snapping
+     * scale downward or fighting an active press-release spring.
+     */
+    fun nudge(view: View, velocity: Float = 1.5f) {
+        if (!enabled(view.context)) return
+        if (view.width > 0 && view.height > 0) {
+            view.pivotX = view.width * 0.5f
+            view.pivotY = view.height * 0.5f
+        }
+        springScale(view, 1f, Spatial.EXPRESSIVE, startVelocity = velocity)
     }
 
     fun cancelSpring(view: View, property: DynamicAnimation.ViewProperty) {
@@ -270,23 +288,22 @@ object Motion {
 
     private fun attachPressIfEligible(view: View) {
         val parent = view.parent as? ViewGroup
-        // Persistent bottom tab slots: gently press only the icon container, never the full bar slot.
+        // Persistent bottom tab slots: press only the icon container, never the full bar slot.
         if (parent?.id == R.id.navSlots) {
             if (view.isClickable) {
                 val iconHolder = (view as? ViewGroup)?.getChildAt(0) ?: return
-                listenForPress(view, iconHolder, fixedDepth = 0.88f, depressCard = false)
+                listenForPress(view, iconHolder, fixedDepth = 0.85f, depressCard = false)
             }
             return
         }
         if (!view.isClickable || view is EditText || view is CompoundButton || view is ScrollView) return
         if (view is CampusMapView) return
 
-        val density = view.resources.displayMetrics.density
         val screenWidth = view.resources.displayMetrics.widthPixels
-        val longestDp = maxOf(view.width, view.height) / density
-        // Full-width rows (chats, settings, notifications, dropdown rows) keep ripple only.
+        // Full-bleed list rows (chats, settings, notifications, dropdowns) keep clean ripple only;
+        // compact inline actions ("Newest v", "See all", "Mark all read", "Reset") get full spring bounce.
         if (view.width >= screenWidth * 0.96f) return
-        if (isPlainRow(view.background) && longestDp > 68f) return
+        if (isPlainRow(view.background) && view.width >= screenWidth * 0.65f) return
 
         val isCard = view is MaterialCardView
         // MaterialCardView owns its rounded-corner foreground; its content child receives pressed state.
@@ -297,22 +314,32 @@ object Motion {
     private fun listenForPress(host: View, target: View, fixedDepth: Float?, depressCard: Boolean) {
         val dp = target.resources.displayMetrics.density
         val spy = PressSpy { down ->
-            val depth = fixedDepth ?: run {
-                val longestDp = maxOf(target.width, target.height) / dp
-                when {
-                    longestDp <= 64f -> 0.93f
-                    longestDp <= 150f -> 0.96f
-                    else -> 0.978f
-                }
+            val longestDp = maxOf(target.width, target.height) / dp
+            val depth = fixedDepth ?: when {
+                longestDp <= 68f -> 0.87f
+                longestDp <= 160f -> 0.925f
+                else -> 0.955f
             }
             if (target.width > 0 && target.height > 0) {
                 target.pivotX = target.width * 0.5f
                 target.pivotY = target.height * 0.5f
             }
-            val spec = if (down) Effects.FAST else Spatial.SNAPPY
-            springScale(target, if (down) depth else 1f, spec)
-            if (depressCard) {
-                spring(target, DynamicAnimation.TRANSLATION_Z, if (down) -1.5f * dp else 0f, spec)
+            if (down) {
+                springScale(target, depth, Effects.FAST)
+                if (depressCard) {
+                    spring(target, DynamicAnimation.TRANSLATION_Z, -2.5f * dp, Effects.FAST)
+                }
+            } else {
+                // Calibrated upward impulse guarantees even the quickest light tap feels crisply springy.
+                val kick = when {
+                    fixedDepth != null || longestDp <= 68f -> 1.25f
+                    longestDp <= 160f -> 0.85f
+                    else -> 0.45f
+                }
+                springScale(target, 1f, Spatial.TACTILE, startVelocity = kick)
+                if (depressCard) {
+                    spring(target, DynamicAnimation.TRANSLATION_Z, 0f, Spatial.TACTILE)
+                }
             }
         }
         val current = host.foreground
@@ -440,6 +467,7 @@ object Motion {
             v
         } else 0f
 
+        val dp = to.resources.displayMetrics.density
         val slide = SlideDrawable(indicator, currentX - targetX)
         to.background = slide
 
@@ -458,9 +486,11 @@ object Motion {
                 state.velocity = velocity
                 track.setTag(R.id.motion_slide_x, value)
                 slide.offset = value - targetX
+                slide.stretchX = 1f + (abs(velocity) / (3400f * dp)).coerceIn(0f, 0.14f)
                 to.invalidate()
             }
             addEndListener { _, canceled, _, _ ->
+                slide.stretchX = 1f
                 if (!canceled) {
                     state.x = targetX
                     state.velocity = 0f
@@ -494,9 +524,13 @@ object Motion {
     }
 
     private class SlideDrawable(private val inner: Drawable, var offset: Float) : DrawableWrapper(inner) {
+        var stretchX: Float = 1f
         override fun draw(canvas: Canvas) {
             val save = canvas.save()
             canvas.translate(offset, 0f)
+            if (stretchX != 1f) {
+                canvas.scale(stretchX, 1f, bounds.exactCenterX(), bounds.exactCenterY())
+            }
             inner.draw(canvas)
             canvas.restoreToCount(save)
         }
@@ -645,9 +679,9 @@ object Motion {
         return anim
     }
 
-    /** Smoothly rotates a chevron or + icon to [degrees] on a snappy spring. */
+    /** Smoothly rotates a chevron or + icon to [degrees] with a crisp spring settle. */
     fun rotateTo(view: View, degrees: Float) {
-        spring(view, DynamicAnimation.ROTATION, degrees, Spatial.SNAPPY)
+        spring(view, DynamicAnimation.ROTATION, degrees, Spatial.TACTILE)
     }
 
     // ---------------------------------------------------------------- numeric & content motion
@@ -890,7 +924,7 @@ object Motion {
                 accum = 0
                 fab.setTag(R.id.motion_reveal_state, true)
                 spring(fab, DynamicAnimation.TRANSLATION_Y, 0f, Spatial.RESPONSIVE)
-                springScale(fab, 1f, Spatial.RESPONSIVE)
+                springScale(fab, 1f, Spatial.EXPRESSIVE)
                 spring(fab, DynamicAnimation.ALPHA, 1f, Effects.FAST)
             }
         }

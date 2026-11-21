@@ -44,6 +44,7 @@ class SettingsActivity : BaseActivity() {
         ).forEach { id ->
             findViewById<MaterialSwitch>(id).setOnCheckedChangeListener { button, _ ->
                 Motion.tick(button)
+                Motion.nudge(button, velocity = 1.3f)
             }
         }
 

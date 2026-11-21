@@ -57,6 +57,7 @@ object Choice {
                     view.context.getColor(if (isOn) R.color.white else R.color.text_primary),
                     shouldAnimate,
                 )
+                if (shouldAnimate && isOn) Motion.nudge(view, velocity = 1.55f)
             }
         }
     }
@@ -86,11 +87,12 @@ object Choice {
                     view.context.getColor(if (isOn) R.color.white else R.color.text_primary),
                     shouldAnimate,
                 )
+                if (shouldAnimate) Motion.nudge(view, velocity = if (isOn) 1.65f else 0.7f)
             }
         }
     }
 
-    /** Sell / Rent / Swap segmented control with interruptible sliding pill. */
+    /** Sell / Rent / Swap segmented control with interruptible liquid sliding pill. */
     fun segments(views: List<TextView>, selected: Int, onPick: (Int) -> Unit = {}) =
         segments(views, selected, animate = false, onPick = onPick)
 
@@ -117,6 +119,7 @@ object Choice {
                 view.context.getColor(if (isOn) R.color.white else R.color.text_secondary),
                 changed,
             )
+            if (changed && isOn) Motion.nudge(view, velocity = 0.85f)
         }
 
         if (animate && track != null && previous != null && previous != selected) {
@@ -161,9 +164,10 @@ object Choice {
                 icon.setImageResource(if (isOn) R.drawable.ic_radio_on else R.drawable.ic_radio_off)
                 Motion.iconTint(icon, if (isOn) offColor else onColor, if (isOn) onColor else offColor, shouldAnimate)
                 if (shouldAnimate && isOn) {
-                    icon.scaleX = 0.82f
-                    icon.scaleY = 0.82f
-                    Motion.springScale(icon, 1f, Motion.Spatial.SNAPPY)
+                    icon.scaleX = 0.74f
+                    icon.scaleY = 0.74f
+                    Motion.springScale(icon, 1f, Motion.Spatial.EXPRESSIVE)
+                    Motion.nudge(row, velocity = 0.5f)
                 }
             }
         }
