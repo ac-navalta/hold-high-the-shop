@@ -1,6 +1,8 @@
 package com.nevergrowold.holdhightheshop
 
+import android.app.SearchManager
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
 import android.view.LayoutInflater
@@ -9,8 +11,10 @@ import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
+import androidx.core.content.IntentCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -23,11 +27,10 @@ import kotlin.math.abs
 /**
  * Single-host shell for the four primary tabs (Home, Market, Chats, Profile).
  *
- * Hosting all four tabs inside one Activity above one persistent bottom nav
- * eliminates Activity-switch buffering, white flashes, and teleporting pills:
- * tapping any tab glides the single indicator pill continuously point-to-point
- * on an interruptible spring while cross-transitioning pages in-place on GPU
- * hardware layers.
+ * Also serves as the exported Manifest intent router for:
+ * - Deep links (`ACTION_VIEW` for `https://holdhightheshop.app/...` and `holdhightheshop://...`)
+ * - Campus Market search (`ACTION_SEARCH`)
+ * - Incoming text/photo shares (`ACTION_SEND`) forwarded to [CreateListingActivity]
  */
 class MainActivity : BaseActivity() {
 
@@ -81,8 +84,8 @@ class MainActivity : BaseActivity() {
 
         val initialTab = intent.getIntExtra(EXTRA_NAV_TAB, TAB_HOME).coerceIn(TAB_HOME, TAB_PROFILE)
         showTab(initialTab, animate = false)
-        handleRoutingExtras(intent)
-        if (initialTab == TAB_HOME) homeTab?.ringBellOnceIfUnread()
+        handleIncomingIntent(intent, animateTab = false)
+        if (activeTab == TAB_HOME) homeTab?.ringBellOnceIfUnread()
 
         // Quietly pre-warm the remaining three tabs after frame 1 paints so even
         // the very first tap on Market, Chats or Profile responds in 0ms.
@@ -96,7 +99,7 @@ class MainActivity : BaseActivity() {
         if (target in TAB_HOME..TAB_PROFILE) {
             showTab(target, animate = true)
         }
-        handleRoutingExtras(intent)
+        handleIncomingIntent(intent, animateTab = true)
     }
 
     override fun onResume() {
@@ -114,18 +117,105 @@ class MainActivity : BaseActivity() {
         super.onDestroy()
     }
 
-    private fun handleRoutingExtras(intent: Intent?) {
+    /**
+     * Handles all intents declared in AndroidManifest.xml on [MainActivity]:
+     * deep links (`ACTION_VIEW`), system search (`ACTION_SEARCH`), incoming
+     * shares (`ACTION_SEND`), and explicit internal routing extras.
+     */
+    private fun handleIncomingIntent(intent: Intent?, animateTab: Boolean) {
         if (intent == null) return
+
+        intent.getStringExtra(EXTRA_EMAIL)?.takeIf { it.isNotBlank() }?.let { email ->
+            UserState.updateEmail(this, email)
+            intent.removeExtra(EXTRA_EMAIL)
+        }
+
+        when (intent.action) {
+            Intent.ACTION_VIEW -> {
+                val route = AppIntents.parseDeepLink(intent.data)
+                if (route != null) {
+                    intent.data = null
+                    dispatchDeepLink(route, animateTab)
+                    return
+                }
+            }
+            Intent.ACTION_SEARCH -> {
+                val query = intent.getStringExtra(SearchManager.QUERY)?.trim().orEmpty()
+                intent.removeExtra(SearchManager.QUERY)
+                showTab(TAB_MARKET, animate = animateTab)
+                if (query.isNotEmpty()) {
+                    ensureMarket().setSearchQuery(query)
+                    Toast.makeText(this, getString(R.string.toast_searching_format, query), Toast.LENGTH_SHORT).show()
+                }
+                return
+            }
+            Intent.ACTION_SEND -> {
+                val subject = intent.getStringExtra(Intent.EXTRA_SUBJECT)
+                val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
+                val streamUri = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
+                val createIntent = Intent(this, CreateListingActivity::class.java).apply {
+                    if (!subject.isNullOrBlank()) putExtra(AppIntents.EXTRA_SHARED_SUBJECT, subject)
+                    if (!sharedText.isNullOrBlank()) putExtra(AppIntents.EXTRA_SHARED_TEXT, sharedText)
+                    if (streamUri != null) {
+                        putExtra(AppIntents.EXTRA_SHARED_IMAGE_URI, streamUri.toString())
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                }
+                intent.action = null
+                startActivity(createIntent)
+                return
+            }
+        }
+
+        handleRoutingExtras(intent, animateTab)
+    }
+
+    private fun dispatchDeepLink(route: AppIntents.DeepLinkRoute, animateTab: Boolean) {
+        when (route) {
+            is AppIntents.DeepLinkRoute.ListingDetail -> openListingById(route.listingId)
+            is AppIntents.DeepLinkRoute.Market -> {
+                showTab(TAB_MARKET, animate = animateTab)
+                val market = ensureMarket()
+                if (route.program != null) market.selectProgram(route.program)
+                if (!route.query.isNullOrBlank()) market.setSearchQuery(route.query)
+            }
+            AppIntents.DeepLinkRoute.Chats -> showTab(TAB_CHATS, animate = animateTab)
+            is AppIntents.DeepLinkRoute.ChatThread -> {
+                showTab(TAB_CHATS, animate = animateTab)
+                openChatWith(Listings.sellerByName(route.sellerName), route.listingId)
+            }
+            is AppIntents.DeepLinkRoute.Profile -> {
+                showTab(TAB_PROFILE, animate = animateTab)
+                ensureProfile().openSubTab(route.subTab, scrollDown = false)
+            }
+            is AppIntents.DeepLinkRoute.SellerProfile -> openSeller(Listings.sellerByName(route.sellerName))
+            is AppIntents.DeepLinkRoute.MapDirections -> startActivity(
+                Intent(this, MapActivity::class.java).putExtra(MapActivity.EXTRA_PLACE, route.place)
+            )
+            AppIntents.DeepLinkRoute.CreateListing -> startActivity(Intent(this, CreateListingActivity::class.java))
+            AppIntents.DeepLinkRoute.Saved -> startActivity(Intent(this, SavedActivity::class.java))
+            AppIntents.DeepLinkRoute.Notifications -> startActivity(Intent(this, NotificationsActivity::class.java))
+            AppIntents.DeepLinkRoute.Settings -> startActivity(Intent(this, SettingsActivity::class.java))
+        }
+    }
+
+    private fun handleRoutingExtras(intent: Intent, animateTab: Boolean) {
         if (intent.hasExtra(EXTRA_PROGRAM)) {
             val program = intent.getStringExtra(EXTRA_PROGRAM)
             intent.removeExtra(EXTRA_PROGRAM)
-            showTab(TAB_MARKET, animate = true)
+            showTab(TAB_MARKET, animate = animateTab)
             ensureMarket().selectProgram(program)
+        }
+        if (intent.hasExtra(EXTRA_SEARCH_QUERY)) {
+            val query = intent.getStringExtra(EXTRA_SEARCH_QUERY).orEmpty()
+            intent.removeExtra(EXTRA_SEARCH_QUERY)
+            showTab(TAB_MARKET, animate = animateTab)
+            ensureMarket().setSearchQuery(query)
         }
         if (intent.hasExtra(EXTRA_TAB)) {
             val subTab = intent.getIntExtra(EXTRA_TAB, ProfileActivity.TAB_ACTIVE)
             intent.removeExtra(EXTRA_TAB)
-            showTab(TAB_PROFILE, animate = true)
+            showTab(TAB_PROFILE, animate = animateTab)
             ensureProfile().openSubTab(subTab, scrollDown = true)
         }
     }
@@ -285,10 +375,13 @@ class MainActivity : BaseActivity() {
         else -> ensureProfile().root
     }
 
+    internal fun activeTabIndex(): Int = activeTab
+
     private fun refreshActiveTab() {
         when (activeTab) {
             TAB_HOME -> homeTab?.onShow()
             TAB_MARKET -> marketTab?.refresh()
+            TAB_CHATS -> chatsTab?.refresh()
             TAB_PROFILE -> profileTab?.onShow()
         }
     }

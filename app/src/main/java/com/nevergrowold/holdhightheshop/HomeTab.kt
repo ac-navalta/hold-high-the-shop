@@ -74,6 +74,8 @@ internal class HomeTab(
     }
 
     fun refresh() {
+        root.findViewById<TextView>(R.id.homeGreetingTitle)?.text =
+            activity.getString(R.string.greeting_format, UserState.profile.first)
         Motion.setVisiblePop(root.findViewById(R.id.bellDot), !UserState.notificationsRead)
         bindReturnReminder()
 
@@ -90,11 +92,11 @@ internal class HomeTab(
             Motion.countUp(activeCount, activeValue, delay = 150)
         }
 
-        // Fresh on campus: only rebuild cards when the newest open listings actually change.
+        // Fresh on campus: rebuild cards when the newest open listings or their details change.
         val freshItems = Listings.open().sortedBy { it.postedDaysAgo }.take(FRESH_COUNT)
-        val freshIds = freshItems.map { it.id }
-        if (freshIds != lastFreshIds) {
-            lastFreshIds = freshIds
+        val freshSig = freshItems.map { "${it.id}:${it.title}:${it.price}:${it.photoUris.firstOrNull()}" }
+        if (freshSig != lastFreshIds) {
+            lastFreshIds = freshSig
             val fresh = root.findViewById<LinearLayout>(R.id.freshRow)
             fresh.removeAllViews()
             freshItems.forEach { listing ->

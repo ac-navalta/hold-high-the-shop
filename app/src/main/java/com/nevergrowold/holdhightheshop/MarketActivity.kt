@@ -34,6 +34,7 @@ class MarketActivity : BaseActivity() {
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             .putExtra(MainActivity.EXTRA_NAV_TAB, MainActivity.TAB_MARKET)
         intent.getStringExtra(EXTRA_PROGRAM)?.let { forward.putExtra(EXTRA_PROGRAM, it) }
+        intent.getStringExtra(EXTRA_SEARCH_QUERY)?.let { forward.putExtra(EXTRA_SEARCH_QUERY, it) }
         startActivity(forward)
         finish()
     }

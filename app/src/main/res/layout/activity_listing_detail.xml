@@ -45,6 +45,17 @@
                     android:tint="#CFC9B4"
                     android:contentDescription="@string/cd_item_photo" />
 
+                <ImageView
+                    android:id="@+id/detailHeroPhoto"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:onClick="cycleHeroPhoto"
+                    android:contentDescription="@string/cd_item_photo" />
+
                 <!-- top buttons, padded down past the status bar -->
                 <LinearLayout
                     android:id="@+id/headerArea"
@@ -124,6 +135,7 @@
                 </LinearLayout>
 
                 <TextView
+                    android:id="@+id/detailPhotoCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom|end"
@@ -378,6 +390,19 @@
                         android:fontFamily="@font/poppins_semibold"
                         android:textSize="14sp"
                         android:onClick="markReceived"
+                        android:visibility="gone" />
+
+                    <!-- Implicit Calendar Intent: add meetup or loan return due date to device Calendar. -->
+                    <TextView
+                        android:id="@+id/btnAddCalendar"
+                        style="@style/OutlineButton"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/btn_add_calendar"
+                        android:textColor="@color/uc_green"
+                        android:fontFamily="@font/poppins_medium"
+                        android:textSize="13sp"
+                        android:onClick="addToCalendar"
                         android:visibility="gone" />
                 </LinearLayout>
 

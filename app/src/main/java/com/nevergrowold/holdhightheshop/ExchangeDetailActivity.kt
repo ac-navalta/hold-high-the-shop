@@ -1,6 +1,9 @@
 package com.nevergrowold.holdhightheshop
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -21,6 +24,7 @@ import androidx.core.view.isVisible
 class ExchangeDetailActivity : BaseActivity() {
 
     private lateinit var exchange: Exchange
+    private var referenceCode: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +47,8 @@ class ExchangeDetailActivity : BaseActivity() {
         findViewById<TextView>(R.id.exPrice).text = Listings.price(exchange.price)
         findViewById<TextView>(R.id.exDate).text = getString(R.string.ex_completed_on, ExchangeText.date(this, exchange))
 
-        findViewById<TextView>(R.id.exReference).text = "HTS-%05d".format(23000 + exchange.id.hashCode().mod(1000))
+        referenceCode = "HTS-%05d".format(23000 + exchange.id.hashCode().mod(1000))
+        findViewById<TextView>(R.id.exReference).text = referenceCode
         findViewById<TextView>(R.id.exMeetup).text = exchange.meetup
         findViewById<TextView>(R.id.exPayment).text = when (exchange.kind) {
             Exchange.SWAPPED -> getString(R.string.ex_no_payment)
@@ -147,6 +152,26 @@ class ExchangeDetailActivity : BaseActivity() {
             textSize = 12f
             setTextColor(getColor(R.color.text_secondary))
         })
+    }
+
+    /** Shares the transaction receipt via implicit ACTION_SEND intent. */
+    fun shareReceipt(view: View) {
+        Motion.tick(view)
+        AppIntents.launch(this, AppIntents.shareReceiptChooser(this, exchange, referenceCode))
+    }
+
+    /** Copies the transaction reference code to clipboard with a Toast confirmation. */
+    fun copyReference(view: View) {
+        Motion.confirm(view)
+        val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText(getString(R.string.ex_reference), referenceCode))
+        Toast.makeText(this, getString(R.string.toast_ref_copied, referenceCode), Toast.LENGTH_SHORT).show()
+    }
+
+    /** Opens campus directions to the exchange's meetup point via explicit MapActivity Intent. */
+    fun openMeetupMap(view: View) {
+        Motion.tick(view)
+        startActivity(Intent(this, MapActivity::class.java).putExtra(MapActivity.EXTRA_PLACE, exchange.meetup))
     }
 
     /** "With" card: the other student's profile. */

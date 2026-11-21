@@ -80,9 +80,19 @@ internal class MarketTab(
         render(animate = true)
     }
 
+    /** Populates search from ACTION_SEARCH or a deep link query parameter. */
+    fun setSearchQuery(query: String) {
+        search.setText(query)
+        search.setSelection(search.text.length)
+        render(animate = true)
+    }
+
+    private fun openSignature(list: List<Listing>): List<String> =
+        list.map { "${it.id}:${it.title}:${it.price}:${it.condition}:${it.type}:${it.photoUris.firstOrNull()}" }
+
     fun refresh() {
-        val currentOpenIds = Listings.open().map { it.id }
-        if (currentOpenIds != lastOpenIds) render(animate = false)
+        val currentSig = openSignature(Listings.open())
+        if (currentSig != lastOpenIds) render(animate = false)
     }
 
     fun onHide() {
@@ -116,7 +126,7 @@ internal class MarketTab(
         val query = search.text.toString().trim().lowercase()
         val programName = Listings.PROGRAMS.getOrNull(program)
         val openListings = Listings.open()
-        lastOpenIds = openListings.map { it.id }
+        lastOpenIds = openSignature(openListings)
 
         var items = openListings.filter { listing ->
             (programName == null || listing.program == programName) &&

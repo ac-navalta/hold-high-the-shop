@@ -3,6 +3,7 @@ package com.nevergrowold.holdhightheshop
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -30,6 +31,7 @@ import java.util.TimeZone
 class ListingDetailActivity : BaseActivity() {
 
     private lateinit var listing: Listing
+    private var photoIndex = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,7 +57,9 @@ class ListingDetailActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Saved or reserved state can change on other screens.
+        // Edits, profile updates, saved or reserved state can change on other screens.
+        listing = Listings.byId(listing.id)
+        bind()
         bindSaved()
         bindActions(animate = false)
     }
@@ -63,7 +67,8 @@ class ListingDetailActivity : BaseActivity() {
     private val isMine get() = Listings.isMine(listing)
 
     private fun bind() {
-        val seller = listing.seller
+        val seller = Listings.sellerOf(listing)
+        bindHeroPhoto()
         findViewById<TextView>(R.id.detailCondition).text =
             getString(R.string.condition_badge_format, Listings.conditionLabel(this, listing.condition))
         findViewById<TextView>(R.id.detailTitle).text = listing.title
@@ -76,13 +81,44 @@ class ListingDetailActivity : BaseActivity() {
             if (isMine) getString(R.string.seller_you_format, seller.name) else seller.name
         // Your own listing: nothing to save or report.
         findViewById<View>(R.id.btnSave).isVisible = !isMine
-        findViewById<TextView>(R.id.sellerMeta).text = getString(R.string.seller_meta_format, seller.program, seller.year)
+        findViewById<TextView>(R.id.sellerMeta).text =
+            if (isMine && !UserState.settings.showProgram) seller.year
+            else getString(R.string.seller_meta_format, seller.program, seller.year)
         // Your own reliability is worked out from your history; other students' comes with their profile.
         findViewById<TextView>(R.id.statRating).text = if (isMine) Reliability.rating() else seller.rating
         findViewById<TextView>(R.id.statOnTime).text = if (isMine) Reliability.onTime() else seller.onTime
         findViewById<TextView>(R.id.statCompleted).text = (if (isMine) Reliability.completed() else seller.completed).toString()
         findViewById<TextView>(R.id.meetupPlace).text = listing.meetup
         findViewById<TextView>(R.id.meetupAvailability).text = freeLabel()
+    }
+
+    private fun bindHeroPhoto() {
+        val photos = listing.photoUris
+        val photoView = findViewById<ImageView>(R.id.detailHeroPhoto)
+        val placeholderIcon = findViewById<View>(R.id.detailHeroIcon)
+        val countPill = findViewById<TextView>(R.id.detailPhotoCount)
+        if (photos.isEmpty()) {
+            photoView.isVisible = false
+            placeholderIcon.isVisible = true
+            countPill.setText(R.string.photo_count)
+            return
+        }
+        photoIndex = photoIndex.coerceIn(0, photos.lastIndex)
+        AppIntents.bindImageUri(photoView, placeholderIcon, photos[photoIndex])
+        countPill.text = getString(R.string.photo_count_format, photoIndex + 1, photos.size)
+    }
+
+    /** Cycles through multiple real photos, or opens a single photo in the system viewer. */
+    fun cycleHeroPhoto(view: View) {
+        val photos = listing.photoUris
+        if (photos.isEmpty()) return
+        if (photos.size > 1) {
+            photoIndex = (photoIndex + 1) % photos.size
+            Motion.tick(view)
+            bindHeroPhoto()
+        } else {
+            AppIntents.launch(this, AppIntents.viewImageIntent(Uri.parse(photos.first())))
+        }
     }
 
     /** "Paolo is free Mon, Wed, Fri • 1:00–4:00 PM", or "You're free …" on your own listing. */
@@ -184,7 +220,11 @@ class ListingDetailActivity : BaseActivity() {
         val due = findViewById<TextView>(R.id.reservationDue)
         val received = findViewById<TextView>(R.id.btnReceived)
         val codeBox = findViewById<View>(R.id.codeBox)
+        val addCalendar = findViewById<View>(R.id.btnAddCalendar)
         codeBox.isVisible = false
+        addCalendar.isVisible = rental != null ||
+            (deal != null && !dealMissed) ||
+            (!isMine && reservation?.meetMillis != null && !reservationMissed)
         received.isVisible = !isMine && reservation != null
         received.setText(
             when {
@@ -289,6 +329,46 @@ class ListingDetailActivity : BaseActivity() {
                 due.isVisible = false
             }
             else -> card.isVisible = false
+        }
+    }
+
+    /** Implicit Calendar Intent: inserts the meetup or loan return due date into the device Calendar. */
+    fun addToCalendar(view: View) {
+        Motion.tick(view)
+        val rental = UserState.rental(listing.id)
+        val deal = if (isMine) UserState.accepted(listing.id) else null
+        val reservation = if (!isMine) UserState.reservation(listing.id) else null
+
+        val calIntent = when {
+            rental != null -> {
+                val title = if (rental.lending) {
+                    getString(R.string.calendar_lent_return_title, listing.title)
+                } else {
+                    getString(R.string.calendar_return_title, listing.title)
+                }
+                val desc = if (rental.lending) {
+                    getString(R.string.calendar_lent_return_desc, rental.partner.name, listing.title)
+                } else {
+                    getString(R.string.calendar_return_desc, listing.title, rental.partner.name)
+                }
+                AppIntents.calendarEventIntent(title, listing.meetup, desc, rental.dueMillis)
+            }
+            deal != null -> AppIntents.calendarEventIntent(
+                title = getString(R.string.calendar_meetup_title, listing.title),
+                location = deal.meetup,
+                description = getString(R.string.calendar_meetup_desc, deal.from.name, listing.title),
+                beginMillis = deal.meetMillis,
+            )
+            reservation?.meetMillis != null -> AppIntents.calendarEventIntent(
+                title = getString(R.string.calendar_meetup_title, listing.title),
+                location = listing.meetup,
+                description = getString(R.string.calendar_meetup_desc, listing.seller.name, listing.title),
+                beginMillis = reservation.meetMillis,
+            )
+            else -> return
+        }
+        if (AppIntents.launch(this, calIntent)) {
+            Toast.makeText(this, R.string.toast_calendar_opened, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -698,13 +778,12 @@ class ListingDetailActivity : BaseActivity() {
     }
 
     /**
-     * Share button: preview of what will be shared and the listing link.
-     * Sending to Messenger, Viber and other apps comes in a later version;
-     * for now the link can be copied.
+     * Share button: preview of what will be shared, copyable deep link, and
+     * system share sheet (`Intent.ACTION_SEND`) to Messenger, Viber, SMS, etc.
      */
     fun shareListing(view: View) {
         Sheets.show(this, R.layout.sheet_share) { sheet, dialog ->
-            val link = getString(R.string.share_link_format, listing.id)
+            val link = AppIntents.listingUrl(listing.id)
             sheet.findViewById<TextView>(R.id.shareItemTitle).text = listing.title
             sheet.findViewById<TextView>(R.id.shareItemPrice).text = Listings.priceLabel(this, listing)
             sheet.findViewById<TextView>(R.id.shareLink).text = link
@@ -713,7 +792,12 @@ class ListingDetailActivity : BaseActivity() {
                 val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.setPrimaryClip(ClipData.newPlainText(listing.title, link))
                 dialog.dismiss()
-                notify(getString(R.string.toast_link_copied))
+                Toast.makeText(this, R.string.toast_link_copied, Toast.LENGTH_SHORT).show()
+            }
+            sheet.findViewById<View>(R.id.shareExternal).setOnClickListener { btn ->
+                Motion.confirm(btn)
+                dialog.dismiss()
+                AppIntents.launch(this, AppIntents.shareListingChooser(this, listing))
             }
         }
     }
@@ -938,8 +1022,18 @@ class ListingDetailActivity : BaseActivity() {
                 } else {
                     getString(R.string.sys_reserved_detail, Listings.MEETUP_POINTS[place], pickedDay, pickedTime)
                 }
+                val scheduledMillis = meetMillis(picked!!, pickedTime)
                 UserState.setReserved(
-                    listing.id, summary, if (listing.isRent) weeks else 0, meetMillis(picked!!, pickedTime),
+                    listing.id, summary, if (listing.isRent) weeks else 0, scheduledMillis,
+                )
+                UserState.appendChatMessage(
+                    listing.seller.name,
+                    UserState.ChatMessage(
+                        systemTitle = getString(R.string.sys_reserved),
+                        systemDetail = summary,
+                        meetupPlace = Listings.MEETUP_POINTS[place],
+                        meetupMillis = scheduledMillis,
+                    ),
                 )
                 bindActions()
                 dialog.dismiss()
@@ -1068,6 +1162,14 @@ class ListingDetailActivity : BaseActivity() {
                 Motion.confirm(btn)
                 val summary = getString(R.string.swap_summary_format, mine[picked].title, listing.title)
                 UserState.setReserved(listing.id, summary, offerId = mine[picked].id)
+                UserState.appendChatMessage(
+                    listing.seller.name,
+                    UserState.ChatMessage(
+                        systemTitle = getString(R.string.sys_swap_offered),
+                        systemDetail = summary,
+                        meetupPlace = listing.meetup,
+                    ),
+                )
                 bindActions()
                 dialog.dismiss()
                 Toast.makeText(this, getString(R.string.toast_swap_sent, listing.seller.name), Toast.LENGTH_SHORT).show()

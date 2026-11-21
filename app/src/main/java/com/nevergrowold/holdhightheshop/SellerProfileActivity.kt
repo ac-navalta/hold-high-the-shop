@@ -6,7 +6,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 
-/** Public profile of a seller, opened from the seller card on a listing. */
+/** Public profile of a seller, opened from the seller card on a listing, chat header, or deep link. */
 class SellerProfileActivity : BaseActivity() {
 
     private lateinit var seller: Seller
@@ -42,6 +42,12 @@ class SellerProfileActivity : BaseActivity() {
                 openListingById(item.id)
             }
         }
+    }
+
+    /** Shares the seller's profile via implicit ACTION_SEND intent. */
+    fun shareSeller(view: View) {
+        Motion.tick(view)
+        AppIntents.launch(this, AppIntents.shareSellerChooser(this, seller))
     }
 
     /** "Message ..." button. */

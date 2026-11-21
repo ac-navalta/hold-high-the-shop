@@ -54,6 +54,7 @@
             android:textSize="20sp" />
 
         <TextView
+            android:id="@+id/btnMarkAllRead"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins_medium"
@@ -107,7 +108,7 @@
                 android:paddingBottom="14dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:onClick="openListing"
+                android:onClick="openReservationNotification"
                 android:tag="item2"
                 android:foreground="?attr/selectableItemBackground">
 
@@ -428,6 +429,7 @@
                 android:background="@color/divider" />
 
             <LinearLayout
+                android:id="@+id/notifRow5"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -435,7 +437,11 @@
                 android:paddingStart="20dp"
                 android:paddingEnd="20dp"
                 android:paddingTop="14dp"
-                android:paddingBottom="14dp">
+                android:paddingBottom="14dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:onClick="openReportNotification"
+                android:foreground="?attr/selectableItemBackground">
 
                 <FrameLayout
                     android:layout_width="42dp"

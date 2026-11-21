@@ -89,9 +89,14 @@
             android:lineSpacingExtra="4dp" />
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/postedRefCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="26dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="copyReference"
+            android:foreground="?attr/selectableItemBackground"
             app:cardCornerRadius="18dp"
             app:cardElevation="2dp"
             android:outlineSpotShadowColor="@color/shadow_green"
@@ -118,6 +123,7 @@
                     android:letterSpacing="0.1" />
 
                 <TextView
+                    android:id="@+id/postedRef"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
