@@ -11,31 +11,43 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 /**
  * Shared behaviour for every screen in the app.
- *
- * The bottom navigation appears on several layouts, so the handlers for it
- * live here instead of being copied into each Activity. Tab switches use
- * CLEAR_TOP so moving between Home, Market, Chats and Profile reuses the
- * screen that is already open rather than stacking another copy of it.
  */
 open class BaseActivity : AppCompatActivity() {
 
-    fun openHome(view: View) = switchTab(MainActivity::class.java)
+    /**
+     * Every screen gets the shared press feedback ([Motion.installPress]) and
+     * 48dp touch areas ([TouchTargets]), deferred past frame 1 so screens open
+     * and render with zero startup scanning overhead.
+     */
+    override fun setContentView(layoutResID: Int) {
+        super.setContentView(layoutResID)
+        val content = findViewById<View>(android.R.id.content)
+        content.post {
+            if (!isFinishing && !isDestroyed) {
+                Motion.installPress(content)
+                TouchTargets.install(content)
+            }
+        }
+    }
 
-    fun openMarket(view: View) = switchTab(MarketActivity::class.java)
+    open fun openHome(view: View) = switchTab(MainActivity.TAB_HOME)
 
-    fun openChats(view: View) = switchTab(ChatsActivity::class.java)
+    open fun openMarket(view: View) = switchTab(MainActivity.TAB_MARKET)
 
-    fun openProfile(view: View) = switchTab(ProfileActivity::class.java)
+    open fun openChats(view: View) = switchTab(MainActivity.TAB_CHATS)
+
+    open fun openProfile(view: View) = switchTab(MainActivity.TAB_PROFILE)
 
     /** Opens the Campus Market already filtered to the program in the view's tag. */
-    fun openProgram(view: View) {
-        switchTab(MarketActivity::class.java) {
+    open fun openProgram(view: View) {
+        switchTab(MainActivity.TAB_MARKET) {
             putExtra(EXTRA_PROGRAM, view.tag as? String)
         }
     }
 
     /** Opens the Create listing form. */
     fun openCreateListing(view: View) {
+        Motion.tick(view)
         startActivity(Intent(this, CreateListingActivity::class.java))
     }
 
@@ -51,8 +63,15 @@ open class BaseActivity : AppCompatActivity() {
         )
     }
 
+    /** Opens a listing from its card using the app's sleek Shared-Axis Z transition. */
+    fun openListingFromCard(card: View, id: String) {
+        Motion.tick(card)
+        openListingById(id)
+    }
+
     /** Opens the saved items list. */
     fun openSaved(view: View) {
+        Motion.tick(view)
         startActivity(Intent(this, SavedActivity::class.java))
     }
 
@@ -84,21 +103,24 @@ open class BaseActivity : AppCompatActivity() {
             .show()
     }
 
-    /** Closes the current screen. */
-    fun goBack(view: View) {
+    /** Closes the current screen (the back arrow). */
+    open fun goBack(view: View) {
+        Motion.tick(view)
         finish()
     }
 
-    protected fun switchTab(target: Class<*>, extras: Intent.() -> Unit = {}) {
-        val intent = Intent(this, target)
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+    /** Jumps back to [MainActivity] on a specific tab from any pushed screen. */
+    protected fun switchTab(tabIndex: Int, extras: Intent.() -> Unit = {}) {
+        val intent = Intent(this, MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            .putExtra(MainActivity.EXTRA_NAV_TAB, tabIndex)
         intent.extras()
-        if (javaClass == target && intent.extras == null) return
         startActivity(intent)
+        if (this !is MainActivity) finish()
     }
 
     /** A product card (photo, condition, price, title, program) that opens the listing. */
-    protected fun listingCard(parent: ViewGroup, listing: Listing): View {
+    internal fun listingCard(parent: ViewGroup, listing: Listing): View {
         val card = LayoutInflater.from(this).inflate(R.layout.item_listing_card, parent, false)
         card.findViewById<TextView>(R.id.cardPrice).text = Listings.priceLabel(this, listing)
         card.findViewById<TextView>(R.id.cardTitle).text = listing.title
@@ -111,7 +133,7 @@ open class BaseActivity : AppCompatActivity() {
             listing.isRent -> styleBadge(type, getString(R.string.tag_for_rent), giving = true)
             else -> styleBadge(type, getString(R.string.tag_for_sale), giving = false)
         }
-        card.setOnClickListener { openListingById(listing.id) }
+        card.setOnClickListener { openListingFromCard(card, listing.id) }
         return card
     }
 
@@ -119,7 +141,7 @@ open class BaseActivity : AppCompatActivity() {
      * Adds a listing row (thumbnail, title, price, status) to a list.
      * Returns the row so callers can change its trailing icon.
      */
-    protected fun addRow(
+    internal fun addRow(
         list: LinearLayout,
         title: String,
         price: CharSequence,
@@ -152,7 +174,7 @@ open class BaseActivity : AppCompatActivity() {
      * outlined; getting (things from others) is filled mint; swaps, where
      * both sides give and get, are amber.
      */
-    protected fun styleBadge(view: TextView, label: String, giving: Boolean, swap: Boolean = false) {
+    internal fun styleBadge(view: TextView, label: String, giving: Boolean, swap: Boolean = false) {
         view.text = label
         view.setBackgroundResource(
             when {
@@ -204,10 +226,12 @@ open class BaseActivity : AppCompatActivity() {
                 setText(R.string.btn_send_report)
                 setOnClickListener {
                     if (picked < 0) {
+                        Motion.shake(box)
                         android.widget.Toast.makeText(this@BaseActivity, R.string.toast_select_reason, android.widget.Toast.LENGTH_SHORT).show()
                         return@setOnClickListener
                     }
                     hideKeyboard(input)
+                    Motion.confirm(this)
                     val issue = UserState.report(subject, reasons[picked], partner, input.text.toString().trim())
                     dialog.dismiss()
                     onReported(issue)
@@ -218,7 +242,7 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     /** Adds a heading with a one-line hint to a list. */
-    protected fun addSection(list: LinearLayout, title: Int, hint: Int) {
+    internal fun addSection(list: LinearLayout, title: Int, hint: Int) {
         val header = LayoutInflater.from(this).inflate(R.layout.item_section_header, list, false)
         header.findViewById<TextView>(R.id.sectionTitle).setText(title)
         header.findViewById<TextView>(R.id.sectionHint).setText(hint)
@@ -231,5 +255,7 @@ open class BaseActivity : AppCompatActivity() {
         const val EXTRA_SELLER = "seller"
         const val EXTRA_RESERVED = "reserved"
         const val EXTRA_TAB = "tab"
+        const val EXTRA_FROM_TAB = "from_tab"
+
     }
 }

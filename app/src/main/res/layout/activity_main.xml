@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Single-host shell for the four primary tabs (Home, Market, Chats, Profile).
+    All four tabs live in one Activity window above a single persistent bottom
+    bar so switching tabs is instantaneous (0ms Activity overhead), flash-free,
+    and the translucent indicator pill glides continuously from icon to icon.
+-->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -9,627 +15,211 @@
     android:background="@color/uc_cream"
     tools:context=".MainActivity">
 
-    <!-- SCROLLING CONTENT -->
-    <ScrollView
+    <!-- FOUR TAB PAGES HOSTED IN-PLACE -->
+    <FrameLayout
+        android:id="@+id/tabContainer"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:clipToPadding="false"
         android:clipChildren="false"
-        android:scrollbars="none"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottomNav">
+        app:layout_constraintBottom_toTopOf="@id/bottomNav" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:clipToPadding="false"
-            android:clipChildren="false"
-            android:descendantFocusability="beforeDescendants"
-            android:focusableInTouchMode="true"
-            android:paddingBottom="28dp">
-
-            <!-- GREEN HEADER -->
-            <LinearLayout
-                android:id="@+id/headerArea"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/bg_header_green"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:paddingTop="24dp"
-                android:paddingBottom="62dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/poppins_semibold"
-                    android:text="@string/brand_kicker"
-                    android:textColor="@color/text_on_green_dim"
-                    android:textSize="11sp"
-                    android:letterSpacing="0.12" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginTop="10dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_bold"
-                            android:text="@string/greeting"
-                            android:textColor="@color/text_on_green"
-                            android:textSize="26sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:fontFamily="@font/poppins_regular"
-                            android:text="@string/greeting_sub"
-                            android:textColor="@color/text_on_green_dim"
-                            android:textSize="13sp" />
-                    </LinearLayout>
-
-                    <FrameLayout
-                        android:layout_width="46dp"
-                        android:layout_height="46dp"
-                        android:background="@drawable/bg_circle_translucent"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:onClick="openNotifications"
-                        android:foreground="?attr/selectableItemBackgroundBorderless">
-
-                        <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_bell"
-                            android:tint="@color/white"
-                            android:contentDescription="@string/cd_notifications" />
-
-                        <View
-                            android:layout_width="9dp"
-                            android:layout_height="9dp"
-                            android:layout_gravity="top|end"
-                            android:layout_marginTop="10dp"
-                            android:layout_marginEnd="11dp"
-                            android:background="@drawable/bg_dot_alert" />
-                    </FrameLayout>
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- STAT CARDS -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:clipToPadding="false"
-                android:clipChildren="false"
-                android:layout_marginTop="-46dp"
-                android:layout_marginStart="@dimen/screen_margin"
-                android:layout_marginEnd="@dimen/screen_margin">
-
-                <com.google.android.material.card.MaterialCardView
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:onClick="openExchanged"
-                    android:foreground="?attr/selectableItemBackground"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="@dimen/half_gap"
-                    app:cardCornerRadius="18dp"
-                    app:cardElevation="5dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardUseCompatPadding="false"
-                    app:strokeWidth="0dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:padding="12dp">
-
-                        <FrameLayout
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
-                            android:background="@drawable/bg_tile_mint">
-
-                            <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_swap"
-                                android:tint="@color/uc_green"
-                                android:contentDescription="@null" />
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="9dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:fontFamily="@font/poppins_bold"
-                                android:id="@+id/statExchanged"
-                                android:text="@string/stat_exchanged_value"
-                                android:textColor="@color/text_primary"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:fontFamily="@font/poppins_regular"
-                                android:text="@string/stat_exchanged_label"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="10sp"
-                                android:maxLines="1"
-                                android:ellipsize="end" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <com.google.android.material.card.MaterialCardView
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:onClick="openActiveListings"
-                    android:foreground="?attr/selectableItemBackground"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="@dimen/half_gap"
-                    app:cardCornerRadius="18dp"
-                    app:cardElevation="5dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardUseCompatPadding="false"
-                    app:strokeWidth="0dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:padding="12dp">
-
-                        <FrameLayout
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
-                            android:background="@drawable/bg_tile_mint">
-
-                            <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_bookmark"
-                                android:tint="@color/uc_green"
-                                android:contentDescription="@null" />
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="9dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:fontFamily="@font/poppins_bold"
-                                android:id="@+id/statListings"
-                                android:text="@string/stat_listings_value"
-                                android:textColor="@color/text_primary"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:fontFamily="@font/poppins_regular"
-                                android:text="@string/stat_listings_label"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="10sp"
-                                android:maxLines="1"
-                                android:ellipsize="end" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-            </LinearLayout>
-
-            <!-- RETURN REMINDER: the most urgent thing you borrowed, filled in by MainActivity -->
-            <LinearLayout
-                android:id="@+id/returnReminder"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/screen_margin"
-                android:layout_marginEnd="@dimen/screen_margin"
-                android:layout_marginTop="@dimen/grid_gap"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_badge_swap"
-                android:padding="14dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground"
-                android:visibility="gone">
-
-                <ImageView
-                    android:id="@+id/reminderIcon"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:src="@drawable/ic_clock"
-                    android:tint="@color/swap_text"
-                    android:contentDescription="@null" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="12dp"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/reminderTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/poppins_semibold"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:id="@+id/reminderDue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="1dp"
-                        android:fontFamily="@font/poppins_regular"
-                        android:textColor="@color/swap_text"
-                        android:textSize="11sp" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_chevron_right"
-                    android:tint="@color/text_secondary"
-                    android:contentDescription="@null" />
-            </LinearLayout>
-
-            <!-- POST AN ITEM -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/grid_gap"
-                android:clickable="true"
-                android:focusable="true"
-                android:onClick="openCreateListing"
-                android:foreground="?attr/selectableItemBackground"
-                android:layout_marginStart="@dimen/screen_margin"
-                android:layout_marginEnd="@dimen/screen_margin"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="5dp"
-                app:cardBackgroundColor="@color/white"
-                app:cardUseCompatPadding="false"
-                app:strokeWidth="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="14dp">
-
-                    <FrameLayout
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:background="@drawable/bg_circle_green">
-
-                        <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_plus"
-                            android:tint="@color/white"
-                            android:contentDescription="@null" />
-                    </FrameLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="12dp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_semibold"
-                            android:text="@string/post_title"
-                            android:textColor="@color/text_primary"
-                            android:textSize="16sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_regular"
-                            android:text="@string/post_sub"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:src="@drawable/ic_chevron_right"
-                        android:tint="@color/text_secondary"
-                        android:contentDescription="@null" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="@dimen/section_gap"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:fontFamily="@font/poppins_bold"
-                    android:text="@string/browse_programs"
-                    android:textColor="@color/text_primary"
-                    android:textSize="18sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/poppins_semibold"
-                    android:text="@string/see_all"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:onClick="openMarket"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:textColor="@color/uc_green"
-                    android:textSize="13sp" />
-            </LinearLayout>
-
-            <!-- One tile per college, filled in by MainActivity. Scrolls sideways. -->
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:clipToPadding="false"
-                android:paddingStart="@dimen/screen_margin"
-                android:paddingEnd="@dimen/screen_margin"
-                android:paddingTop="6dp"
-                android:paddingBottom="10dp"
-                android:scrollbars="none">
-
-                <LinearLayout
-                    android:id="@+id/programRow"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:clipToPadding="false"
-                    android:clipChildren="false" />
-            </HorizontalScrollView>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="@dimen/section_gap"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:fontFamily="@font/poppins_bold"
-                    android:text="@string/fresh_on_campus"
-                    android:textColor="@color/text_primary"
-                    android:textSize="18sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/poppins_semibold"
-                    android:text="@string/view_market"
-                    android:textColor="@color/uc_green"
-                    android:textSize="13sp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:onClick="openMarket"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp" />
-            </LinearLayout>
-
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:paddingStart="@dimen/screen_margin"
-                android:paddingEnd="@dimen/screen_margin"
-                android:paddingTop="6dp"
-                android:paddingBottom="12dp"
-                android:clipToPadding="false"
-                android:clipChildren="false"
-                android:scrollbars="none">
-
-                <!-- Newest listings from other students, filled in by MainActivity. -->
-                <LinearLayout
-                    android:id="@+id/freshRow"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:clipToPadding="false"
-                    android:clipChildren="false" />
-            </HorizontalScrollView>
-
-        </LinearLayout>
-    </ScrollView>
-
-    <!-- BOTTOM NAVIGATION -->
-    <LinearLayout
+    <!-- SINGLE PERSISTENT BOTTOM NAVIGATION WITH CONTINUOUS SPRING PILL -->
+    <FrameLayout
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:background="@color/uc_green"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:elevation="8dp"
         android:paddingBottom="6dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp">
-
-            <FrameLayout
-                android:layout_width="46dp"
-                android:layout_height="30dp"
-                android:background="@drawable/bg_nav_active">
-
-                <ImageView
-                    android:layout_width="21dp"
-                    android:layout_height="21dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_home"
-                    android:tint="@color/white"
-                    android:contentDescription="@null" />
-            </FrameLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:fontFamily="@font/poppins_medium"
-                android:text="@string/nav_home"
-                android:textColor="@color/white"
-                android:textSize="10sp" />
-        </LinearLayout>
+        <!-- One real pill that glides smoothly point-to-point behind the icons -->
+        <View
+            android:id="@+id/navIndicator"
+            android:layout_width="46dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_nav_active" />
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:id="@+id/navSlots"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:onClick="openMarket"
-            android:foreground="?attr/selectableItemBackground">
+            android:orientation="horizontal"
+            android:clipChildren="false"
+            android:clipToPadding="false">
 
-            <ImageView
-                android:layout_width="21dp"
-                android:layout_height="21dp"
-                android:layout_marginTop="5dp"
-                android:src="@drawable/ic_market"
-                android:tint="@color/text_on_green_dim"
-                android:contentDescription="@null" />
-
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/navTab0"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:fontFamily="@font/poppins_medium"
-                android:text="@string/nav_market"
-                android:textColor="@color/text_on_green_dim"
-                android:textSize="10sp" />
-        </LinearLayout>
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clipChildren="false"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:onClick="openHome"
+                android:foreground="?attr/selectableItemBackground">
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:onClick="openChats"
-            android:foreground="?attr/selectableItemBackground">
+                <FrameLayout
+                    android:layout_width="46dp"
+                    android:layout_height="30dp"
+                    android:clipChildren="false">
 
-            <ImageView
-                android:layout_width="21dp"
-                android:layout_height="21dp"
-                android:layout_marginTop="5dp"
-                android:src="@drawable/ic_chat"
-                android:tint="@color/text_on_green_dim"
-                android:contentDescription="@null" />
+                    <ImageView
+                        android:id="@+id/navIcon0"
+                        android:layout_width="21dp"
+                        android:layout_height="21dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_home"
+                        android:tint="@color/white"
+                        android:contentDescription="@null" />
+                </FrameLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/navLabel0"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="@string/nav_home"
+                    android:textColor="@color/white"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/navTab1"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:fontFamily="@font/poppins_medium"
-                android:text="@string/nav_chats"
-                android:textColor="@color/text_on_green_dim"
-                android:textSize="10sp" />
-        </LinearLayout>
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clipChildren="false"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:onClick="openMarket"
+                android:foreground="?attr/selectableItemBackground">
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:onClick="openProfile"
-            android:foreground="?attr/selectableItemBackground">
+                <FrameLayout
+                    android:layout_width="46dp"
+                    android:layout_height="30dp"
+                    android:clipChildren="false">
 
-            <ImageView
-                android:layout_width="21dp"
-                android:layout_height="21dp"
-                android:layout_marginTop="5dp"
-                android:src="@drawable/ic_profile"
-                android:tint="@color/text_on_green_dim"
-                android:contentDescription="@null" />
+                    <ImageView
+                        android:id="@+id/navIcon1"
+                        android:layout_width="21dp"
+                        android:layout_height="21dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_market"
+                        android:tint="@color/text_on_green_dim"
+                        android:contentDescription="@null" />
+                </FrameLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/navLabel1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="@string/nav_market"
+                    android:textColor="@color/text_on_green_dim"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/navTab2"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:fontFamily="@font/poppins_medium"
-                android:text="@string/nav_profile"
-                android:textColor="@color/text_on_green_dim"
-                android:textSize="10sp" />
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clipChildren="false"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:onClick="openChats"
+                android:foreground="?attr/selectableItemBackground">
+
+                <FrameLayout
+                    android:layout_width="46dp"
+                    android:layout_height="30dp"
+                    android:clipChildren="false">
+
+                    <ImageView
+                        android:id="@+id/navIcon2"
+                        android:layout_width="21dp"
+                        android:layout_height="21dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_chat"
+                        android:tint="@color/text_on_green_dim"
+                        android:contentDescription="@null" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/navLabel2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="@string/nav_chats"
+                    android:textColor="@color/text_on_green_dim"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/navTab3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clipChildren="false"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:onClick="openProfile"
+                android:foreground="?attr/selectableItemBackground">
+
+                <FrameLayout
+                    android:layout_width="46dp"
+                    android:layout_height="30dp"
+                    android:clipChildren="false">
+
+                    <ImageView
+                        android:id="@+id/navIcon3"
+                        android:layout_width="21dp"
+                        android:layout_height="21dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_profile"
+                        android:tint="@color/text_on_green_dim"
+                        android:contentDescription="@null" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/navLabel3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="@string/nav_profile"
+                    android:textColor="@color/text_on_green_dim"
+                    android:textSize="10sp" />
+            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

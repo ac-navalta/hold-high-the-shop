@@ -27,6 +27,7 @@
 
     <LinearLayout
         android:id="@+id/brandRow"
+        android:transitionName="@string/transition_brand"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -94,7 +95,9 @@
         android:layout_marginEnd="20dp"
         android:layout_marginBottom="40dp"
         app:cardCornerRadius="24dp"
-        app:cardElevation="6dp"
+        app:cardElevation="2dp"
+        android:outlineSpotShadowColor="@color/shadow_green"
+        android:outlineAmbientShadowColor="@color/shadow_green"
         app:cardBackgroundColor="@color/white"
         app:cardUseCompatPadding="false"
         app:strokeWidth="0dp"
@@ -173,6 +176,7 @@
                     android:autofillHints="emailAddress" />
 
                 <ImageView
+                    android:id="@+id/emailCheck"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_marginStart="8dp"
@@ -205,6 +209,7 @@
                     android:textSize="15sp" />
 
                 <ImageView
+                    android:id="@+id/signInArrow"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:src="@drawable/ic_arrow_right"

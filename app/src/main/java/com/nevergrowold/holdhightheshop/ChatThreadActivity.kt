@@ -1,6 +1,8 @@
 package com.nevergrowold.holdhightheshop
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -10,13 +12,13 @@ import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.isVisible
+import androidx.dynamicanimation.animation.DynamicAnimation
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 
 /**
  * One conversation. Opened from the chat list, from a seller's profile, or
- * right after reserving a listing. The Paolo thread keeps the sample history
- * from the design; other people start with their last message from the list.
+ * right after reserving a listing.
  */
 class ChatThreadActivity : BaseActivity() {
 
@@ -24,6 +26,7 @@ class ChatThreadActivity : BaseActivity() {
     private lateinit var listing: Listing
     private lateinit var messages: LinearLayout
     private lateinit var input: EditText
+    private lateinit var sendButton: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,18 +41,41 @@ class ChatThreadActivity : BaseActivity() {
             ?: Listings.byId(null)
         messages = findViewById(R.id.messageList)
         input = findViewById(R.id.inputMessage)
+        sendButton = findViewById(R.id.btnSend)
 
         bindHeader()
         bindHistory()
+        updateSendReady(ready = false, animate = false)
 
+        input.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                updateSendReady(ready = !s.isNullOrBlank(), animate = true)
+            }
+            override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+            override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+        })
         input.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEND) {
-                sendMessage(input)
+                sendMessage(sendButton)
                 true
             } else {
                 false
             }
         }
+    }
+
+    /** Send button softens slightly while empty and springs vivid when ready to send. */
+    private fun updateSendReady(ready: Boolean, animate: Boolean) {
+        val targetAlpha = if (ready) 1f else 0.48f
+        val targetScale = if (ready) 1f else 0.94f
+        if (!animate) {
+            sendButton.alpha = targetAlpha
+            sendButton.scaleX = targetScale
+            sendButton.scaleY = targetScale
+            return
+        }
+        Motion.spring(sendButton, DynamicAnimation.ALPHA, targetAlpha, Motion.Effects.FAST)
+        Motion.springScale(sendButton, targetScale, Motion.Spatial.SNAPPY)
     }
 
     private fun bindHeader() {
@@ -59,11 +85,10 @@ class ChatThreadActivity : BaseActivity() {
         findViewById<TextView>(R.id.threadStatus).text = getString(
             R.string.thread_status_format,
             getString(if (seller.online) R.string.status_active else R.string.status_away),
-            seller.program
+            seller.program,
         )
         input.hint = getString(R.string.hint_message_format, seller.name.substringBefore(' '))
 
-        // Say who is giving and who is getting, e.g. YOU'RE BORROWING.
         findViewById<TextView>(R.id.stripKicker).setText(Listings.roleKicker(listing))
         findViewById<TextView>(R.id.stripTitle).text = listing.title
         findViewById<TextView>(R.id.stripPrice).text = Listings.priceLabel(this, listing)
@@ -74,9 +99,7 @@ class ChatThreadActivity : BaseActivity() {
 
     private fun bindHistory() {
         if (!isSampleThread()) {
-            // Keep only the "TODAY" label, then start from the last message in the list.
             while (messages.childCount > 1) messages.removeViewAt(1)
-            // Someone who sent a request on your listing: their request opens the chat.
             val request = UserState.requestFrom(seller, listing.id)
             if (request != null) {
                 addBubble(request.message, outgoing = false)
@@ -100,19 +123,28 @@ class ChatThreadActivity : BaseActivity() {
             )
             card.findViewById<TextView>(R.id.systemDetail).text = detail
             messages.addView(card)
-            scrollToEnd()
+            scrollToEnd(smooth = false)
         }
     }
 
     /** Opens the listing this conversation is about. */
     fun openThreadListing(view: View) = openListingById(listing.id)
 
-    /** Send button and the keyboard's send key. */
+    /** Send button and keyboard send key. */
     fun sendMessage(view: View) {
         val text = input.text.toString().trim()
         if (text.isEmpty()) return
         addBubble(text, outgoing = true)
         input.setText("")
+        Motion.tick(view)
+        // Send glyph flicks diagonally toward the sent bubble, then springs home.
+        findViewById<View>(R.id.sendIcon)?.let { icon ->
+            val dp = resources.displayMetrics.density
+            icon.translationX = 0f
+            icon.translationY = 0f
+            Motion.spring(icon, DynamicAnimation.TRANSLATION_X, 0f, Motion.Spatial.EXPRESSIVE, startVelocity = 680f * dp)
+            Motion.spring(icon, DynamicAnimation.TRANSLATION_Y, 0f, Motion.Spatial.EXPRESSIVE, startVelocity = -400f * dp)
+        }
     }
 
     private fun addBubble(text: String, outgoing: Boolean) {
@@ -120,23 +152,38 @@ class ChatThreadActivity : BaseActivity() {
         val bubble = LayoutInflater.from(this).inflate(layout, messages, false)
         bubble.findViewById<TextView>(R.id.bubbleText).text = text
         messages.addView(bubble)
-        scrollToEnd()
+        if (outgoing) Motion.insert(bubble, fromEnd = true)
+        scrollToEnd(smooth = outgoing)
     }
 
     /** Placeholder photo message. Real photos come with the backend. */
     private fun addPhoto() {
-        messages.addView(LayoutInflater.from(this).inflate(R.layout.item_bubble_photo, messages, false))
-        scrollToEnd()
+        val photo = LayoutInflater.from(this).inflate(R.layout.item_bubble_photo, messages, false)
+        messages.addView(photo)
+        Motion.insert(photo, fromEnd = true)
+        Motion.confirm(photo)
+        scrollToEnd(smooth = true)
     }
 
-    private fun scrollToEnd() {
+    private fun scrollToEnd(smooth: Boolean) {
         val scroll = findViewById<ScrollView>(R.id.messagesScroll)
-        scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
+        scroll.post {
+            val targetY = (messages.bottom - scroll.height).coerceAtLeast(0)
+            if (smooth && Motion.enabled(this)) scroll.smoothScrollTo(0, targetY)
+            else scroll.scrollTo(0, targetY)
+        }
     }
 
-    /** The + button: things you can share besides text. */
+    /** The + button: rotates into an X while the actions sheet is open. */
     fun openChatActions(view: View) {
-        Sheets.show(this, R.layout.sheet_chat_actions) { sheet, dialog ->
+        Motion.tick(view)
+        val plus = findViewById<View>(R.id.attachIcon)
+        plus?.let { Motion.rotateTo(it, 45f) }
+        Sheets.show(
+            this,
+            R.layout.sheet_chat_actions,
+            onDismiss = { plus?.let { Motion.rotateTo(it, 0f) } },
+        ) { sheet, dialog ->
             sheet.findViewById<View>(R.id.actionPhoto).setOnClickListener {
                 dialog.dismiss()
                 addPhoto()

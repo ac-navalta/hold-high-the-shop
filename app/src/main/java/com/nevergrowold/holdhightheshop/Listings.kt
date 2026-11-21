@@ -624,6 +624,7 @@ object Listings {
 object UserState {
 
     private val saved = mutableSetOf("item3", "item5")
+    var notificationsRead: Boolean = false
 
     /**
      * A reservation or swap offer Mika made on someone else's listing.

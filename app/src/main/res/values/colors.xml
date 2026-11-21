@@ -23,6 +23,14 @@
     <color name="danger">#C62828</color>
     <color name="danger_light">#FDECEA</color>
 
+    <!-- Neutrals for Material colour roles (switch tracks, dialogs, outlines),
+         taken from the cream so system widgets never fall back to Material's lavender. -->
+    <color name="surface_dim">#EFEBDA</color>
+    <color name="outline">#8F8A78</color>
+
+    <!-- Card shadows lean green instead of grey, so depth reads as part of the palette. -->
+    <color name="shadow_green">#5C05512E</color>
+
     <!-- Swap tags, built from the existing amber accent. -->
     <color name="swap_bg">#FFF5DF</color>
     <color name="swap_text">#8A5A00</color>

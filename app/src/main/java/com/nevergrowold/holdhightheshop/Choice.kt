@@ -1,108 +1,175 @@
 package com.nevergrowold.holdhightheshop
 
+import android.graphics.Color
 import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 
 /**
- * Small helpers for "pick one of these" controls.
+ * Shared selection controls (pills, segmented controls, filter chips, toggle
+ * chips, radio rows).
  *
- * The app has four of them (condition, listing type, report reason, market
- * filter) and they all behave the same way: tapping one option selects it and
- * clears the rest. Keeping the logic here means each screen only has to say
- * which views belong to the group and what the selected style looks like.
+ * Only views whose state actually changed animate, avoiding visual noise on
+ * untouched siblings, and selection never fights the tactile press-release spring.
  */
 object Choice {
 
-    /** Pill buttons such as the Condition options on the create form. */
-    fun pills(views: List<TextView>, selected: Int, onPick: (Int) -> Unit = {}) {
+    /** Pill buttons such as Condition options on Create Listing. */
+    fun pills(views: List<TextView>, selected: Int, onPick: (Int) -> Unit = {}) =
+        bindSingle(views, selected, R.drawable.bg_chip_active, R.drawable.bg_input, false, false, onPick)
+
+    /** Filter chips on Campus Market, Reserve sheet, and Profile Active groups. */
+    fun chips(
+        views: List<TextView>,
+        selected: Int,
+        allowReselect: Boolean = false,
+        onPick: (Int) -> Unit = {},
+    ) = bindSingle(views, selected, R.drawable.bg_chip_active, R.drawable.bg_chip, false, allowReselect, onPick)
+
+    private fun bindSingle(
+        views: List<TextView>,
+        selected: Int,
+        activeBg: Int,
+        inactiveBg: Int,
+        animate: Boolean,
+        allowReselect: Boolean = false,
+        onPick: (Int) -> Unit,
+    ) {
         views.forEachIndexed { index, view ->
+            val isOn = index == selected
+            val wasOn = view.getTag(R.id.choice_on) as? Boolean
+            val shouldAnimate = animate && wasOn != null && wasOn != isOn
+            view.setTag(R.id.choice_on, isOn)
+
             view.setOnClickListener {
-                pills(views, index, onPick)
+                val alreadyOn = view.getTag(R.id.choice_on) == true
+                if (alreadyOn && !allowReselect) return@setOnClickListener
+                Motion.tick(view)
+                if (!alreadyOn) bindSingle(views, index, activeBg, inactiveBg, true, allowReselect, onPick)
                 onPick(index)
             }
-            val isOn = index == selected
-            view.setBackgroundResource(
-                if (isOn) R.drawable.bg_chip_active else R.drawable.bg_input
-            )
-            view.setTextColor(
-                view.context.getColor(if (isOn) R.color.white else R.color.text_primary)
-            )
+
+            if (wasOn == null || wasOn != isOn) {
+                Motion.background(view, if (isOn) activeBg else inactiveBg, shouldAnimate)
+                Motion.textColor(
+                    view,
+                    view.context.getColor(if (isOn) R.color.white else R.color.text_primary),
+                    shouldAnimate,
+                )
+                if (shouldAnimate && isOn) Motion.nudge(view, velocity = 1.55f)
+            }
         }
     }
 
-    /** The Sell / Rent / Swap segmented control. */
-    fun segments(views: List<TextView>, selected: Int, onPick: (Int) -> Unit = {}) {
-        views.forEachIndexed { index, view ->
-            view.setOnClickListener {
-                segments(views, index, onPick)
-                onPick(index)
-            }
-            val isOn = index == selected
-            if (isOn) {
-                view.setBackgroundResource(R.drawable.bg_segment_active)
-            } else {
-                view.setBackgroundColor(android.graphics.Color.TRANSPARENT)
-            }
-            view.setTextColor(
-                view.context.getColor(if (isOn) R.color.white else R.color.text_secondary)
-            )
-        }
-    }
-
-    /** Filter chips on the Campus Market. */
-    fun chips(views: List<TextView>, selected: Int, onPick: (Int) -> Unit = {}) {
-        views.forEachIndexed { index, view ->
-            view.setOnClickListener {
-                chips(views, index, onPick)
-                onPick(index)
-            }
-            val isOn = index == selected
-            view.setBackgroundResource(
-                if (isOn) R.drawable.bg_chip_active else R.drawable.bg_chip
-            )
-            view.setTextColor(
-                view.context.getColor(if (isOn) R.color.white else R.color.text_primary)
-            )
-        }
-    }
-
-    /**
-     * Chips where several can be on at once, such as Condition in the
-     * market filters. Tapping a chip turns it on or off.
-     */
-    fun toggles(views: List<TextView>, selected: Set<Int>, onChange: (Set<Int>) -> Unit) {
+    /** Multi-select toggle chips (Condition / Type in Market filters, Days in Create listing). */
+    fun toggles(
+        views: List<TextView>,
+        selected: Set<Int>,
+        inactiveBg: Int = R.drawable.bg_chip,
+        onChange: (Set<Int>) -> Unit,
+    ) {
         views.forEachIndexed { index, view ->
             val isOn = index in selected
+            val wasOn = view.getTag(R.id.choice_on) as? Boolean
+            val shouldAnimate = wasOn != null && wasOn != isOn
+            view.setTag(R.id.choice_on, isOn)
+
             view.setOnClickListener {
+                Motion.tick(view)
                 onChange(if (isOn) selected - index else selected + index)
             }
-            view.setBackgroundResource(if (isOn) R.drawable.bg_chip_active else R.drawable.bg_chip)
-            view.setTextColor(view.context.getColor(if (isOn) R.color.white else R.color.text_primary))
+
+            if (wasOn == null || wasOn != isOn) {
+                Motion.background(view, if (isOn) R.drawable.bg_chip_active else inactiveBg, shouldAnimate)
+                Motion.textColor(
+                    view,
+                    view.context.getColor(if (isOn) R.color.white else R.color.text_primary),
+                    shouldAnimate,
+                )
+                if (shouldAnimate) Motion.nudge(view, velocity = if (isOn) 1.65f else 0.7f)
+            }
         }
     }
 
-    /** Radio style rows, used by the report reasons. */
-    fun rows(
-        rows: List<View>,
-        icons: List<android.widget.ImageView>,
-        selected: Int,
-        onPick: (Int) -> Unit = {}
-    ) {
-        rows.forEachIndexed { index, row ->
-            row.setOnClickListener {
-                rows(rows, icons, index, onPick)
+    /** Sell / Rent / Swap segmented control with interruptible liquid sliding pill. */
+    fun segments(views: List<TextView>, selected: Int, onPick: (Int) -> Unit = {}) =
+        segments(views, selected, animate = false, onPick = onPick)
+
+    private fun segments(views: List<TextView>, selected: Int, animate: Boolean, onPick: (Int) -> Unit) {
+        val track = views.firstOrNull()?.parent as? ViewGroup
+        val previous = track?.getTag(R.id.choice_on) as? Int
+
+        views.forEachIndexed { index, view ->
+            val isOn = index == selected
+            view.setOnClickListener {
+                val current = track?.getTag(R.id.choice_on) as? Int
+                if (current == index) return@setOnClickListener
+                Motion.tick(view)
+                segments(views, index, animate = true, onPick = onPick)
                 onPick(index)
             }
+            if (!animate || previous == null) {
+                if (isOn) view.setBackgroundResource(R.drawable.bg_segment_active)
+                else view.setBackgroundColor(Color.TRANSPARENT)
+            }
+            val changed = animate && (index == selected || index == previous)
+            Motion.textColor(
+                view,
+                view.context.getColor(if (isOn) R.color.white else R.color.text_secondary),
+                changed,
+            )
+            if (changed && isOn) Motion.nudge(view, velocity = 0.85f)
+        }
+
+        if (animate && track != null && previous != null && previous != selected) {
+            Motion.slideIndicator(track, views[previous], views[selected], R.drawable.bg_segment_active)
+        }
+        track?.setTag(R.id.choice_on, selected)
+    }
+
+    /** Radio-style option rows (Report reasons, Swap items, Review requests, Meetup check). */
+    fun rows(
+        rows: List<View>,
+        icons: List<ImageView>,
+        selected: Int,
+        onPick: (Int) -> Unit = {},
+    ) = rows(rows, icons, selected, animate = false, onPick = onPick)
+
+    private fun rows(
+        rows: List<View>,
+        icons: List<ImageView>,
+        selected: Int,
+        animate: Boolean,
+        onPick: (Int) -> Unit,
+    ) {
+        rows.forEachIndexed { index, row ->
             val isOn = index == selected
-            row.setBackgroundResource(
-                if (isOn) R.drawable.bg_input_selected else R.drawable.bg_input
-            )
-            icons[index].setImageResource(
-                if (isOn) R.drawable.ic_radio_on else R.drawable.ic_radio_off
-            )
-            icons[index].setColorFilter(
-                row.context.getColor(if (isOn) R.color.uc_green else R.color.text_secondary)
-            )
+            val wasOn = row.getTag(R.id.choice_on) as? Boolean
+            val shouldAnimate = animate && wasOn != null && wasOn != isOn
+            row.setTag(R.id.choice_on, isOn)
+
+            row.setOnClickListener {
+                if (row.getTag(R.id.choice_on) == true) return@setOnClickListener
+                Motion.tick(row)
+                rows(rows, icons, index, animate = true, onPick = onPick)
+                onPick(index)
+            }
+
+            if (wasOn == null || wasOn != isOn) {
+                Motion.background(row, if (isOn) R.drawable.bg_input_selected else R.drawable.bg_input, shouldAnimate)
+                val icon = icons[index]
+                val onColor = row.context.getColor(R.color.uc_green)
+                val offColor = row.context.getColor(R.color.text_secondary)
+                icon.setImageResource(if (isOn) R.drawable.ic_radio_on else R.drawable.ic_radio_off)
+                Motion.iconTint(icon, if (isOn) offColor else onColor, if (isOn) onColor else offColor, shouldAnimate)
+                if (shouldAnimate && isOn) {
+                    icon.scaleX = 0.74f
+                    icon.scaleY = 0.74f
+                    Motion.springScale(icon, 1f, Motion.Spatial.EXPRESSIVE)
+                    Motion.nudge(row, velocity = 0.5f)
+                }
+            }
         }
     }
 }

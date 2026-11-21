@@ -37,11 +37,20 @@ class MapActivity : BaseActivity() {
             resources.getQuantityString(R.plurals.map_walk, minutes, minutes)
     }
 
-    fun zoomIn(view: View) = map.zoomBy(1.5f)
+    fun zoomIn(view: View) {
+        Motion.tick(view)
+        map.zoomBy(1.5f)
+    }
 
-    fun zoomOut(view: View) = map.zoomBy(1 / 1.5f)
+    fun zoomOut(view: View) {
+        Motion.tick(view)
+        map.zoomBy(1 / 1.5f)
+    }
 
-    fun recenter(view: View) = map.recenter()
+    fun recenter(view: View) {
+        Motion.tick(view)
+        map.recenter(animate = true)
+    }
 
     companion object {
         const val EXTRA_PLACE = "place"

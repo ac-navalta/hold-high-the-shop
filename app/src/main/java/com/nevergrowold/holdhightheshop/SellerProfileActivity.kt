@@ -23,9 +23,10 @@ class SellerProfileActivity : BaseActivity() {
         findViewById<TextView>(R.id.sellerInitials).text = seller.initials
         findViewById<TextView>(R.id.sellerName).text = seller.name
         findViewById<TextView>(R.id.sellerMeta).text = getString(R.string.seller_meta_format, seller.program, seller.year)
-        findViewById<TextView>(R.id.statRating).text = seller.rating
-        findViewById<TextView>(R.id.statOnTime).text = seller.onTime
-        findViewById<TextView>(R.id.statCompleted).text = seller.completed.toString()
+        val keyBase = seller.name.hashCode() * 31
+        Motion.countUp(findViewById(R.id.statRating), seller.rating, delay = 120, sessionKey = keyBase + 1)
+        Motion.countUp(findViewById(R.id.statOnTime), seller.onTime, delay = 170, sessionKey = keyBase + 2)
+        Motion.countUp(findViewById(R.id.statCompleted), seller.completed.toString(), delay = 220, sessionKey = keyBase + 3)
         findViewById<TextView>(R.id.sellerListingsTitle).text = getString(R.string.seller_listings_format, firstName)
         findViewById<TextView>(R.id.btnMessageSeller).text = getString(R.string.btn_message_seller, firstName)
 

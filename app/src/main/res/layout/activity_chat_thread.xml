@@ -146,7 +146,7 @@
                 android:fontFamily="@font/poppins_semibold"
                 android:text="@string/reserved_item"
                 android:textColor="@color/uc_green"
-                android:textSize="9sp"
+                android:textSize="10sp"
                 android:letterSpacing="0.08" />
 
             <TextView
@@ -233,7 +233,7 @@
                 android:fontFamily="@font/poppins_regular"
                 android:text="@string/msg1_time"
                 android:textColor="@color/text_secondary"
-                android:textSize="9sp" />
+                android:textSize="10sp" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -261,7 +261,7 @@
                 android:fontFamily="@font/poppins_regular"
                 android:text="@string/msg2_time"
                 android:textColor="@color/text_secondary"
-                android:textSize="9sp" />
+                android:textSize="10sp" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -361,6 +361,7 @@
             android:foreground="?attr/selectableItemBackgroundBorderless">
 
             <ImageView
+                android:id="@+id/attachIcon"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_gravity="center"
@@ -391,6 +392,7 @@
             android:autofillHints="" />
 
         <FrameLayout
+            android:id="@+id/btnSend"
             android:layout_width="46dp"
             android:layout_height="46dp"
             android:background="@drawable/bg_circle_green"
@@ -403,6 +405,7 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_gravity="center"
+                android:id="@+id/sendIcon"
                 android:src="@drawable/ic_send"
                 android:tint="@color/white"
                 android:contentDescription="@string/cd_send" />

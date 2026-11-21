@@ -29,5 +29,5 @@
         android:fontFamily="@font/poppins_regular"
         android:text="@string/msg_sent_now"
         android:textColor="@color/text_secondary"
-        android:textSize="9sp" />
+        android:textSize="10sp" />
 </LinearLayout>

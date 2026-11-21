@@ -3,7 +3,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/uc_cream"
@@ -76,7 +75,7 @@
         app:layout_constraintTop_toBottomOf="@id/headerArea"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottomNav">
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -165,7 +164,9 @@
                 android:layout_marginEnd="@dimen/screen_margin"
                 android:layout_marginTop="20dp"
                 app:cardCornerRadius="20dp"
-                app:cardElevation="5dp"
+                app:cardElevation="2dp"
+                android:outlineSpotShadowColor="@color/shadow_green"
+                android:outlineAmbientShadowColor="@color/shadow_green"
                 app:cardBackgroundColor="@color/white"
                 app:cardUseCompatPadding="false"
                 app:strokeWidth="0dp">
@@ -205,7 +206,7 @@
                             android:fontFamily="@font/poppins_regular"
                             android:text="@string/reliability_basis"
                             android:textColor="@color/text_secondary"
-                            android:textSize="9sp" />
+                            android:textSize="10sp" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -354,6 +355,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
+                android:clipChildren="false"
+                android:clipToPadding="false"
                 android:layout_marginTop="@dimen/section_gap"
                 android:paddingStart="@dimen/screen_margin"
                 android:paddingEnd="@dimen/screen_margin">
@@ -365,6 +368,7 @@
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
+                    android:clipChildren="false"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground">
@@ -416,6 +420,7 @@
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
+                    android:clipChildren="false"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground">
@@ -467,6 +472,7 @@
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
+                    android:clipChildren="false"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground">
@@ -561,145 +567,4 @@
 
         </LinearLayout>
     </ScrollView>
-
-    <!-- BOTTOM NAVIGATION -->
-    <LinearLayout
-        android:id="@+id/bottomNav"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="@color/uc_green"
-        android:elevation="8dp"
-        android:paddingBottom="6dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:onClick="openHome"
-            android:foreground="?attr/selectableItemBackground">
-
-            <ImageView
-                android:layout_width="21dp"
-                android:layout_height="21dp"
-                android:layout_marginTop="5dp"
-                android:src="@drawable/ic_home"
-                android:tint="@color/text_on_green_dim"
-                android:contentDescription="@null" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:fontFamily="@font/poppins_medium"
-                android:text="@string/nav_home"
-                android:textColor="@color/text_on_green_dim"
-                android:textSize="10sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:onClick="openMarket"
-            android:foreground="?attr/selectableItemBackground">
-
-            <ImageView
-                android:layout_width="21dp"
-                android:layout_height="21dp"
-                android:layout_marginTop="5dp"
-                android:src="@drawable/ic_market"
-                android:tint="@color/text_on_green_dim"
-                android:contentDescription="@null" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:fontFamily="@font/poppins_medium"
-                android:text="@string/nav_market"
-                android:textColor="@color/text_on_green_dim"
-                android:textSize="10sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:onClick="openChats"
-            android:foreground="?attr/selectableItemBackground">
-
-            <ImageView
-                android:layout_width="21dp"
-                android:layout_height="21dp"
-                android:layout_marginTop="5dp"
-                android:src="@drawable/ic_chat"
-                android:tint="@color/text_on_green_dim"
-                android:contentDescription="@null" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:fontFamily="@font/poppins_medium"
-                android:text="@string/nav_chats"
-                android:textColor="@color/text_on_green_dim"
-                android:textSize="10sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp">
-
-            <FrameLayout
-                android:layout_width="46dp"
-                android:layout_height="30dp"
-                android:background="@drawable/bg_nav_active">
-
-                <ImageView
-                    android:layout_width="21dp"
-                    android:layout_height="21dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_profile"
-                    android:tint="@color/white"
-                    android:contentDescription="@null" />
-            </FrameLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:fontFamily="@font/poppins_medium"
-                android:text="@string/nav_profile"
-                android:textColor="@color/white"
-                android:textSize="10sp" />
-        </LinearLayout>
-    </LinearLayout>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

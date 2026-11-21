@@ -39,13 +39,25 @@ class ListingDetailActivity : BaseActivity() {
 
         listing = Listings.byId(intent.getStringExtra(EXTRA_LISTING))
         bind()
+
+        // Subtle scroll-linked parallax on the photo hero beneath the overlapping details sheet.
+        val scroll = findViewById<android.widget.ScrollView>(R.id.detailScroll)
+        val hero = findViewById<View>(R.id.detailHero)
+        val heroIcon = findViewById<View>(R.id.detailHeroIcon)
+        val fadeSpan = 260f * resources.displayMetrics.density
+        scroll.setOnScrollChangeListener { _, _, y, _, _ ->
+            if (!Motion.enabled(this)) return@setOnScrollChangeListener
+            hero.translationY = y * 0.36f
+            val t = (y / fadeSpan).coerceIn(0f, 1f)
+            heroIcon.alpha = 1f - 0.55f * t
+        }
     }
 
     override fun onResume() {
         super.onResume()
         // Saved or reserved state can change on other screens.
         bindSaved()
-        bindActions()
+        bindActions(animate = false)
     }
 
     private val isMine get() = Listings.isMine(listing)
@@ -100,7 +112,11 @@ class ListingDetailActivity : BaseActivity() {
      * - bought or swapped for: done, Message;
      * - anyone else's open listing: Report / Reserve.
      */
-    private fun bindActions() {
+    private fun bindActions(animate: Boolean = true) {
+        if (animate) {
+            Motion.layoutTransition(findViewById(R.id.detailSheet), durationMs = 220L)
+            Motion.layoutTransition(findViewById(R.id.bottomNav), durationMs = 200L)
+        }
         val closed = UserState.isClosed(listing.id)
         val rental = UserState.rental(listing.id)
         val reservation = UserState.reservation(listing.id)
@@ -330,7 +346,7 @@ class ListingDetailActivity : BaseActivity() {
                 isVisible = true
                 setText(R.string.btn_decline)
                 setOnClickListener {
-                    val request = open.getOrNull(picked) ?: return@setOnClickListener pickFirst()
+                    val request = open.getOrNull(picked) ?: return@setOnClickListener pickFirst(box)
                     MaterialAlertDialogBuilder(this@ListingDetailActivity)
                         .setTitle(getString(R.string.decline_title, request.from.first))
                         .setMessage(getString(R.string.decline_message, request.from.first))
@@ -346,10 +362,11 @@ class ListingDetailActivity : BaseActivity() {
             }
             sheet.findViewById<TextView>(R.id.choosePrimary).apply {
                 setText(R.string.btn_accept)
-                setOnClickListener {
-                    val request = open.getOrNull(picked) ?: return@setOnClickListener pickFirst()
+                setOnClickListener { btn ->
+                    val request = open.getOrNull(picked) ?: return@setOnClickListener pickFirst(box)
                     val conflicts = UserState.offersUsing(listing.id)
                     if (conflicts.isEmpty()) {
+                        Motion.confirm(btn)
                         accept(request)
                         dialog.dismiss()
                         return@setOnClickListener
@@ -361,6 +378,7 @@ class ListingDetailActivity : BaseActivity() {
                         .setMessage(getString(R.string.withdraw_other_message, other.seller.first, other.title, request.from.first))
                         .setNegativeButton(R.string.action_cancel, null)
                         .setPositiveButton(R.string.withdraw_other_confirm) { _, _ ->
+                            Motion.confirm(btn)
                             accept(request)
                             dialog.dismiss()
                         }
@@ -370,7 +388,8 @@ class ListingDetailActivity : BaseActivity() {
         }
     }
 
-    private fun pickFirst() {
+    private fun pickFirst(box: View) {
+        Motion.shake(box)
         Toast.makeText(this, R.string.toast_pick_request, Toast.LENGTH_SHORT).show()
     }
 
@@ -412,12 +431,20 @@ class ListingDetailActivity : BaseActivity() {
             val error = sheet.findViewById<TextView>(R.id.codeError)
             fun check() {
                 val typed = input.text.toString()
-                error.isVisible = typed != expected
+                val wrong = typed != expected
+                Motion.setVisiblePop(error, wrong)
                 when {
-                    typed.length < 4 -> error.setText(R.string.code_error_short)
-                    typed != expected -> error.text = getString(R.string.code_error_wrong, first)
+                    typed.length < 4 -> {
+                        error.setText(R.string.code_error_short)
+                        Motion.shake(input)
+                    }
+                    wrong -> {
+                        error.text = getString(R.string.code_error_wrong, first)
+                        Motion.shake(input)
+                    }
                     else -> {
                         hideKeyboard(input)
+                        Motion.confirm(input)
                         dialog.dismiss()
                         completeHandover(deal, Exchange.PROOF_CODE)
                     }
@@ -434,6 +461,7 @@ class ListingDetailActivity : BaseActivity() {
                     .setNegativeButton(R.string.action_cancel, null)
                     .setPositiveButton(R.string.btn_confirm_handover) { _, _ ->
                         hideKeyboard(input)
+                        Motion.confirm(input)
                         dialog.dismiss()
                         completeHandover(deal, Exchange.PROOF_MANUAL)
                     }
@@ -453,7 +481,7 @@ class ListingDetailActivity : BaseActivity() {
             else -> notify(
                 getString(if (listing.isSwap) R.string.toast_swapped_with else R.string.toast_sold_to, first),
                 getString(R.string.action_view)
-            ) { switchTab(ProfileActivity::class.java) { putExtra(EXTRA_TAB, ProfileActivity.TAB_COMPLETED) } }
+            ) { switchTab(MainActivity.TAB_PROFILE) { putExtra(EXTRA_TAB, ProfileActivity.TAB_COMPLETED) } }
         }
     }
 
@@ -539,7 +567,10 @@ class ListingDetailActivity : BaseActivity() {
                                 }
                                 .show()
                         }
-                        else -> Toast.makeText(this@ListingDetailActivity, R.string.toast_pick_option, Toast.LENGTH_SHORT).show()
+                        else -> {
+                            Motion.shake(box)
+                            Toast.makeText(this@ListingDetailActivity, R.string.toast_pick_option, Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }
@@ -653,13 +684,15 @@ class ListingDetailActivity : BaseActivity() {
     fun toggleSave(view: View) {
         val nowSaved = !UserState.isSaved(listing.id)
         UserState.setSaved(listing.id, nowSaved)
-        bindSaved()
+        Motion.replaceIcon(findViewById(R.id.saveIcon)) { bindSaved() }
+        if (nowSaved) Motion.confirm(view) else Motion.tick(view)
         if (nowSaved) {
             notify(getString(R.string.toast_saved), getString(R.string.action_view)) { openSaved(view) }
         } else {
             notify(getString(R.string.toast_unsaved), getString(R.string.action_undo)) {
                 UserState.setSaved(listing.id, true)
-                bindSaved()
+                Motion.replaceIcon(findViewById(R.id.saveIcon)) { bindSaved() }
+                Motion.confirm(view)
             }
         }
     }
@@ -675,7 +708,8 @@ class ListingDetailActivity : BaseActivity() {
             sheet.findViewById<TextView>(R.id.shareItemTitle).text = listing.title
             sheet.findViewById<TextView>(R.id.shareItemPrice).text = Listings.priceLabel(this, listing)
             sheet.findViewById<TextView>(R.id.shareLink).text = link
-            sheet.findViewById<View>(R.id.shareCopy).setOnClickListener {
+            sheet.findViewById<View>(R.id.shareCopy).setOnClickListener { btn ->
+                Motion.confirm(btn)
                 val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.setPrimaryClip(ClipData.newPlainText(listing.title, link))
                 dialog.dismiss()
@@ -703,18 +737,21 @@ class ListingDetailActivity : BaseActivity() {
             Choice.rows(rows, rows.map { it.findViewById(R.id.optionRadio) }, person) { person = it }
 
             val dueText = sheet.findViewById<TextView>(R.id.lendDue)
-            fun bindDue() {
-                dueText.text = getString(R.string.lend_due_format, Rentals.dateLabel(System.currentTimeMillis() + weeks * Rentals.WEEK_MS))
+            fun bindDue(roll: Boolean = false) {
+                val text = getString(R.string.lend_due_format, Rentals.dateLabel(System.currentTimeMillis() + weeks * Rentals.WEEK_MS))
+                if (roll) Motion.rollText(dueText, text) else dueText.text = text
             }
             val chips = addChips(sheet.findViewById(R.id.lendWeeks), weekOptions.map { Listings.weeksLabel(this, it) })
-            Choice.chips(chips, 0) { weeks = weekOptions[it]; bindDue() }
-            bindDue()
+            Choice.chips(chips, 0) { weeks = weekOptions[it]; bindDue(roll = true) }
+            bindDue(roll = false)
 
-            sheet.findViewById<View>(R.id.lendStart).setOnClickListener {
+            sheet.findViewById<View>(R.id.lendStart).setOnClickListener { btn ->
                 if (person < 0) {
+                    Motion.shake(box)
                     Toast.makeText(this, R.string.toast_pick_borrower, Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
+                Motion.confirm(btn)
                 UserState.lend(listing, people[person], weeks)
                 bindActions()
                 dialog.dismiss()
@@ -797,7 +834,13 @@ class ListingDetailActivity : BaseActivity() {
             placeText.text = Listings.MEETUP_POINTS[place]
             val placeRow = sheet.findViewById<View>(R.id.reservePlaceRow)
             placeRow.setOnClickListener {
-                Dropdown.show(placeRow, Listings.MEETUP_POINTS, place, icons = listOf(R.drawable.ic_location)) {
+                Dropdown.show(
+                    placeRow,
+                    Listings.MEETUP_POINTS,
+                    place,
+                    icons = listOf(R.drawable.ic_location),
+                    rotateChevron = true,
+                ) {
                     place = it
                     placeText.text = Listings.MEETUP_POINTS[it]
                 }
@@ -805,21 +848,22 @@ class ListingDetailActivity : BaseActivity() {
 
             // Times depend on the day: each day shows the seller's free slots for it.
             val timeBox = sheet.findViewById<LinearLayout>(R.id.reserveTimes)
-            fun bindTimes() {
+            fun bindTimes(animate: Boolean = false) {
                 val day = picked ?: return
                 val slots = listing.availability.slots(day.weekday).map { Availability.time(it) }
+                if (animate) Motion.layoutTransition(timeBox, durationMs = 180L)
                 timeBox.removeAllViews()
                 val chips = addChips(timeBox, slots + getString(R.string.chip_pick_time))
                 val selected = slots.indexOf(timeLabel).let { if (it < 0 && timeLabel != null) slots.size else it }
                 if (selected == slots.size) chips.last().text = timeLabel
-                Choice.chips(chips, selected) { index ->
+                Choice.chips(chips, selected, allowReselect = true) { index ->
                     if (index < slots.size) {
                         timeLabel = slots[index]
                     } else {
                         bindTimes() // keep the old choice until a time is confirmed
                         pickTime(day.weekday) { label ->
                             timeLabel = label
-                            bindTimes()
+                            bindTimes(animate = true)
                         }
                     }
                 }
@@ -827,19 +871,20 @@ class ListingDetailActivity : BaseActivity() {
 
             // Rent: how long, with the return date and total.
             val returnBy = sheet.findViewById<TextView>(R.id.reserveReturnBy)
-            fun bindReturn() {
+            fun bindReturn(roll: Boolean = false) {
                 val start = picked?.millis ?: System.currentTimeMillis()
-                returnBy.text = getString(
+                val text = getString(
                     R.string.rent_return_total_format,
                     Rentals.dateLabel(start + weeks * Rentals.WEEK_MS),
-                    Listings.price(listing.price * weeks)
+                    Listings.price(listing.price * weeks),
                 )
+                if (roll) Motion.rollText(returnBy, text) else returnBy.text = text
             }
             // Quick picks, plus a last chip that opens the full calendar.
             val dayChips = addChips(sheet.findViewById(R.id.reserveDays), days.map { it.label } + getString(R.string.chip_pick_date))
             fun bindDays() {
                 val selected = days.indexOf(picked).let { if (it < 0 && picked != null) days.size else it }
-                Choice.chips(dayChips, selected) { index ->
+                Choice.chips(dayChips, selected, allowReselect = true) { index ->
                     if (index < days.size) {
                         picked = days[index]
                     } else {
@@ -848,51 +893,53 @@ class ListingDetailActivity : BaseActivity() {
                             dayChips.last().text = day.label
                             picked = day
                             bindDays()
-                            bindTimes()
-                            if (listing.isRent) bindReturn()
+                            bindTimes(animate = true)
+                            if (listing.isRent) bindReturn(roll = true)
                         }
                         return@chips
                     }
                     // A time that the new day does not offer is cleared.
                     if (picked?.let { listing.availability.isFreeAt(it.weekday, minutesOf(timeLabel)) } != true) timeLabel = null
-                    bindTimes()
-                    if (listing.isRent) bindReturn()
+                    bindTimes(animate = true)
+                    if (listing.isRent) bindReturn(roll = true)
                 }
             }
             if (listing.isRent) {
                 sheet.findViewById<View>(R.id.reserveRentSection).isVisible = true
                 sheet.findViewById<TextView>(R.id.reserveRentMax).text = getString(
                     R.string.rent_max_format, listing.seller.name.substringBefore(' '),
-                    Listings.weeksLabel(this, listing.maxWeeks)
+                    Listings.weeksLabel(this, listing.maxWeeks),
                 )
                 val weekChips = addChips(sheet.findViewById(R.id.reserveWeeks), weekOptions.map { Listings.weeksLabel(this, it) })
                 Choice.chips(weekChips, 0) {
                     weeks = weekOptions[it]
-                    bindReturn()
+                    bindReturn(roll = true)
                 }
-                bindReturn()
+                bindReturn(roll = false)
             }
 
             bindDays()
-            bindTimes()
+            bindTimes(animate = false)
 
-            sheet.findViewById<View>(R.id.reserveConfirm).setOnClickListener {
+            sheet.findViewById<View>(R.id.reserveConfirm).setOnClickListener { btn ->
                 val pickedDay = picked?.label
                 val pickedTime = timeLabel
                 if (pickedDay == null || pickedTime == null) {
+                    Motion.shake(if (pickedDay == null) sheet.findViewById(R.id.reserveDays) else timeBox)
                     Toast.makeText(this, R.string.toast_pick_day_time, Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
+                Motion.confirm(btn)
                 val summary = if (listing.isRent) {
                     getString(
                         R.string.rent_summary_format, Listings.MEETUP_POINTS[place], pickedDay, pickedTime,
-                        Listings.weeksLabel(this, weeks)
+                        Listings.weeksLabel(this, weeks),
                     )
                 } else {
                     getString(R.string.sys_reserved_detail, Listings.MEETUP_POINTS[place], pickedDay, pickedTime)
                 }
                 UserState.setReserved(
-                    listing.id, summary, if (listing.isRent) weeks else 0, meetMillis(picked!!, pickedTime)
+                    listing.id, summary, if (listing.isRent) weeks else 0, meetMillis(picked!!, pickedTime),
                 )
                 bindActions()
                 dialog.dismiss()
@@ -902,7 +949,7 @@ class ListingDetailActivity : BaseActivity() {
                         .putExtra(EXTRA_SELLER, listing.seller.name)
                         .putExtra(EXTRA_LISTING, listing.id)
                         .putExtra(EXTRA_RESERVED, true)
-                        .putExtra(ChatThreadActivity.EXTRA_RESERVED_DETAIL, summary)
+                        .putExtra(ChatThreadActivity.EXTRA_RESERVED_DETAIL, summary),
                 )
             }
         }
@@ -1012,11 +1059,13 @@ class ListingDetailActivity : BaseActivity() {
             }
             Choice.rows(rows, rows.map { it.findViewById(R.id.optionRadio) }, picked) { picked = it }
 
-            sheet.findViewById<View>(R.id.swapSend).setOnClickListener {
+            sheet.findViewById<View>(R.id.swapSend).setOnClickListener { btn ->
                 if (picked < 0) {
+                    Motion.shake(box)
                     Toast.makeText(this, R.string.toast_pick_swap_item, Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
+                Motion.confirm(btn)
                 val summary = getString(R.string.swap_summary_format, mine[picked].title, listing.title)
                 UserState.setReserved(listing.id, summary, offerId = mine[picked].id)
                 bindActions()
