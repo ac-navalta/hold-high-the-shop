@@ -16,6 +16,7 @@ class MainActivity : BaseActivity() {
 
     /** The overdue icon's calm breathing loop; only runs while visible. */
     private var reminderPulse: Animator? = null
+    private var lastFreshIds: List<String> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,14 +78,19 @@ class MainActivity : BaseActivity() {
             Motion.countUp(active, activeValue, delay = 150)
         }
 
-        // Fresh on campus: the newest listings from other students.
-        val fresh = findViewById<LinearLayout>(R.id.freshRow)
-        fresh.removeAllViews()
-        Listings.open().sortedBy { it.postedDaysAgo }.take(FRESH_COUNT).forEach { listing ->
-            val card = listingCard(fresh, listing)
-            card.layoutParams = LinearLayout.LayoutParams(dp(this, 172), LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { if (fresh.childCount > 0) marginStart = resources.getDimensionPixelSize(R.dimen.grid_gap) }
-            fresh.addView(card)
+        // Fresh on campus: only rebuild cards when the newest open listings actually change.
+        val freshItems = Listings.open().sortedBy { it.postedDaysAgo }.take(FRESH_COUNT)
+        val freshIds = freshItems.map { it.id }
+        if (freshIds != lastFreshIds) {
+            lastFreshIds = freshIds
+            val fresh = findViewById<LinearLayout>(R.id.freshRow)
+            fresh.removeAllViews()
+            freshItems.forEach { listing ->
+                val card = listingCard(fresh, listing)
+                card.layoutParams = LinearLayout.LayoutParams(dp(this, 172), LinearLayout.LayoutParams.WRAP_CONTENT)
+                    .apply { if (fresh.childCount > 0) marginStart = resources.getDimensionPixelSize(R.dimen.grid_gap) }
+                fresh.addView(card)
+            }
         }
     }
 

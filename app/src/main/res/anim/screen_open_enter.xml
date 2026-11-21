@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Push: incoming screen glides swiftly from the right with M3 emphasized deceleration. -->
-<translate xmlns:android="http://schemas.android.com/apk/res/android"
-    android:zAdjustment="top"
-    android:fromXDelta="100%"
-    android:toXDelta="0"
-    android:duration="300"
-    android:interpolator="@interpolator/emphasized_decelerate" />
+<!-- Modern Shared-Axis X push: restrained glide with crisp fade-in (sleek, never harsh). -->
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <translate
+        android:zAdjustment="top"
+        android:fromXDelta="16%"
+        android:toXDelta="0%"
+        android:duration="250"
+        android:interpolator="@interpolator/emphasized_decelerate" />
+    <alpha
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0"
+        android:duration="130"
+        android:interpolator="@interpolator/ease_out" />
+</set>

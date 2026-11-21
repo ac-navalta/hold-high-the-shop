@@ -25,6 +25,7 @@ class ProfileActivity : BaseActivity() {
     /** Cached group ids currently rendered as chips so tapping a chip animates in-place. */
     private var renderedGroupIds: List<Int> = emptyList()
     private var renderedGroupChips: List<TextView> = emptyList()
+    private var lastRenderSignature: Any? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,6 +100,19 @@ class ProfileActivity : BaseActivity() {
         Motion.rollText(findViewById(R.id.tab1Count), (borrowing.size + lending.size + reserved.size + mine.size).toString())
         Motion.rollText(findViewById(R.id.tab2Count), completed.size.toString())
         Motion.rollText(findViewById(R.id.tab3Count), saved.size.toString())
+
+        val signature = listOf(
+            selected,
+            group,
+            saved.map { it.id },
+            mine.map { Triple(it.id, UserState.accepted(it.id)?.meetMillis, UserState.pending(it.id).size) },
+            reserved.map { Pair(it.id, UserState.reservation(it.id)?.meetMillis) },
+            borrowing.map { Triple(it.first.id, it.second.dueMillis, it.second.returnPending) },
+            lending.map { Triple(it.first.id, it.second.dueMillis, it.second.returnPending) },
+            completed.map { Triple(it.id, it.yourRating, UserState.issue(it.id)?.ref) },
+        )
+        if (!changed && !fromGroupFilter && signature == lastRenderSignature) return
+        lastRenderSignature = signature
 
         findViewById<View>(R.id.activeFiltersScroll).isVisible = selected == TAB_ACTIVE
         val list = findViewById<LinearLayout>(R.id.profileList)

@@ -26,13 +26,22 @@ object TouchTargets {
 
     fun install(root: View) {
         scan(root)
+        var pending = false
+        val runScan = Runnable {
+            pending = false
+            if (root.isAttachedToWindow) scan(root)
+        }
         root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 if (!root.isAttachedToWindow) {
+                    root.removeCallbacks(runScan)
                     root.viewTreeObserver.removeOnGlobalLayoutListener(this)
                     return
                 }
-                scan(root)
+                if (!pending) {
+                    pending = true
+                    root.post(runScan)
+                }
             }
         })
     }

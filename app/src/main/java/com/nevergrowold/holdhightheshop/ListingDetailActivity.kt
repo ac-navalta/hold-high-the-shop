@@ -35,15 +35,22 @@ class ListingDetailActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_listing_detail)
-        // Opened from a card: grow out of it, and shrink back into it on Back.
-        zoom = ZoomTransition.enter(this)
-        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() = goBack(window.decorView)
-        })
         BarInsets.apply(this)
 
         listing = Listings.byId(intent.getStringExtra(EXTRA_LISTING))
         bind()
+
+        // Calm, sleek arrival settle on the detail sheet (no bounce, no blank flash).
+        if (Motion.enabled(this)) {
+            val sheet = findViewById<View>(R.id.detailSheet)
+            sheet.translationY = 8f * resources.displayMetrics.density
+            sheet.animate()
+                .translationY(0f)
+                .setDuration(220)
+                .setInterpolator(Motion.EASE_OUT)
+                .withLayer()
+                .start()
+        }
 
         // Subtle scroll-linked parallax on the photo hero beneath the overlapping details sheet.
         val scroll = findViewById<android.widget.ScrollView>(R.id.detailScroll)
@@ -56,11 +63,6 @@ class ListingDetailActivity : BaseActivity() {
             val t = (y / fadeSpan).coerceIn(0f, 1f)
             heroIcon.alpha = 1f - 0.55f * t
         }
-    }
-
-    override fun onDestroy() {
-        zoom?.dispose()
-        super.onDestroy()
     }
 
     override fun onResume() {
@@ -100,13 +102,6 @@ class ListingDetailActivity : BaseActivity() {
         getString(R.string.you_free_format, listing.availability.label())
     } else {
         getString(R.string.seller_free_format, listing.seller.name.substringBefore(' '), listing.availability.label())
-    }
-
-    /** Set when this screen grew out of a card. */
-    private var zoom: ZoomTransition.Zoom? = null
-
-    override fun goBack(view: View) {
-        zoom?.close() ?: finish()
     }
 
     private fun bindSaved() {

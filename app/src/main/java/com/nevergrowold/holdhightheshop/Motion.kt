@@ -39,7 +39,6 @@ import androidx.dynamicanimation.animation.FloatValueHolder
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
 import com.google.android.material.card.MaterialCardView
-import kotlin.math.abs
 
 /**
  * Shared physics-based motion system built around Material 3 Expressive tokens
@@ -239,13 +238,22 @@ object Motion {
      */
     fun installPress(root: View) {
         scanForPress(root)
+        var pending = false
+        val runScan = Runnable {
+            pending = false
+            if (root.isAttachedToWindow) scanForPress(root)
+        }
         val listener = object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 if (!root.isAttachedToWindow) {
+                    root.removeCallbacks(runScan)
                     root.viewTreeObserver.removeOnGlobalLayoutListener(this)
                     return
                 }
-                scanForPress(root)
+                if (!pending) {
+                    pending = true
+                    root.post(runScan)
+                }
             }
         }
         root.viewTreeObserver.addOnGlobalLayoutListener(listener)
@@ -501,7 +509,7 @@ object Motion {
 
     /**
      * Suppresses the open window transition on API 34+ (called on the
-     * destination Activity inside `onCreate` / `ZoomTransition.enter`).
+     * destination tab Activity inside `onCreate`).
      */
     fun noOpenTransition(activity: Activity) {
         if (Build.VERSION.SDK_INT >= 34) {
@@ -510,33 +518,24 @@ object Motion {
     }
 
     /**
-     * Suppresses the pending transition right after `startActivity` on API < 34
-     * and when bringing an existing tab Activity forward with `CLEAR_TOP`.
+     * Suppresses the pending transition right after `startActivity` for peer
+     * tab handoffs across API levels.
      */
     @Suppress("DEPRECATION")
     fun noPendingTransition(activity: Activity) {
         activity.overridePendingTransition(0, 0)
     }
 
-    /** Finishes [activity] without a default slide-out animation on all API levels. */
-    @Suppress("DEPRECATION")
-    fun finishWithoutTransition(activity: Activity) {
-        if (Build.VERSION.SDK_INT >= 34) {
-            activity.overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, 0, 0)
-            activity.finish()
-        } else {
-            activity.finish()
-            activity.overridePendingTransition(0, 0)
-        }
-    }
+    /** Taut, sleek spring exclusively for the bottom-nav pill glide (zero bounce/stretch). */
+    private val NAV_PILL_SPEC = SpringSpec(stiffness = 950f, dampingRatio = 0.90f)
 
     /**
-     * Plays a cohesive peer-tab arrival:
-     * - The green bottom bar stays 100% locked with zero ghosting;
-     * - ONLY the translucent indicator pill glides from [from] to [to] with
-     *   subtle velocity-proportional stretch (icons never move or stretch);
-     * - The active tab icon pops crisply in place;
-     * - The page body glides gently from the incoming direction and fades in.
+     * Plays a sleek, flash-free peer-tab handoff:
+     * - The green bottom bar AND top header stay 100% solid (never flashing cream/white);
+     * - The translucent pill glides briskly behind the icons on a taut spring (zero stretch);
+     * - The active icon gives a subtle crisp micro-settle in place;
+     * - Only the scrollable page body sharpens softly (`0.88 -> 1.0`, `4dp -> 0`) on a GPU
+     *   layer in 115ms so content is visible on frame one with zero stutter or buffering.
      */
     fun navSlide(activity: Activity, from: Int, to: Int) {
         if (!enabled(activity)) return
@@ -545,29 +544,14 @@ object Motion {
         val activeIcon = activity.findViewById<View>(R.id.navActiveIcon)
         val root = activity.findViewById<ViewGroup>(R.id.main) ?: return
         val dp = activity.resources.displayMetrics.density
-        val direction = if (to > from) 1 else -1
 
-        // Glide page content (excluding the locked bottom bar and FAB).
-        val pageViews = (0 until root.childCount)
+        // Keep bottom bar AND green header bar completely opaque — only gently settle the body.
+        val pageBodies = (0 until root.childCount)
             .map { root.getChildAt(it) }
-            .filter { it !== nav && it.id != R.id.fabPost }
-        pageViews.forEach { v ->
-            cancelAllSprings(v)
-            v.translationX = direction * 18f * dp
-            v.alpha = 0f
-        }
+            .filter { it !== nav && it.id != R.id.headerArea && it.id != R.id.fabPost }
+
         val fab = activity.findViewById<View>(R.id.fabPost)
         val animateFab = fab != null && fab.getTag(R.id.motion_reveal_state) != false
-        if (animateFab) {
-            cancelAllSprings(fab)
-            fab.scaleX = 0.88f
-            fab.scaleY = 0.88f
-            fab.translationY = 12f * dp
-            fab.alpha = 0f
-        }
-
-        cancelAllSprings(pill)
-        pill.alpha = 0f
 
         nav.clipChildren = false
         for (i in 0 until nav.childCount) {
@@ -582,53 +566,55 @@ object Motion {
             val toSlot = nav.getChildAt(to)
             if (fromSlot != null && toSlot != null) {
                 val dx = (fromSlot.left + fromSlot.width * 0.5f) - (toSlot.left + toSlot.width * 0.5f)
+                cancelAllSprings(pill)
                 pill.alpha = 1f
-                pill.translationX = dx
                 pill.scaleX = 1f
-                pill.pivotX = pill.width * 0.5f
-                pill.pivotY = pill.height * 0.5f
-
-                // Velocity-driven stretch on the pill ONLY (never the icon).
-                // Listeners MUST be added before start() per DynamicAnimation contract.
-                cancelSpring(pill, DynamicAnimation.TRANSLATION_X)
-                ensureAttachCleanup(pill)
-                val pillAnim = SpringAnimation(pill, DynamicAnimation.TRANSLATION_X).apply {
-                    configureMinVisibleChange(this, DynamicAnimation.TRANSLATION_X)
-                    spring = SpringForce(0f).apply {
-                        stiffness = Spatial.RESPONSIVE.stiffness
-                        dampingRatio = Spatial.RESPONSIVE.dampingRatio
-                    }
-                    PillStretch(pill, dp).attach(this)
-                }
-                pill.setTag(R.id.spring_translation_x, pillAnim)
-                pillAnim.start()
+                pill.translationX = dx
+                spring(pill, DynamicAnimation.TRANSLATION_X, 0f, NAV_PILL_SPEC)
 
                 activeIcon?.let { icon ->
                     cancelAllSprings(icon)
-                    icon.scaleX = 0.86f
-                    icon.scaleY = 0.86f
-                    icon.alpha = 0.65f
+                    icon.scaleX = 0.92f
+                    icon.scaleY = 0.92f
                     springScale(icon, 1f, Spatial.SNAPPY)
-                    spring(icon, DynamicAnimation.ALPHA, 1f, Effects.FAST)
-                }
-
-                (toSlot as? ViewGroup)?.getChildAt(1)?.let { label ->
-                    cancelAllSprings(label)
-                    label.translationY = 2.5f * dp
-                    spring(label, DynamicAnimation.TRANSLATION_Y, 0f, Spatial.SNAPPY)
                 }
             } else {
                 pill.alpha = 1f
+                pill.translationX = 0f
             }
 
-            pageViews.forEach { v ->
-                spring(v, DynamicAnimation.TRANSLATION_X, 0f, Spatial.STANDARD)
-                spring(v, DynamicAnimation.ALPHA, 1f, Effects.FAST)
+            pageBodies.forEach { body ->
+                body.animate().cancel()
+                cancelAllSprings(body)
+                body.translationX = 0f
+                body.translationY = 4f * dp
+                body.alpha = 0.88f
+                body.animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(115)
+                    .setStartDelay(0)
+                    .setInterpolator(EASE_OUT)
+                    .withLayer()
+                    .start()
             }
+
             if (animateFab) {
-                spring(fab, DynamicAnimation.ALPHA, 1f, Effects.FAST)
-                spring(fab, DynamicAnimation.TRANSLATION_Y, 0f, Spatial.RESPONSIVE)
-                springScale(fab, 1f, Spatial.RESPONSIVE)
+                fab.animate().cancel()
+                cancelAllSprings(fab)
+                fab.alpha = 0.88f
+                fab.scaleX = 0.94f
+                fab.scaleY = 0.94f
+                fab.translationY = 0f
+                fab.animate()
+                    .alpha(1f)
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(125)
+                    .setStartDelay(0)
+                    .setInterpolator(EASE_OUT)
+                    .withLayer()
+                    .start()
             }
         }
 
@@ -642,25 +628,6 @@ object Motion {
                     return true
                 }
             })
-        }
-    }
-
-    private class PillStretch(private val pill: View, private val dp: Float) :
-        DynamicAnimation.OnAnimationUpdateListener,
-        DynamicAnimation.OnAnimationEndListener {
-        fun attach(anim: SpringAnimation) {
-            anim.addUpdateListener(this)
-            anim.addEndListener(this)
-        }
-
-        override fun onAnimationUpdate(animation: DynamicAnimation<*>?, value: Float, velocity: Float) {
-            pill.scaleX = 1f + (abs(velocity) / (2800f * dp)).coerceIn(0f, 0.18f)
-        }
-
-        override fun onAnimationEnd(animation: DynamicAnimation<*>?, canceled: Boolean, value: Float, velocity: Float) {
-            animation?.removeUpdateListener(this)
-            animation?.removeEndListener(this)
-            if (!canceled) pill.scaleX = 1f
         }
     }
 

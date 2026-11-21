@@ -12,10 +12,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 /**
  * Shared behaviour for every screen in the app.
  *
- * The bottom navigation appears on several layouts, so the handlers for it
- * live here instead of being copied into each Activity. Tab switches use
- * CLEAR_TOP so moving between Home, Market, Chats and Profile reuses the
- * screen that is already open rather than stacking another copy of it.
+ * The bottom navigation appears on the four tab screens, so the handlers live
+ * here. Peer tab switches use `REORDER_TO_FRONT` so once visited, Home, Market,
+ * Chats and Profile stay warm in memory for instant, flash-free handoffs.
  */
 open class BaseActivity : AppCompatActivity() {
 
@@ -37,19 +36,28 @@ open class BaseActivity : AppCompatActivity() {
 
     override fun onPostCreate(savedInstanceState: android.os.Bundle?) {
         super.onPostCreate(savedInstanceState)
+        val tabIndex = currentTab()
+        if (tabIndex >= 0) {
+            onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (tabIndex > 0) switchTab(MainActivity::class.java)
+                    else finishAffinity()
+                }
+            })
+        }
         arriveOnTab(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.hasExtra(EXTRA_FROM_TAB)) Motion.noOpenTransition(this)
         arriveOnTab(intent)
     }
 
     /**
-     * On tab screens: arriving from another tab, the translucent pill glides
-     * smoothly behind the icons while the page body drifts in directionally and
-     * the green bottom bar stays completely locked. Arriving fresh, the pill
-     * settles gently into place.
+     * On tab screens: arriving from another tab glides the translucent pill
+     * briskly behind the icons while keeping the header and bottom bar rock-solid.
      */
     private fun arriveOnTab(intent: Intent?) {
         val pill = findViewById<View>(R.id.navIndicator) ?: return
@@ -100,13 +108,8 @@ open class BaseActivity : AppCompatActivity() {
         )
     }
 
-    /**
-     * Opens a listing from its card: the card expands into the listing screen,
-     * and Back shrinks the screen smoothly into the card again ([ZoomTransition]).
-     */
-    fun openListingFromCard(card: View, id: String) {
-        ZoomTransition.launch(this, card, Intent(this, ListingDetailActivity::class.java).putExtra(EXTRA_LISTING, id))
-    }
+    /** Opens a listing from its card using the app's sleek Shared-Axis transition. */
+    fun openListingFromCard(card: View, id: String) = openListingById(id)
 
     /** Opens the saved items list. */
     fun openSaved(view: View) {
@@ -141,20 +144,27 @@ open class BaseActivity : AppCompatActivity() {
             .show()
     }
 
-    /** Closes the current screen (the back arrow). Screens with their own exit motion override it. */
+    /** Closes the current screen (the back arrow). */
     open fun goBack(view: View) {
         finish()
     }
 
     protected fun switchTab(target: Class<*>, extras: Intent.() -> Unit = {}) {
         val intent = Intent(this, target)
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         intent.extras()
         if (javaClass == target && intent.extras == null) return
-        currentTab().takeIf { it >= 0 }?.let { intent.putExtra(EXTRA_FROM_TAB, it) }
-        Motion.tick(window.decorView)
-        startActivity(intent)
-        Motion.noPendingTransition(this)
+        val fromTab = currentTab()
+        if (fromTab >= 0) {
+            intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NO_ANIMATION
+            intent.putExtra(EXTRA_FROM_TAB, fromTab)
+            Motion.tick(window.decorView)
+            startActivity(intent)
+            Motion.noPendingTransition(this)
+        } else {
+            intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            startActivity(intent)
+            finish()
+        }
     }
 
     /** A product card (photo, condition, price, title, program) that opens the listing. */

@@ -30,6 +30,7 @@ class MarketActivity : BaseActivity() {
     private var program = -1
     private var sort = 0
     private var filters = Filters()
+    private var lastOpenIds: List<String> = emptyList()
 
     /** What the Filters sheet can narrow by. Empty sets mean "any". */
     data class Filters(
@@ -96,6 +97,12 @@ class MarketActivity : BaseActivity() {
         Motion.hideOnScroll(findViewById(R.id.marketScroll), findViewById(R.id.fabPost))
     }
 
+    override fun onResume() {
+        super.onResume()
+        val currentOpenIds = Listings.open().map { it.id }
+        if (currentOpenIds != lastOpenIds) render(animate = false)
+    }
+
     /** Arriving from a program tile on Home while the market is already open. */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -132,8 +139,10 @@ class MarketActivity : BaseActivity() {
     private fun render(animate: Boolean = true) {
         val query = search.text.toString().trim().lowercase()
         val programName = Listings.PROGRAMS.getOrNull(program)
+        val openListings = Listings.open()
+        lastOpenIds = openListings.map { it.id }
 
-        var items = Listings.open().filter { listing ->
+        var items = openListings.filter { listing ->
             (programName == null || listing.program == programName) &&
                 filters.matches(listing) &&
                 (query.isEmpty() ||

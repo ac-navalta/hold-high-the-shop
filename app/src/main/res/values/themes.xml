@@ -36,9 +36,8 @@
         <item name="colorError">@color/danger</item>
         <item name="android:colorControlHighlight">#1F07683B</item>
         <item name="android:textColorHighlight">@color/uc_mint</item>
-        <!-- Motion: screens slide on a shared horizontal axis; the splash hands its logo to sign in. -->
+        <!-- Motion: sleek Shared-Axis transitions across screens. -->
         <item name="android:windowAnimationStyle">@style/ScreenTransitions</item>
-        <item name="android:windowActivityTransitions">true</item>
     </style>
 
     <style name="ScreenTransitions" parent="@android:style/Animation.Activity">
@@ -62,4 +61,9 @@
     </style>
 
     <style name="Theme.HoldHighTheShop" parent="Base.Theme.HoldHighTheShop" />
+
+    <!-- Splash -> Sign in shared-element logo handoff only. -->
+    <style name="Theme.HoldHighTheShop.Onboarding" parent="Theme.HoldHighTheShop">
+        <item name="android:windowActivityTransitions">true</item>
+    </style>
 </resources>

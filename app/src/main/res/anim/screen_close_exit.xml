@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Pop: top screen exits briskly to the right (asymmetric: exits faster than enters). -->
-<translate xmlns:android="http://schemas.android.com/apk/res/android"
-    android:zAdjustment="top"
-    android:fromXDelta="0"
-    android:toXDelta="100%"
-    android:duration="250"
-    android:interpolator="@interpolator/standard" />
+<!-- Pop: closing screen glides briskly aside and dissolves cleanly (faster than open). -->
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <translate
+        android:zAdjustment="top"
+        android:fromXDelta="0%"
+        android:toXDelta="14%"
+        android:duration="190"
+        android:interpolator="@interpolator/standard" />
+    <alpha
+        android:fromAlpha="1.0"
+        android:toAlpha="0.0"
+        android:duration="150"
+        android:interpolator="@interpolator/ease_out" />
+</set>
