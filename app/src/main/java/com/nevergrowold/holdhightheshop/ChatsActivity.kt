@@ -39,7 +39,7 @@ class ChatsActivity : BaseActivity() {
         bindRoleChips()
 
         search.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) = filter()
+            override fun afterTextChanged(s: Editable?) = filter(animate = false)
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
         })
@@ -55,6 +55,9 @@ class ChatsActivity : BaseActivity() {
 
     /** Search icon in the header, and the close button inside the search bar. */
     fun toggleSearch(view: View) {
+        Motion.tick(view)
+        val content = findViewById<ViewGroup>(R.id.chatsContent)
+        Motion.layoutTransition(content, durationMs = 200L)
         val bar = findViewById<View>(R.id.chatSearchBar)
         if (bar.isVisible) {
             search.setText("")
@@ -69,13 +72,15 @@ class ChatsActivity : BaseActivity() {
     private fun bindRoleChips() {
         Choice.chips(
             listOf(
-                findViewById(R.id.chatFilterAll), findViewById(R.id.chatFilterGetting),
-                findViewById(R.id.chatFilterGiving), findViewById(R.id.chatFilterSwaps)
+                findViewById(R.id.chatFilterAll),
+                findViewById(R.id.chatFilterGetting),
+                findViewById(R.id.chatFilterGiving),
+                findViewById(R.id.chatFilterSwaps),
             ),
-            roleFilter
+            roleFilter,
         ) {
             roleFilter = it
-            filter()
+            filter(animate = true)
         }
     }
 
@@ -83,7 +88,8 @@ class ChatsActivity : BaseActivity() {
      * Shows only the conversations that match the role chip and whose name,
      * program, item or last message contain the search text.
      */
-    private fun filter() {
+    private fun filter(animate: Boolean) {
+        if (animate) Motion.layoutTransition(findViewById(R.id.chatsContent), durationMs = 210L)
         val q = search.text.toString().trim().lowercase()
         val visible = rows.mapIndexed { index, row ->
             val listing = Listings.byId(Listings.CHAT_LISTINGS[Listings.SELLERS[index]])
@@ -97,7 +103,6 @@ class ChatsActivity : BaseActivity() {
             row.isVisible = match
             match
         }
-        // A divider sits under each row except the last; keep it only between visible rows.
         dividers.forEachIndexed { index, divider ->
             divider.isVisible = visible[index] && visible.drop(index + 1).any { it }
         }

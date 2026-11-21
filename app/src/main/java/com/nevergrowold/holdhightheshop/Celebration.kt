@@ -1,74 +1,74 @@
 package com.nevergrowold.holdhightheshop
 
-import android.animation.Keyframe
-import android.animation.ObjectAnimator
-import android.animation.PropertyValuesHolder
 import android.app.Activity
-import android.util.Property
 import android.view.View
 import android.view.ViewGroup
+import androidx.dynamicanimation.animation.DynamicAnimation
 
 /**
- * The confirmation moment shared by "Listing posted" and "Report sent": both
- * close out something the student finished, so both get the same stamp.
+ * Confirmation choreography shared by "Listing posted" and "Report received".
  *
- * Built as keyframe tracks, each property on its own timeline:
- * - the badge overshoots to 112%, dips, then settles;
- * - the check twists in a beat later, as if being stamped, with a haptic tick;
- * - two rings ripple out from the badge;
- * - then the details and actions settle in underneath on springs.
- *
- * The layout provides celebrateContent (first child is the badge frame),
- * celebrateBadge, celebrateCheck, celebrateRing and celebrateRing2.
+ * Uses expressive spring physics rather than long multi-beat keyframe tracks:
+ * - The badge springs immediately from 0.78 -> 1.0 (`Spatial.EXPRESSIVE`);
+ * - The verified mark rotates gently (-14° -> 0°) and lands with a confirm haptic;
+ * - A single restrained mint halo expands once around the badge;
+ * - Title, reference card and action button glide in right behind it so the
+ *   whole moment feels celebratory, crisp and interactive within ~480ms.
  */
 object Celebration {
 
     fun play(activity: Activity) {
         if (!Motion.enabled(activity)) return
-        val badge = activity.findViewById<View>(R.id.celebrateBadge)
-        val check = activity.findViewById<View>(R.id.celebrateCheck)
+        val badge = activity.findViewById<View>(R.id.celebrateBadge) ?: return
+        val check = activity.findViewById<View>(R.id.celebrateCheck) ?: return
+        val ring = activity.findViewById<View>(R.id.celebrateRing)
+        val ring2 = activity.findViewById<View>(R.id.celebrateRing2)
+        val content = activity.findViewById<ViewGroup>(R.id.celebrateContent) ?: return
 
-        track(badge, 640, 120,
-            View.SCALE_X to floatArrayOf(0f, 0.5f, 0.45f, 1.12f, 0.72f, 0.97f, 1f, 1f),
-            View.SCALE_Y to floatArrayOf(0f, 0.5f, 0.45f, 1.12f, 0.72f, 0.97f, 1f, 1f),
-            View.ALPHA to floatArrayOf(0f, 0f, 0.3f, 1f, 1f, 1f))
-        track(check, 560, 260,
-            View.ROTATION to floatArrayOf(0f, -30f, 0.55f, 8f, 1f, 0f),
-            View.SCALE_X to floatArrayOf(0f, 0.3f, 0.6f, 1.15f, 1f, 1f),
-            View.SCALE_Y to floatArrayOf(0f, 0.3f, 0.6f, 1.15f, 1f, 1f))
-        // The stamp lands: one firm tick when the check reaches full size.
-        check.postDelayed({ Motion.confirm(check) }, 260 + 330)
+        badge.alpha = 0f
+        badge.scaleX = 0.78f
+        badge.scaleY = 0.78f
 
-        ripple(activity.findViewById(R.id.celebrateRing), 380, 0.9f)
-        ripple(activity.findViewById(R.id.celebrateRing2), 560, 0.5f)
+        check.alpha = 0f
+        check.scaleX = 0.72f
+        check.scaleY = 0.72f
+        check.rotation = -14f
 
-        val content = activity.findViewById<ViewGroup>(R.id.celebrateContent)
-        Motion.enter((1 until content.childCount).map { content.getChildAt(it) }, delay = 340, rise = 18)
-    }
-
-    /** One keyframe track per property: each array is pairs of (fraction, value). */
-    private fun track(view: View, duration: Long, delay: Long, vararg tracks: Pair<Property<View, Float>, FloatArray>) {
-        val holders = tracks.map { (property, pairs) ->
-            val frames = (pairs.indices step 2).map { i ->
-                Keyframe.ofFloat(pairs[i], pairs[i + 1]).apply { if (i > 0) interpolator = Motion.EMPHASIZED }
-            }
-            PropertyValuesHolder.ofKeyframe(property, *frames.toTypedArray())
+        ring?.apply {
+            alpha = 0f
+            scaleX = 0.92f
+            scaleY = 0.92f
         }
-        // Hold the first frame during the delay so nothing flashes at full size.
-        tracks.forEach { (property, pairs) -> property.set(view, pairs[1]) }
-        ObjectAnimator.ofPropertyValuesHolder(view, *holders.toTypedArray()).apply {
-            this.duration = duration
-            startDelay = delay
-            start()
-        }
-    }
+        ring2?.alpha = 0f
 
-    private fun ripple(ring: View, delay: Long, strength: Float) {
-        ring.scaleX = 1f
-        ring.scaleY = 1f
-        ring.alpha = 0f
-        ring.animate().withStartAction { ring.alpha = strength }
-            .alpha(0f).scaleX(2.2f).scaleY(2.2f)
-            .setStartDelay(delay).setDuration(900).setInterpolator(Motion.EASE_OUT).start()
+        badge.postDelayed({
+            if (!badge.isAttachedToWindow) return@postDelayed
+            Motion.spring(badge, DynamicAnimation.ALPHA, 1f, Motion.Effects.FAST)
+            Motion.springScale(badge, 1f, Motion.Spatial.EXPRESSIVE)
+        }, 40)
+
+        check.postDelayed({
+            if (!check.isAttachedToWindow) return@postDelayed
+            Motion.spring(check, DynamicAnimation.ALPHA, 1f, Motion.Effects.FAST)
+            Motion.springScale(check, 1f, Motion.Spatial.EXPRESSIVE)
+            Motion.spring(check, DynamicAnimation.ROTATION, 0f, Motion.Spatial.RESPONSIVE)
+            Motion.confirm(check)
+        }, 120)
+
+        ring?.let { r ->
+            r.animate().cancel()
+            r.animate()
+                .withStartAction { r.alpha = 0.55f }
+                .alpha(0f)
+                .scaleX(1.9f)
+                .scaleY(1.9f)
+                .setStartDelay(130)
+                .setDuration(560)
+                .setInterpolator(Motion.EASE_OUT)
+                .start()
+        }
+
+        val items = (1 until content.childCount).map { content.getChildAt(it) }
+        Motion.staggerIn(items, delay = 140, riseDp = 12f, gapMs = 26L, subtleScale = true)
     }
 }

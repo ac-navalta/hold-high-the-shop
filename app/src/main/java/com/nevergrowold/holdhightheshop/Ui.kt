@@ -23,19 +23,12 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.snackbar.Snackbar
 
 /**
- * Dropdown list that opens next to the field or button that was tapped, styled
- * like the dropdown components in the Figma file: a white card, one option
- * per row, and a green bar beside the selected option.
+ * Origin-aware dropdown menu styled after the Figma specification: crisp white
+ * card, one option per row, green indicator bar beside the selected option, and
+ * optional chevron rotation synced to open/dismiss state.
  */
 object Dropdown {
 
-    /**
-     * @param anchor the view the list opens under.
-     * @param selected index of the current option, or -1 for none.
-     * @param icons optional icon per row (a single-item list repeats it).
-     * @param widthDp fixed width; by default the list matches the anchor.
-     * @param alignEnd line the list up with the anchor's right edge.
-     */
     fun show(
         anchor: View,
         options: List<String>,
@@ -43,8 +36,11 @@ object Dropdown {
         icons: List<Int>? = null,
         widthDp: Int? = null,
         alignEnd: Boolean = false,
-        onPick: (Int) -> Unit
-    ) = whenKeyboardClosed(anchor) { open(anchor, options, selected, icons, widthDp, alignEnd, onPick) }
+        rotateChevron: Boolean = false,
+        onPick: (Int) -> Unit,
+    ) = whenKeyboardClosed(anchor) {
+        open(anchor, options, selected, icons, widthDp, alignEnd, rotateChevron, onPick)
+    }
 
     private fun open(
         anchor: View,
@@ -53,10 +49,10 @@ object Dropdown {
         icons: List<Int>?,
         widthDp: Int?,
         alignEnd: Boolean,
-        onPick: (Int) -> Unit
+        rotateChevron: Boolean,
+        onPick: (Int) -> Unit,
     ) {
         val context = anchor.context
-
         val content = LayoutInflater.from(context).inflate(R.layout.popup_dropdown, null)
         val rows = content.findViewById<LinearLayout>(R.id.dropdownRows)
 
@@ -65,6 +61,12 @@ object Dropdown {
         popup.elevation = dp(context, 8).toFloat()
         popup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         popup.isOutsideTouchable = true
+
+        val chevron = if (rotateChevron) findTrailingChevron(anchor) else null
+        chevron?.let { Motion.rotateTo(it, 180f) }
+        popup.setOnDismissListener {
+            chevron?.let { Motion.rotateTo(it, 0f) }
+        }
 
         options.forEachIndexed { index, label ->
             val row = LayoutInflater.from(context).inflate(R.layout.item_dropdown_row, rows, false)
@@ -82,18 +84,16 @@ object Dropdown {
                 }
             }
             row.setOnClickListener {
+                Motion.tick(row)
                 popup.dismiss()
                 onPick(index)
             }
             rows.addView(row)
         }
 
-        // Open where there is room. Below the anchor when the whole list fits,
-        // otherwise above it (fields near the bottom of a form, the chat input),
-        // otherwise on whichever side is bigger, scrolling inside that space.
         content.measure(
             View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
         )
         val listHeight = minOf(content.measuredHeight, dp(context, MAX_HEIGHT_DP))
         val gap = dp(context, 6)
@@ -106,43 +106,73 @@ object Dropdown {
         val height = minOf(listHeight, if (below) spaceBelow else spaceAbove)
         popup.height = height
 
-        // Grow out of the anchor: downward when below it, upward when above.
+        // Origin-aware scale+fade in and out from the anchor edge.
         popup.animationStyle = if (below) R.style.DropdownBelow else R.style.DropdownAbove
 
         val x = loc[0] + if (alignEnd) anchor.width - width else 0
         val y = if (below) loc[1] + anchor.height + gap else loc[1] - gap - height
         popup.showAtLocation(anchor, Gravity.TOP or Gravity.START, x, y)
-        // Rows follow the list out of the field, nearest first.
-        val order = (0 until rows.childCount).map { rows.getChildAt(it) }
-        Motion.settle(if (below) order else order.reversed(), delay = 30, rise = if (below) 8 else -8, gap = 18)
+    }
+
+    private fun findTrailingChevron(anchor: View): View? {
+        val group = anchor as? ViewGroup ?: return null
+        for (i in group.childCount - 1 downTo 0) {
+            val child = group.getChildAt(i)
+            if (child is ImageView) return child
+        }
+        return null
     }
 
     /** About seven rows; longer lists scroll inside the card. */
     private const val MAX_HEIGHT_DP = 46 * 7 + 12
 }
 
-/** Bottom sheets that share the cream, round-cornered look of the app. */
+/**
+ * Bottom sheets sharing the cream, round-cornered design of the app, now wired
+ * with the same tactile press physics and 48dp touch targets as full screens.
+ */
 object Sheets {
 
-    fun show(activity: Activity, layoutRes: Int, setup: (View, BottomSheetDialog) -> Unit) {
+    fun show(
+        activity: Activity,
+        layoutRes: Int,
+        onDismiss: (() -> Unit)? = null,
+        setup: (View, BottomSheetDialog) -> Unit,
+    ) {
         val root = activity.findViewById<View>(R.id.main) ?: activity.window.decorView
-        whenKeyboardClosed(root) { open(activity, layoutRes, setup) }
+        whenKeyboardClosed(root) { open(activity, layoutRes, onDismiss, setup) }
     }
 
-    private fun open(activity: Activity, layoutRes: Int, setup: (View, BottomSheetDialog) -> Unit) {
+    private fun open(
+        activity: Activity,
+        layoutRes: Int,
+        onDismiss: (() -> Unit)?,
+        setup: (View, BottomSheetDialog) -> Unit,
+    ) {
         if (activity.isFinishing) return
         val dialog = BottomSheetDialog(activity)
         val view = LayoutInflater.from(activity).inflate(layoutRes, null)
         dialog.setContentView(view)
         setup(view, dialog)
+        if (onDismiss != null) {
+            dialog.setOnDismissListener { onDismiss() }
+        }
         dialog.setOnShowListener {
             val container = dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
             container?.setBackgroundColor(Color.TRANSPARENT)
             dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
             dialog.behavior.skipCollapsed = true
         }
-        // As the sheet rises, its contents settle into it a beat behind, row by row.
-        (view as? ViewGroup)?.let { sheet -> Motion.settle((0 until sheet.childCount).map { sheet.getChildAt(it) }, delay = 90) }
+        // Give every button, chip, star and radio option inside the sheet real tactile press & touch area.
+        Motion.installPress(view)
+        TouchTargets.install(view)
+        // Subtle content cohesion strictly below the drag handle (handle stays immediately visible).
+        (view as? ViewGroup)?.let { sheet ->
+            if (sheet.childCount > 1) {
+                val items = (1 until sheet.childCount).map { sheet.getChildAt(it) }
+                Motion.settleSheetContent(items, delay = 20L)
+            }
+        }
         dialog.show()
     }
 }
@@ -153,16 +183,13 @@ fun dp(context: Context, value: Int): Int =
 fun showKeyboard(input: EditText) {
     input.requestFocus()
     val imm = input.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+    @Suppress("DEPRECATION")
     input.post { imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT) }
 }
 
 /**
- * Runs [action] once the keyboard is fully closed and the screen has settled.
- *
- * Opening a dropdown or bottom sheet while typing used to place it against
- * the keyboard-sized screen; the keyboard then closed and left the popup
- * floating mid-screen. Waiting for the layout to stop moving avoids that.
- * When the keyboard is not open, [action] runs straight away.
+ * Runs [action] once the keyboard is fully closed and the screen has settled,
+ * avoiding popups/sheets anchored to a mid-resize IME frame.
  */
 fun whenKeyboardClosed(view: View, action: () -> Unit) {
     if (ViewCompat.getRootWindowInsets(view)?.isVisible(WindowInsetsCompat.Type.ime()) != true) {

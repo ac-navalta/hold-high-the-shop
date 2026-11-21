@@ -176,6 +176,7 @@
                     android:autofillHints="emailAddress" />
 
                 <ImageView
+                    android:id="@+id/emailCheck"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_marginStart="8dp"
@@ -208,6 +209,7 @@
                     android:textSize="15sp" />
 
                 <ImageView
+                    android:id="@+id/signInArrow"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:src="@drawable/ic_arrow_right"

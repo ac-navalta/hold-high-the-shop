@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Back: the top screen slides off to the right, the way it came. -->
+<!-- Pop: top screen exits briskly to the right (asymmetric: exits faster than enters). -->
 <translate xmlns:android="http://schemas.android.com/apk/res/android"
     android:zAdjustment="top"
     android:fromXDelta="0"
     android:toXDelta="100%"
-    android:duration="360"
+    android:duration="250"
     android:interpolator="@interpolator/standard" />

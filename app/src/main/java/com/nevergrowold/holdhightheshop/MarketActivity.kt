@@ -8,10 +8,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.isVisible
+import androidx.dynamicanimation.animation.DynamicAnimation
 
 /**
  * Campus Market. The grid is built from [Listings] so the search box,
@@ -21,6 +23,7 @@ class MarketActivity : BaseActivity() {
 
     private lateinit var search: EditText
     private lateinit var grid: LinearLayout
+    private lateinit var chipScroll: HorizontalScrollView
     private lateinit var chips: List<TextView>
 
     /** -1 means "All". Otherwise an index into [Listings.PROGRAMS]. */
@@ -32,7 +35,7 @@ class MarketActivity : BaseActivity() {
     data class Filters(
         val conditions: Set<Int> = emptySet(),
         val types: Set<Int> = emptySet(),
-        val price: Int = 0
+        val price: Int = 0,
     ) {
         val isActive get() = conditions.isNotEmpty() || types.isNotEmpty() || price != 0
 
@@ -55,6 +58,7 @@ class MarketActivity : BaseActivity() {
 
         search = findViewById(R.id.inputSearch)
         grid = findViewById(R.id.grid)
+        chipScroll = findViewById(R.id.chipScroll)
         val chipRow = findViewById<LinearLayout>(R.id.chipRow)
         chips = (listOf(getString(R.string.chip_all)) + Listings.PROGRAMS).map { label ->
             val chip = LayoutInflater.from(this).inflate(R.layout.item_market_chip, chipRow, false) as TextView
@@ -66,8 +70,8 @@ class MarketActivity : BaseActivity() {
         findViewById<View>(R.id.searchIcon).setOnClickListener { showKeyboard(search) }
         search.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
-                findViewById<View>(R.id.btnClearSearch).isVisible = !s.isNullOrEmpty()
-                // Typing narrows the grid in place; a stagger on every keystroke would only flicker.
+                Motion.setVisiblePop(findViewById(R.id.btnClearSearch), !s.isNullOrEmpty())
+                // Live typing narrows in place without flicker.
                 render(animate = false)
             }
 
@@ -86,7 +90,9 @@ class MarketActivity : BaseActivity() {
 
         program = programIndex(intent.getStringExtra(EXTRA_PROGRAM))
         bindChips()
-        render()
+        scrollSelectedChipIntoView(smooth = false)
+        // Initial load arrives as part of the cohesive tab transition — no conflicting card stagger.
+        render(animate = false)
         Motion.hideOnScroll(findViewById(R.id.marketScroll), findViewById(R.id.fabPost))
     }
 
@@ -96,27 +102,33 @@ class MarketActivity : BaseActivity() {
         if (intent.hasExtra(EXTRA_PROGRAM)) {
             program = programIndex(intent.getStringExtra(EXTRA_PROGRAM))
             bindChips()
-            render()
+            scrollSelectedChipIntoView(smooth = true)
+            render(animate = true)
         }
     }
 
-    private fun programIndex(name: String?): Int {
-        // Chip order on screen: All, then Listings.PROGRAMS.
-        return Listings.PROGRAMS.indexOf(name)
-    }
+    private fun programIndex(name: String?): Int = Listings.PROGRAMS.indexOf(name)
 
     private fun bindChips() {
         Choice.chips(chips, program + 1) {
             program = it - 1
-            render()
+            scrollSelectedChipIntoView(smooth = true)
+            render(animate = true)
         }
     }
 
-    /**
-     * Rebuilds the grid from the current search, chip, filters and sort.
-     * With [animate], the new cards arrive in a short stagger so a changed
-     * filter visibly lands.
-     */
+    /** Brings the selected college chip near the centre of the horizontal chip bar. */
+    private fun scrollSelectedChipIntoView(smooth: Boolean) {
+        val chip = chips.getOrNull(program + 1) ?: return
+        chipScroll.post {
+            val targetX = (chip.left + chip.width / 2) - (chipScroll.width / 2)
+            val clamped = targetX.coerceAtLeast(0)
+            if (smooth && Motion.enabled(this)) chipScroll.smoothScrollTo(clamped, 0)
+            else chipScroll.scrollTo(clamped, 0)
+        }
+    }
+
+    /** Rebuilds the grid from search, chip, filters and sort. */
     private fun render(animate: Boolean = true) {
         val query = search.text.toString().trim().lowercase()
         val programName = Listings.PROGRAMS.getOrNull(program)
@@ -146,7 +158,8 @@ class MarketActivity : BaseActivity() {
             pair.forEachIndexed { index, listing -> row.addView(card(listing, index).also { cards += it }) }
             if (grid.childCount > 0) {
                 row.layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
                 ).apply { topMargin = resources.getDimensionPixelSize(R.dimen.grid_gap) }
             }
             if (pair.size == 1) {
@@ -155,33 +168,36 @@ class MarketActivity : BaseActivity() {
             grid.addView(row)
         }
 
-        if (animate) Motion.enter(cards)
+        if (animate) Motion.staggerIn(cards, riseDp = 10f, gapMs = 22L, subtleScale = true)
 
         val narrowed = query.isNotEmpty() || programName != null || filters.isActive
-        Motion.rollText(findViewById(R.id.itemsCount), if (narrowed) {
-            resources.getQuantityString(R.plurals.items_found, items.size, items.size)
-        } else {
-            getString(R.string.items_near_you)
-        })
+        Motion.rollText(
+            findViewById(R.id.itemsCount),
+            if (narrowed) resources.getQuantityString(R.plurals.items_found, items.size, items.size)
+            else getString(R.string.items_near_you),
+        )
+
         val empty = findViewById<View>(R.id.emptyState)
         val wasEmpty = empty.isVisible
         empty.isVisible = items.isEmpty()
-        // The empty state settles in when a filter first leaves nothing to show.
-        if (items.isEmpty() && !wasEmpty && animate) {
+        if (items.isEmpty() && !wasEmpty && animate && Motion.enabled(this)) {
+            val dp = resources.displayMetrics.density
             empty.alpha = 0f
-            empty.scaleX = 0.96f
-            empty.scaleY = 0.96f
-            Motion.spring(empty, androidx.dynamicanimation.animation.DynamicAnimation.ALPHA, 1f, Motion.SMOOTH)
-            Motion.springScale(empty, 1f, Motion.SMOOTH)
+            empty.scaleX = 0.95f
+            empty.scaleY = 0.95f
+            empty.translationY = 10f * dp
+            Motion.spring(empty, DynamicAnimation.ALPHA, 1f, Motion.Effects.DEFAULT)
+            Motion.spring(empty, DynamicAnimation.TRANSLATION_Y, 0f, Motion.Spatial.RESPONSIVE)
+            Motion.springScale(empty, 1f, Motion.Spatial.RESPONSIVE)
         }
-        findViewById<View>(R.id.filterDot).isVisible = filters.isActive
+
+        Motion.setVisiblePop(findViewById(R.id.filterDot), filters.isActive)
         findViewById<TextView>(R.id.sortLabel).text = sortOptions()[sort]
     }
 
     private fun card(listing: Listing, column: Int): View {
         val card = listingCard(grid, listing)
         val params = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        // Two columns, 12dp apart.
         val half = resources.getDimensionPixelSize(R.dimen.half_gap)
         if (column == 0) params.marginEnd = half else params.marginStart = half
         card.layoutParams = params
@@ -191,38 +207,53 @@ class MarketActivity : BaseActivity() {
     private fun sortOptions() = listOf(
         getString(R.string.sort_newest),
         getString(R.string.sort_price_low),
-        getString(R.string.sort_price_high)
+        getString(R.string.sort_price_high),
     )
 
-    /** "Newest" dropdown. */
+    /** "Newest" dropdown with rotating chevron. */
     fun openSort(view: View) {
-        Dropdown.show(view, sortOptions(), sort, widthDp = 200, alignEnd = true) {
-            sort = it
-            render()
+        Dropdown.show(view, sortOptions(), sort, widthDp = 200, alignEnd = true, rotateChevron = true) {
+            if (sort != it) {
+                sort = it
+                render(animate = true)
+            }
         }
     }
 
     fun clearSearch(view: View) {
+        Motion.tick(view)
         search.setText("")
     }
 
     fun clearAllFilters(view: View) {
+        Motion.tick(view)
         search.setText("")
         program = -1
         filters = Filters()
         bindChips()
-        render()
+        scrollSelectedChipIntoView(smooth = true)
+        render(animate = true)
     }
 
     /** Filters sheet: condition, listing type and price range. */
     fun openFilters(view: View) {
         var draft = filters
         Sheets.show(this, R.layout.sheet_filters) { sheet, dialog ->
-            val conditions = listOf<TextView>(sheet.findViewById(R.id.fCond0), sheet.findViewById(R.id.fCond1), sheet.findViewById(R.id.fCond2))
-            val types = listOf<TextView>(sheet.findViewById(R.id.fType0), sheet.findViewById(R.id.fType1), sheet.findViewById(R.id.fType2))
+            val conditions = listOf<TextView>(
+                sheet.findViewById(R.id.fCond0),
+                sheet.findViewById(R.id.fCond1),
+                sheet.findViewById(R.id.fCond2),
+            )
+            val types = listOf<TextView>(
+                sheet.findViewById(R.id.fType0),
+                sheet.findViewById(R.id.fType1),
+                sheet.findViewById(R.id.fType2),
+            )
             val prices = listOf<TextView>(
-                sheet.findViewById(R.id.fPrice0), sheet.findViewById(R.id.fPrice1),
-                sheet.findViewById(R.id.fPrice2), sheet.findViewById(R.id.fPrice3)
+                sheet.findViewById(R.id.fPrice0),
+                sheet.findViewById(R.id.fPrice1),
+                sheet.findViewById(R.id.fPrice2),
+                sheet.findViewById(R.id.fPrice3),
             )
             val apply = sheet.findViewById<TextView>(R.id.filterApply)
 
@@ -233,17 +264,19 @@ class MarketActivity : BaseActivity() {
                 val count = Listings.open().count {
                     draft.matches(it) && (program < 0 || it.program == Listings.PROGRAMS[program])
                 }
-                apply.text = resources.getQuantityString(R.plurals.filters_show_count, count, count)
+                Motion.rollText(apply, resources.getQuantityString(R.plurals.filters_show_count, count, count))
             }
             refresh()
 
-            sheet.findViewById<View>(R.id.filterReset).setOnClickListener {
+            sheet.findViewById<View>(R.id.filterReset).setOnClickListener { resetBtn ->
+                Motion.tick(resetBtn)
                 draft = Filters()
                 refresh()
             }
             apply.setOnClickListener {
+                Motion.confirm(it)
                 filters = draft
-                render()
+                render(animate = true)
                 dialog.dismiss()
             }
         }

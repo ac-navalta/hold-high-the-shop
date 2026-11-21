@@ -50,15 +50,15 @@
         <item name="android:taskOpenExitAnimation">@anim/screen_open_exit</item>
     </style>
 
-    <!-- Dropdown lists grow out of the field that opened them. -->
+    <!-- Dropdown lists grow out of and return into the field that opened them. -->
     <style name="DropdownBelow">
         <item name="android:windowEnterAnimation">@anim/dropdown_enter_below</item>
-        <item name="android:windowExitAnimation">@anim/dropdown_exit</item>
+        <item name="android:windowExitAnimation">@anim/dropdown_exit_below</item>
     </style>
 
     <style name="DropdownAbove">
         <item name="android:windowEnterAnimation">@anim/dropdown_enter_above</item>
-        <item name="android:windowExitAnimation">@anim/dropdown_exit</item>
+        <item name="android:windowExitAnimation">@anim/dropdown_exit_above</item>
     </style>
 
     <style name="Theme.HoldHighTheShop" parent="Base.Theme.HoldHighTheShop" />

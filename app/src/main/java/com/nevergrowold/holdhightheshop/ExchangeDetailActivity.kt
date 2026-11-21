@@ -183,22 +183,50 @@ class ExchangeDetailActivity : BaseActivity() {
                     box.addView(this)
                 }
             }
-            fun paint() {
-                icons.forEachIndexed { i, icon -> icon.setColorFilter(getColor(if (i < stars) R.color.alert_dot else R.color.divider)) }
-                word.text = if (stars == 0) getString(R.string.rate_pick) else words[stars - 1]
-                word.setTextColor(getColor(if (stars == 0) R.color.text_secondary else R.color.text_primary))
+            var lastStars = 0
+            fun paint(animate: Boolean) {
+                val gold = getColor(R.color.alert_dot)
+                val muted = getColor(R.color.divider)
+                icons.forEachIndexed { i, icon ->
+                    val lit = i < stars
+                    val wasLit = i < lastStars
+                    if (!animate || lit != wasLit) {
+                        Motion.iconTint(icon, if (lit) muted else gold, if (lit) gold else muted, animate)
+                    }
+                    if (animate && lit && Motion.enabled(this)) {
+                        icon.postDelayed({
+                            if (!icon.isAttachedToWindow) return@postDelayed
+                            icon.scaleX = 0.80f
+                            icon.scaleY = 0.80f
+                            Motion.springScale(icon, 1f, Motion.Spatial.EXPRESSIVE)
+                        }, i * 24L)
+                    }
+                }
+                lastStars = stars
+                val nextLabel = if (stars == 0) getString(R.string.rate_pick) else words[stars - 1]
+                if (animate) Motion.rollText(word, nextLabel) else word.text = nextLabel
+                Motion.textColor(word, getColor(if (stars == 0) R.color.text_secondary else R.color.text_primary), animate)
             }
-            icons.forEachIndexed { i, icon -> icon.setOnClickListener { stars = i + 1; paint() } }
-            paint()
+            icons.forEachIndexed { i, icon ->
+                icon.setOnClickListener {
+                    stars = i + 1
+                    Motion.tick(icon)
+                    paint(animate = true)
+                }
+            }
+            paint(animate = false)
             val note = sheet.findViewById<EditText>(R.id.rateNote)
-            sheet.findViewById<View>(R.id.rateSubmit).setOnClickListener {
+            sheet.findViewById<View>(R.id.rateSubmit).setOnClickListener { submitBtn ->
                 if (stars == 0) {
+                    Motion.shake(box)
                     Toast.makeText(this, R.string.toast_pick_stars, Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
                 hideKeyboard(note)
+                Motion.confirm(submitBtn)
                 UserState.rate(exchange.id, stars, note.text.toString().trim())
                 dialog.dismiss()
+                Motion.layoutTransition(findViewById(R.id.main), durationMs = 220L)
                 bind()
                 notify(
                     if (exchange.theirRating > 0) getString(R.string.toast_rated_revealed, partner.first)
@@ -213,7 +241,10 @@ class ExchangeDetailActivity : BaseActivity() {
         val reasons = listOf(
             R.string.problem_not_as_described, R.string.problem_damaged, R.string.problem_payment, R.string.problem_other
         )
-        reportProblem(exchange.id, exchange.title, exchange.partner, reasons) { bind() }
+        reportProblem(exchange.id, exchange.title, exchange.partner, reasons) {
+            Motion.layoutTransition(findViewById(R.id.main), durationMs = 220L)
+            bind()
+        }
     }
 
     companion object {

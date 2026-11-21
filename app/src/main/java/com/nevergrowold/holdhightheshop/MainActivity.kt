@@ -1,16 +1,21 @@
 package com.nevergrowold.holdhightheshop
 
+import android.animation.Animator
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.isVisible
 
 class MainActivity : BaseActivity() {
+
+    /** The overdue icon's calm breathing loop; only runs while visible. */
+    private var reminderPulse: Animator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,28 +31,40 @@ class MainActivity : BaseActivity() {
             tile.tag = program.code
             tile.setOnClickListener { openProgram(it) }
             if (row.childCount > 0) {
-                (tile.layoutParams as LinearLayout.LayoutParams).marginStart = resources.getDimensionPixelSize(R.dimen.grid_gap)
+                (tile.layoutParams as LinearLayout.LayoutParams).marginStart =
+                    resources.getDimensionPixelSize(R.dimen.grid_gap)
             }
             row.addView(tile)
         }
-    }
 
-    /** The overdue icon's breathing loop; only runs while this screen is showing. */
-    private var reminderPulse: android.animation.Animator? = null
+        // Subtle scroll-linked header depth as the student scrolls down Home.
+        val scroll = findViewById<ScrollView>(R.id.homeScroll)
+        val greeting = findViewById<View>(R.id.homeGreeting)
+        val fadeSpan = 120f * resources.displayMetrics.density
+        scroll.setOnScrollChangeListener { _, _, y, _, _ ->
+            if (!Motion.enabled(this)) return@setOnScrollChangeListener
+            val t = (y / fadeSpan).coerceIn(0f, 1f)
+            greeting.translationY = y * 0.22f
+            greeting.alpha = 1f - 0.65f * t
+        }
+    }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
         super.onPostCreate(savedInstanceState)
-        // Unread notifications: the bell swings once as Home arrives.
-        val bell = findViewById<View>(R.id.bellIcon)
-        bell.post { Motion.wiggle(bell, delay = 420) }
+        // Pendulum spring chime once per session when unread notifications exist.
+        if (!UserState.notificationsRead && !bellRangThisSession) {
+            bellRangThisSession = true
+            val bell = findViewById<View>(R.id.bellIcon)
+            bell.post { Motion.ringBell(bell, delay = 220) }
+        }
     }
 
     override fun onResume() {
         super.onResume()
+        Motion.setVisiblePop(findViewById(R.id.bellDot), !UserState.notificationsRead)
         bindReturnReminder()
-        // Same numbers as Profile: everything finished, and your listings still out there.
-        // A changed count rolls to its new value.
-        // First visit counts the numbers up; later visits roll only what changed.
+
+        // First visit counts the stats up briskly; later visits roll only what changed.
         val exchanged = findViewById<TextView>(R.id.statExchanged)
         val active = findViewById<TextView>(R.id.statListings)
         val exchangedValue = Listings.completed().size.toString()
@@ -56,8 +73,8 @@ class MainActivity : BaseActivity() {
             Motion.rollText(exchanged, exchangedValue)
             Motion.rollText(active, activeValue)
         } else {
-            Motion.countUp(exchanged, exchangedValue, delay = 200)
-            Motion.countUp(active, activeValue, delay = 260)
+            Motion.countUp(exchanged, exchangedValue, delay = 100)
+            Motion.countUp(active, activeValue, delay = 150)
         }
 
         // Fresh on campus: the newest listings from other students.
@@ -77,7 +94,8 @@ class MainActivity : BaseActivity() {
      */
     private fun bindReturnReminder() {
         val card = findViewById<View>(R.id.returnReminder)
-        val (item, loan) = UserState.borrowing().firstOrNull { !it.second.returnPending && Rentals.isDueSoon(it.second.dueMillis) }
+        val (item, loan) = UserState.borrowing()
+            .firstOrNull { !it.second.returnPending && Rentals.isDueSoon(it.second.dueMillis) }
             ?: run { card.isVisible = false; return }
         val overdue = Rentals.isOverdue(loan.dueMillis)
         card.isVisible = true
@@ -88,12 +106,16 @@ class MainActivity : BaseActivity() {
             getString(R.string.reminder_title, item.title, loan.partner.name.substringBefore(' '))
         }
         findViewById<TextView>(R.id.reminderDue).apply {
-            text = getString(R.string.row_borrowed_meta, loan.partner.name.substringBefore(' '), Rentals.dateLabel(loan.dueMillis), Rentals.countdown(this@MainActivity, loan.dueMillis))
+            text = getString(
+                R.string.row_borrowed_meta,
+                loan.partner.name.substringBefore(' '),
+                Rentals.dateLabel(loan.dueMillis),
+                Rentals.countdown(this@MainActivity, loan.dueMillis),
+            )
             setTextColor(getColor(if (overdue) R.color.danger else R.color.swap_text))
         }
         findViewById<ImageView>(R.id.reminderIcon).let { icon ->
             icon.setColorFilter(getColor(if (overdue) R.color.danger else R.color.swap_text))
-            // Overdue is the one state that keeps asking for attention: the clock breathes until it is returned.
             reminderPulse?.cancel()
             reminderPulse = if (overdue) Motion.breathe(icon) else null
         }
@@ -104,10 +126,6 @@ class MainActivity : BaseActivity() {
         reminderPulse?.cancel()
         reminderPulse = null
         super.onPause()
-    }
-
-    companion object {
-        private const val FRESH_COUNT = 6
     }
 
     /** Opens the notifications screen. */
@@ -123,5 +141,10 @@ class MainActivity : BaseActivity() {
     /** "Active listings" card: the Active tab on the profile lists them. */
     fun openActiveListings(view: View) {
         switchTab(ProfileActivity::class.java) { putExtra(EXTRA_TAB, ProfileActivity.TAB_ACTIVE) }
+    }
+
+    companion object {
+        private const val FRESH_COUNT = 6
+        private var bellRangThisSession = false
     }
 }

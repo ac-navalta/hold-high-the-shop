@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Origin-aware brisk exit back into bottom anchor edge (faster than enter). -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@interpolator/ease_out">
+    <alpha
+        android:fromAlpha="1"
+        android:toAlpha="0"
+        android:duration="110" />
+    <scale
+        android:fromXScale="1"
+        android:toXScale="0.97"
+        android:fromYScale="1"
+        android:toYScale="0.94"
+        android:pivotX="50%"
+        android:pivotY="100%"
+        android:duration="110" />
+</set>

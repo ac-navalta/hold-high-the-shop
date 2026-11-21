@@ -41,23 +41,26 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     /**
-     * On tab screens: arriving from another tab, the green pill slides over
-     * from that tab and the page drifts in from that side, so the tab bar
-     * reads as one bar that stayed put. Arriving any other way, the pill grows in.
+     * On tab screens: arriving from another tab, the translucent pill glides
+     * smoothly behind the icons while the page body drifts in directionally and
+     * the green bottom bar stays completely locked. Arriving fresh, the pill
+     * settles gently into place.
      */
     private fun arriveOnTab(intent: Intent?) {
         val pill = findViewById<View>(R.id.navIndicator) ?: return
         val from = intent?.getIntExtra(EXTRA_FROM_TAB, -1) ?: -1
         intent?.removeExtra(EXTRA_FROM_TAB)
         val to = currentTab()
-        if (from < 0 || from == to) Motion.grow(pill, delay = 60) else Motion.navSlide(this, from, to)
+        if (from < 0 || from == to) Motion.settleIndicator(pill) else Motion.navSlide(this, from, to)
     }
 
     /** Index of this screen's tab in the bar (Home 0 … Profile 3), or -1 off the tab screens. */
     private fun currentTab(): Int {
         val nav = findViewById<ViewGroup>(R.id.bottomNav) ?: return -1
         val pill = findViewById<View>(R.id.navIndicator) ?: return -1
-        return (0 until nav.childCount).firstOrNull { nav.getChildAt(it) === pill.parent } ?: -1
+        var cur: View? = pill
+        while (cur != null && cur.parent !== nav) cur = cur.parent as? View
+        return (0 until nav.childCount).firstOrNull { nav.getChildAt(it) === cur } ?: -1
     }
 
     fun openHome(view: View) = switchTab(MainActivity::class.java)
@@ -93,9 +96,8 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     /**
-     * Opens a listing from its card: the card grows into the listing screen,
-     * and Back shrinks the screen into the card again ([ZoomTransition]).
-     * With animations off, it opens like any other screen.
+     * Opens a listing from its card: the card expands into the listing screen,
+     * and Back shrinks the screen smoothly into the card again ([ZoomTransition]).
      */
     fun openListingFromCard(card: View, id: String) {
         ZoomTransition.launch(this, card, Intent(this, ListingDetailActivity::class.java).putExtra(EXTRA_LISTING, id))
@@ -147,7 +149,7 @@ open class BaseActivity : AppCompatActivity() {
         currentTab().takeIf { it >= 0 }?.let { intent.putExtra(EXTRA_FROM_TAB, it) }
         Motion.tick(window.decorView)
         startActivity(intent)
-        Motion.tabSwitch(this)
+        Motion.noTransition(this)
     }
 
     /** A product card (photo, condition, price, title, program) that opens the listing. */
@@ -257,10 +259,12 @@ open class BaseActivity : AppCompatActivity() {
                 setText(R.string.btn_send_report)
                 setOnClickListener {
                     if (picked < 0) {
+                        Motion.shake(box)
                         android.widget.Toast.makeText(this@BaseActivity, R.string.toast_select_reason, android.widget.Toast.LENGTH_SHORT).show()
                         return@setOnClickListener
                     }
                     hideKeyboard(input)
+                    Motion.confirm(this)
                     val issue = UserState.report(subject, reasons[picked], partner, input.text.toString().trim())
                     dialog.dismiss()
                     onReported(issue)

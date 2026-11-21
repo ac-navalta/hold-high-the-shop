@@ -9,11 +9,11 @@ import android.transition.Fade
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.enableEdgeToEdge
+import androidx.dynamicanimation.animation.DynamicAnimation
 
 /**
- * Splash screen. The brand settles in, then hands itself to sign in: the
- * logo row travels up to its place above the sign-in card (a shared element),
- * so the two screens read as one moment rather than a cut.
+ * Splash screen. The brand emblem springs into place with restrained physics,
+ * then hands off directly to sign-in via a shared-element glide.
  */
 class LandingActivity : BaseActivity() {
 
@@ -23,8 +23,9 @@ class LandingActivity : BaseActivity() {
     private val goToLogin = Runnable {
         val brand = findViewById<View>(R.id.brandRow)
         val intent = Intent(this, LoginActivity::class.java)
+            .putExtra(LoginActivity.EXTRA_FROM_SPLASH, true)
         if (Motion.enabled(this)) {
-            window.exitTransition = Fade().setDuration(150)
+            window.exitTransition = Fade().setDuration(140)
             val options = ActivityOptions.makeSceneTransitionAnimation(this, brand, getString(R.string.transition_brand))
             startActivity(intent, options.toBundle())
         } else {
@@ -42,7 +43,7 @@ class LandingActivity : BaseActivity() {
         handler.postDelayed(goToLogin, SPLASH_MILLIS)
     }
 
-    /** The mark settles, the name slides in beside it, the tagline follows. */
+    /** Mark settles on a spring, wordmark glides beside it, tagline fades in softly. */
     private fun playEntrance() {
         if (!Motion.enabled(this)) return
         val row = findViewById<ViewGroup>(R.id.brandRow)
@@ -52,22 +53,33 @@ class LandingActivity : BaseActivity() {
         val dp = resources.displayMetrics.density
 
         mark.alpha = 0f
-        mark.scaleX = 0.86f
-        mark.scaleY = 0.86f
-        mark.animate().alpha(1f).scaleX(1f).scaleY(1f)
-            .setStartDelay(80).setDuration(520).setInterpolator(Motion.EMPHASIZED).start()
-
+        mark.scaleX = 0.88f
+        mark.scaleY = 0.88f
         name.alpha = 0f
-        name.translationX = -12 * dp
-        name.animate().alpha(1f).translationX(0f)
-            .setStartDelay(220).setDuration(480).setInterpolator(Motion.EMPHASIZED).start()
-
+        name.translationX = -10f * dp
         tagline.alpha = 0f
-        tagline.animate().alpha(1f)
-            .setStartDelay(420).setDuration(360).setInterpolator(Motion.EASE_OUT).start()
+        tagline.translationY = 6f * dp
+
+        mark.postDelayed({
+            if (!mark.isAttachedToWindow) return@postDelayed
+            Motion.spring(mark, DynamicAnimation.ALPHA, 1f, Motion.Effects.DEFAULT)
+            Motion.springScale(mark, 1f, Motion.Spatial.RESPONSIVE)
+        }, 40)
+
+        name.postDelayed({
+            if (!name.isAttachedToWindow) return@postDelayed
+            Motion.spring(name, DynamicAnimation.ALPHA, 1f, Motion.Effects.DEFAULT)
+            Motion.spring(name, DynamicAnimation.TRANSLATION_X, 0f, Motion.Spatial.RESPONSIVE)
+        }, 120)
+
+        tagline.postDelayed({
+            if (!tagline.isAttachedToWindow) return@postDelayed
+            Motion.spring(tagline, DynamicAnimation.ALPHA, 1f, Motion.Effects.DEFAULT)
+            Motion.spring(tagline, DynamicAnimation.TRANSLATION_Y, 0f, Motion.Spatial.STANDARD)
+        }, 220)
     }
 
-    /** Leave once sign in has fully taken over, so the hand-off is not cut short. */
+    /** Finish only after sign-in takes over so the shared-element handoff completes. */
     override fun onStop() {
         super.onStop()
         if (handedOff) finish()
@@ -79,6 +91,6 @@ class LandingActivity : BaseActivity() {
     }
 
     companion object {
-        private const val SPLASH_MILLIS = 1600L
+        private const val SPLASH_MILLIS = 1150L
     }
 }

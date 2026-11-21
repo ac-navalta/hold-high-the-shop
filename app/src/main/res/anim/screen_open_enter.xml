@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Push: the new screen slides all the way in from the right, on top, fast
-    at first and easing into place, like a card being laid down.
--->
+<!-- Push: incoming screen glides swiftly from the right with M3 emphasized deceleration. -->
 <translate xmlns:android="http://schemas.android.com/apk/res/android"
     android:zAdjustment="top"
     android:fromXDelta="100%"
     android:toXDelta="0"
-    android:duration="420"
+    android:duration="300"
     android:interpolator="@interpolator/emphasized_decelerate" />

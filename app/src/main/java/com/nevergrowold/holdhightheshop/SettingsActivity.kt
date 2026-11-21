@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
+import com.google.android.material.materialswitch.MaterialSwitch
 
 /**
  * Settings, opened from the "..." menu on the profile. Switches and the
@@ -29,6 +30,20 @@ class SettingsActivity : BaseActivity() {
             Dropdown.show(row, Listings.MEETUP_POINTS, UserState.defaultMeetup, icons = listOf(R.drawable.ic_location)) {
                 UserState.defaultMeetup = it
                 meetupValue.text = Listings.MEETUP_POINTS[it]
+            }
+        }
+
+        // Tactile detent whenever any notification or privacy switch flips.
+        listOf(
+            R.id.swMessages,
+            R.id.swReservations,
+            R.id.swReminders,
+            R.id.swPriceDrops,
+            R.id.swShowProgram,
+            R.id.swActiveStatus,
+        ).forEach { id ->
+            findViewById<MaterialSwitch>(id).setOnCheckedChangeListener { button, _ ->
+                Motion.tick(button)
             }
         }
 

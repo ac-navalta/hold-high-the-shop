@@ -27,13 +27,13 @@ class ReportListingActivity : BaseActivity() {
         Choice.rows(
             listOf(
                 findViewById(R.id.reason1), findViewById(R.id.reason2), findViewById(R.id.reason3),
-                findViewById(R.id.reason4), findViewById(R.id.reason5), findViewById(R.id.reason6)
+                findViewById(R.id.reason4), findViewById(R.id.reason5), findViewById(R.id.reason6),
             ),
             listOf(
                 findViewById(R.id.reason1Icon), findViewById(R.id.reason2Icon), findViewById(R.id.reason3Icon),
-                findViewById(R.id.reason4Icon), findViewById(R.id.reason5Icon), findViewById(R.id.reason6Icon)
+                findViewById(R.id.reason4Icon), findViewById(R.id.reason5Icon), findViewById(R.id.reason6Icon),
             ),
-            reason
+            reason,
         ) { reason = it }
 
         val input = findViewById<EditText>(R.id.inputReportDetails)
@@ -48,13 +48,15 @@ class ReportListingActivity : BaseActivity() {
         })
     }
 
-    /** Sends the report, but only once a reason has been chosen. */
+    /** Sends the report, shaking the first reason row if none is chosen. */
     fun submitReport(view: View) {
         if (reason < 0) {
+            Motion.shake(findViewById(R.id.reason1))
             Toast.makeText(this, R.string.toast_select_reason, Toast.LENGTH_SHORT).show()
             return
         }
         hideKeyboard(view)
+        Motion.confirm(view)
         startActivity(Intent(this, ReportReceivedActivity::class.java))
         finish()
     }

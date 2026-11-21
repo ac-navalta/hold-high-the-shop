@@ -22,14 +22,14 @@ class EditProfileActivity : BaseActivity() {
 
         val programText = findViewById<TextView>(R.id.rowEditProgramText)
         findViewById<View>(R.id.rowEditProgram).setOnClickListener { row ->
-            Dropdown.show(row, Listings.PROGRAMS, program) {
+            Dropdown.show(row, Listings.PROGRAMS, program, rotateChevron = true) {
                 program = it
                 programText.text = Listings.PROGRAMS[it]
             }
         }
         val yearText = findViewById<TextView>(R.id.rowEditYearText)
         findViewById<View>(R.id.rowEditYear).setOnClickListener { row ->
-            Dropdown.show(row, years, year) {
+            Dropdown.show(row, years, year, rotateChevron = true) {
                 year = it
                 yearText.text = years[it]
             }
@@ -40,11 +40,13 @@ class EditProfileActivity : BaseActivity() {
     fun saveProfile(view: View) {
         val name = findViewById<EditText>(R.id.inputName)
         if (name.text.isBlank()) {
+            Motion.shake(name)
             Toast.makeText(this, R.string.toast_need_name, Toast.LENGTH_SHORT).show()
             showKeyboard(name)
             return
         }
         hideKeyboard(view)
+        Motion.confirm(view)
         Toast.makeText(this, R.string.toast_profile_saved, Toast.LENGTH_SHORT).show()
         finish()
     }

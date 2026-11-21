@@ -182,6 +182,7 @@
             <!-- FILTER CHIPS -->
             <!-- Full-bleed so chips scroll to the screen edge but start on the 20dp line. -->
             <HorizontalScrollView
+                android:id="@+id/chipScroll"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -368,6 +369,8 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:background="@color/uc_green"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:elevation="8dp"
         android:paddingBottom="6dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -380,6 +383,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
+            android:clipChildren="false"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
             android:clickable="true"
@@ -387,18 +391,23 @@
             android:onClick="openHome"
             android:foreground="?attr/selectableItemBackground">
 
-            <ImageView
-                android:layout_width="21dp"
-                android:layout_height="21dp"
-                android:layout_marginTop="5dp"
-                android:src="@drawable/ic_home"
-                android:tint="@color/text_on_green_dim"
-                android:contentDescription="@null" />
+            <FrameLayout
+                android:layout_width="46dp"
+                android:layout_height="30dp">
+
+                <ImageView
+                    android:layout_width="21dp"
+                    android:layout_height="21dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_home"
+                    android:tint="@color/text_on_green_dim"
+                    android:contentDescription="@null" />
+            </FrameLayout>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
+                android:layout_marginTop="3dp"
                 android:fontFamily="@font/poppins_medium"
                 android:text="@string/nav_home"
                 android:textColor="@color/text_on_green_dim"
@@ -411,16 +420,23 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
+            android:clipChildren="false"
             android:paddingTop="8dp"
             android:paddingBottom="8dp">
 
             <FrameLayout
                 android:layout_width="46dp"
                 android:layout_height="30dp"
-                android:id="@+id/navIndicator"
-                android:background="@drawable/bg_nav_active">
+                android:clipChildren="false">
+
+                <View
+                    android:id="@+id/navIndicator"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_nav_active" />
 
                 <ImageView
+                    android:id="@+id/navActiveIcon"
                     android:layout_width="21dp"
                     android:layout_height="21dp"
                     android:layout_gravity="center"
@@ -445,6 +461,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
+            android:clipChildren="false"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
             android:clickable="true"
@@ -452,18 +469,23 @@
             android:onClick="openChats"
             android:foreground="?attr/selectableItemBackground">
 
-            <ImageView
-                android:layout_width="21dp"
-                android:layout_height="21dp"
-                android:layout_marginTop="5dp"
-                android:src="@drawable/ic_chat"
-                android:tint="@color/text_on_green_dim"
-                android:contentDescription="@null" />
+            <FrameLayout
+                android:layout_width="46dp"
+                android:layout_height="30dp">
+
+                <ImageView
+                    android:layout_width="21dp"
+                    android:layout_height="21dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_chat"
+                    android:tint="@color/text_on_green_dim"
+                    android:contentDescription="@null" />
+            </FrameLayout>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
+                android:layout_marginTop="3dp"
                 android:fontFamily="@font/poppins_medium"
                 android:text="@string/nav_chats"
                 android:textColor="@color/text_on_green_dim"
@@ -476,6 +498,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
+            android:clipChildren="false"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
             android:clickable="true"
@@ -483,18 +506,23 @@
             android:onClick="openProfile"
             android:foreground="?attr/selectableItemBackground">
 
-            <ImageView
-                android:layout_width="21dp"
-                android:layout_height="21dp"
-                android:layout_marginTop="5dp"
-                android:src="@drawable/ic_profile"
-                android:tint="@color/text_on_green_dim"
-                android:contentDescription="@null" />
+            <FrameLayout
+                android:layout_width="46dp"
+                android:layout_height="30dp">
+
+                <ImageView
+                    android:layout_width="21dp"
+                    android:layout_height="21dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_profile"
+                    android:tint="@color/text_on_green_dim"
+                    android:contentDescription="@null" />
+            </FrameLayout>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
+                android:layout_marginTop="3dp"
                 android:fontFamily="@font/poppins_medium"
                 android:text="@string/nav_profile"
                 android:textColor="@color/text_on_green_dim"
