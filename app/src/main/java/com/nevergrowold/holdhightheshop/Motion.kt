@@ -3,7 +3,6 @@ package com.nevergrowold.holdhightheshop
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
-import android.app.Activity
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
@@ -271,13 +270,11 @@ object Motion {
 
     private fun attachPressIfEligible(view: View) {
         val parent = view.parent as? ViewGroup
-        // Bottom tab slots (only on the 4 tab screens whose bar owns navIndicator):
-        // gently press only the icon container, never the full bar slot.
-        // Action bars on other screens reuse @id/bottomNav and fall through to normal CTA press.
-        if (parent?.id == R.id.bottomNav && parent.findViewById<View>(R.id.navIndicator) != null) {
-            if (view.isClickable && view.findViewById<View>(R.id.navIndicator) == null) {
+        // Persistent bottom tab slots: gently press only the icon container, never the full bar slot.
+        if (parent?.id == R.id.navSlots) {
+            if (view.isClickable) {
                 val iconHolder = (view as? ViewGroup)?.getChildAt(0) ?: return
-                listenForPress(view, iconHolder, fixedDepth = 0.90f, depressCard = false)
+                listenForPress(view, iconHolder, fixedDepth = 0.88f, depressCard = false)
             }
             return
         }
@@ -503,141 +500,6 @@ object Motion {
             inner.draw(canvas)
             canvas.restoreToCount(save)
         }
-    }
-
-    // ---------------------------------------------------------------- bottom nav transition
-
-    /**
-     * Suppresses the open window transition on API 34+ (called on the
-     * destination tab Activity inside `onCreate`).
-     */
-    fun noOpenTransition(activity: Activity) {
-        if (Build.VERSION.SDK_INT >= 34) {
-            activity.overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, 0, 0)
-        }
-    }
-
-    /**
-     * Suppresses the pending transition right after `startActivity` for peer
-     * tab handoffs across API levels.
-     */
-    @Suppress("DEPRECATION")
-    fun noPendingTransition(activity: Activity) {
-        activity.overridePendingTransition(0, 0)
-    }
-
-    /** Taut, sleek spring exclusively for the bottom-nav pill glide (zero bounce/stretch). */
-    private val NAV_PILL_SPEC = SpringSpec(stiffness = 950f, dampingRatio = 0.90f)
-
-    /**
-     * Plays a sleek, flash-free peer-tab handoff:
-     * - The green bottom bar AND top header stay 100% solid (never flashing cream/white);
-     * - The translucent pill glides briskly behind the icons on a taut spring (zero stretch);
-     * - The active icon gives a subtle crisp micro-settle in place;
-     * - Only the scrollable page body sharpens softly (`0.88 -> 1.0`, `4dp -> 0`) on a GPU
-     *   layer in 115ms so content is visible on frame one with zero stutter or buffering.
-     */
-    fun navSlide(activity: Activity, from: Int, to: Int) {
-        if (!enabled(activity)) return
-        val nav = activity.findViewById<ViewGroup>(R.id.bottomNav) ?: return
-        val pill = activity.findViewById<View>(R.id.navIndicator) ?: return
-        val activeIcon = activity.findViewById<View>(R.id.navActiveIcon)
-        val root = activity.findViewById<ViewGroup>(R.id.main) ?: return
-        val dp = activity.resources.displayMetrics.density
-
-        // Keep bottom bar AND green header bar completely opaque — only gently settle the body.
-        val pageBodies = (0 until root.childCount)
-            .map { root.getChildAt(it) }
-            .filter { it !== nav && it.id != R.id.headerArea && it.id != R.id.fabPost }
-
-        val fab = activity.findViewById<View>(R.id.fabPost)
-        val animateFab = fab != null && fab.getTag(R.id.motion_reveal_state) != false
-
-        nav.clipChildren = false
-        for (i in 0 until nav.childCount) {
-            (nav.getChildAt(i) as? ViewGroup)?.let { slot ->
-                slot.clipChildren = false
-                (slot.getChildAt(0) as? ViewGroup)?.clipChildren = false
-            }
-        }
-
-        val runSlide = {
-            val fromSlot = nav.getChildAt(from)
-            val toSlot = nav.getChildAt(to)
-            if (fromSlot != null && toSlot != null) {
-                val dx = (fromSlot.left + fromSlot.width * 0.5f) - (toSlot.left + toSlot.width * 0.5f)
-                cancelAllSprings(pill)
-                pill.alpha = 1f
-                pill.scaleX = 1f
-                pill.translationX = dx
-                spring(pill, DynamicAnimation.TRANSLATION_X, 0f, NAV_PILL_SPEC)
-
-                activeIcon?.let { icon ->
-                    cancelAllSprings(icon)
-                    icon.scaleX = 0.92f
-                    icon.scaleY = 0.92f
-                    springScale(icon, 1f, Spatial.SNAPPY)
-                }
-            } else {
-                pill.alpha = 1f
-                pill.translationX = 0f
-            }
-
-            pageBodies.forEach { body ->
-                body.animate().cancel()
-                cancelAllSprings(body)
-                body.translationX = 0f
-                body.translationY = 4f * dp
-                body.alpha = 0.88f
-                body.animate()
-                    .alpha(1f)
-                    .translationY(0f)
-                    .setDuration(115)
-                    .setStartDelay(0)
-                    .setInterpolator(EASE_OUT)
-                    .withLayer()
-                    .start()
-            }
-
-            if (animateFab) {
-                fab.animate().cancel()
-                cancelAllSprings(fab)
-                fab.alpha = 0.88f
-                fab.scaleX = 0.94f
-                fab.scaleY = 0.94f
-                fab.translationY = 0f
-                fab.animate()
-                    .alpha(1f)
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(125)
-                    .setStartDelay(0)
-                    .setInterpolator(EASE_OUT)
-                    .withLayer()
-                    .start()
-            }
-        }
-
-        if (nav.isLaidOut && nav.width > 0) {
-            runSlide()
-        } else {
-            nav.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
-                override fun onPreDraw(): Boolean {
-                    nav.viewTreeObserver.removeOnPreDrawListener(this)
-                    runSlide()
-                    return true
-                }
-            })
-        }
-    }
-
-    /** Soft pill arrival when a tab screen opens fresh (e.g. Login → Home). */
-    fun settleIndicator(view: View) {
-        if (!enabled(view.context)) return
-        view.scaleX = 0.78f
-        view.alpha = 0f
-        spring(view, DynamicAnimation.SCALE_X, 1f, Spatial.RESPONSIVE)
-        spring(view, DynamicAnimation.ALPHA, 1f, Effects.FAST)
     }
 
     // ---------------------------------------------------------------- layout reflow & visibility

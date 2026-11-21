@@ -3,7 +3,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/uc_cream"
@@ -73,7 +72,7 @@
         app:layout_constraintTop_toBottomOf="@id/headerArea"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottomNav">
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <LinearLayout
             android:id="@+id/chatsContent"
@@ -765,173 +764,4 @@
 
         </LinearLayout>
     </ScrollView>
-
-    <!-- BOTTOM NAVIGATION -->
-    <LinearLayout
-        android:id="@+id/bottomNav"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="@color/uc_green"
-        android:clipChildren="false"
-        android:clipToPadding="false"
-        android:elevation="8dp"
-        android:paddingBottom="6dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clipChildren="false"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:onClick="openHome"
-            android:foreground="?attr/selectableItemBackground">
-
-            <FrameLayout
-                android:layout_width="46dp"
-                android:layout_height="30dp">
-
-                <ImageView
-                    android:layout_width="21dp"
-                    android:layout_height="21dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_home"
-                    android:tint="@color/text_on_green_dim"
-                    android:contentDescription="@null" />
-            </FrameLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:fontFamily="@font/poppins_medium"
-                android:text="@string/nav_home"
-                android:textColor="@color/text_on_green_dim"
-                android:textSize="10sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clipChildren="false"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:onClick="openMarket"
-            android:foreground="?attr/selectableItemBackground">
-
-            <FrameLayout
-                android:layout_width="46dp"
-                android:layout_height="30dp">
-
-                <ImageView
-                    android:layout_width="21dp"
-                    android:layout_height="21dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_market"
-                    android:tint="@color/text_on_green_dim"
-                    android:contentDescription="@null" />
-            </FrameLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:fontFamily="@font/poppins_medium"
-                android:text="@string/nav_market"
-                android:textColor="@color/text_on_green_dim"
-                android:textSize="10sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clipChildren="false"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp">
-
-            <FrameLayout
-                android:layout_width="46dp"
-                android:layout_height="30dp"
-                android:clipChildren="false">
-
-                <View
-                    android:id="@+id/navIndicator"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/bg_nav_active" />
-
-                <ImageView
-                    android:id="@+id/navActiveIcon"
-                    android:layout_width="21dp"
-                    android:layout_height="21dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_chat"
-                    android:tint="@color/white"
-                    android:contentDescription="@null" />
-            </FrameLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:fontFamily="@font/poppins_medium"
-                android:text="@string/nav_chats"
-                android:textColor="@color/white"
-                android:textSize="10sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clipChildren="false"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:onClick="openProfile"
-            android:foreground="?attr/selectableItemBackground">
-
-            <FrameLayout
-                android:layout_width="46dp"
-                android:layout_height="30dp">
-
-                <ImageView
-                    android:layout_width="21dp"
-                    android:layout_height="21dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_profile"
-                    android:tint="@color/text_on_green_dim"
-                    android:contentDescription="@null" />
-            </FrameLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:fontFamily="@font/poppins_medium"
-                android:text="@string/nav_profile"
-                android:textColor="@color/text_on_green_dim"
-                android:textSize="10sp" />
-        </LinearLayout>
-    </LinearLayout>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

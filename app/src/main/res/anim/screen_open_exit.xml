@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Covered screen steps back subtly with soft depth dim. -->
+<!-- Underlying screen subtly recedes in depth without harsh horizontal sliding. -->
 <set xmlns:android="http://schemas.android.com/apk/res/android"
     android:interpolator="@interpolator/emphasized_decelerate">
-    <translate
-        android:fromXDelta="0%"
-        android:toXDelta="-6%"
-        android:duration="250" />
+    <scale
+        android:fromXScale="1.0"
+        android:toXScale="0.97"
+        android:fromYScale="1.0"
+        android:toYScale="0.97"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:duration="210" />
     <alpha
         android:fromAlpha="1.0"
-        android:toAlpha="0.92"
-        android:duration="250" />
+        android:toAlpha="0.90"
+        android:duration="210" />
 </set>

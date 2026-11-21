@@ -22,10 +22,5 @@ class ListingPostedActivity : BaseActivity() {
     }
 
     /** Returns to the Campus Market. */
-    fun backToMarket(view: View) {
-        val intent = Intent(this, MarketActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-        startActivity(intent)
-        finish()
-    }
+    fun backToMarket(view: View) = switchTab(MainActivity.TAB_MARKET)
 }

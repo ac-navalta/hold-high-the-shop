@@ -11,82 +11,36 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 /**
  * Shared behaviour for every screen in the app.
- *
- * The bottom navigation appears on the four tab screens, so the handlers live
- * here. Peer tab switches use `REORDER_TO_FRONT` so once visited, Home, Market,
- * Chats and Profile stay warm in memory for instant, flash-free handoffs.
  */
 open class BaseActivity : AppCompatActivity() {
 
-    override fun onCreate(savedInstanceState: android.os.Bundle?) {
-        super.onCreate(savedInstanceState)
-        if (intent.hasExtra(EXTRA_FROM_TAB)) Motion.noOpenTransition(this)
-    }
-
     /**
      * Every screen gets the shared press feedback ([Motion.installPress]) and
-     * 48dp touch areas for its small controls ([TouchTargets]).
+     * 48dp touch areas ([TouchTargets]), deferred past frame 1 so screens open
+     * and render with zero startup scanning overhead.
      */
     override fun setContentView(layoutResID: Int) {
         super.setContentView(layoutResID)
         val content = findViewById<View>(android.R.id.content)
-        Motion.installPress(content)
-        TouchTargets.install(content)
-    }
-
-    override fun onPostCreate(savedInstanceState: android.os.Bundle?) {
-        super.onPostCreate(savedInstanceState)
-        val tabIndex = currentTab()
-        if (tabIndex >= 0) {
-            onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    if (tabIndex > 0) switchTab(MainActivity::class.java)
-                    else finishAffinity()
-                }
-            })
+        content.post {
+            if (!isFinishing && !isDestroyed) {
+                Motion.installPress(content)
+                TouchTargets.install(content)
+            }
         }
-        arriveOnTab(intent)
     }
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        if (intent.hasExtra(EXTRA_FROM_TAB)) Motion.noOpenTransition(this)
-        arriveOnTab(intent)
-    }
+    open fun openHome(view: View) = switchTab(MainActivity.TAB_HOME)
 
-    /**
-     * On tab screens: arriving from another tab glides the translucent pill
-     * briskly behind the icons while keeping the header and bottom bar rock-solid.
-     */
-    private fun arriveOnTab(intent: Intent?) {
-        val pill = findViewById<View>(R.id.navIndicator) ?: return
-        val from = intent?.getIntExtra(EXTRA_FROM_TAB, -1) ?: -1
-        intent?.removeExtra(EXTRA_FROM_TAB)
-        val to = currentTab()
-        if (from < 0 || from == to) Motion.settleIndicator(pill) else Motion.navSlide(this, from, to)
-    }
+    open fun openMarket(view: View) = switchTab(MainActivity.TAB_MARKET)
 
-    /** Index of this screen's tab in the bar (Home 0 … Profile 3), or -1 off the tab screens. */
-    private fun currentTab(): Int {
-        val nav = findViewById<ViewGroup>(R.id.bottomNav) ?: return -1
-        val pill = findViewById<View>(R.id.navIndicator) ?: return -1
-        var cur: View? = pill
-        while (cur != null && cur.parent !== nav) cur = cur.parent as? View
-        return (0 until nav.childCount).firstOrNull { nav.getChildAt(it) === cur } ?: -1
-    }
+    open fun openChats(view: View) = switchTab(MainActivity.TAB_CHATS)
 
-    fun openHome(view: View) = switchTab(MainActivity::class.java)
-
-    fun openMarket(view: View) = switchTab(MarketActivity::class.java)
-
-    fun openChats(view: View) = switchTab(ChatsActivity::class.java)
-
-    fun openProfile(view: View) = switchTab(ProfileActivity::class.java)
+    open fun openProfile(view: View) = switchTab(MainActivity.TAB_PROFILE)
 
     /** Opens the Campus Market already filtered to the program in the view's tag. */
-    fun openProgram(view: View) {
-        switchTab(MarketActivity::class.java) {
+    open fun openProgram(view: View) {
+        switchTab(MainActivity.TAB_MARKET) {
             putExtra(EXTRA_PROGRAM, view.tag as? String)
         }
     }
@@ -108,7 +62,7 @@ open class BaseActivity : AppCompatActivity() {
         )
     }
 
-    /** Opens a listing from its card using the app's sleek Shared-Axis transition. */
+    /** Opens a listing from its card using the app's sleek Shared-Axis Z transition. */
     fun openListingFromCard(card: View, id: String) = openListingById(id)
 
     /** Opens the saved items list. */
@@ -149,26 +103,18 @@ open class BaseActivity : AppCompatActivity() {
         finish()
     }
 
-    protected fun switchTab(target: Class<*>, extras: Intent.() -> Unit = {}) {
-        val intent = Intent(this, target)
+    /** Jumps back to [MainActivity] on a specific tab from any pushed screen. */
+    protected fun switchTab(tabIndex: Int, extras: Intent.() -> Unit = {}) {
+        val intent = Intent(this, MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            .putExtra(MainActivity.EXTRA_NAV_TAB, tabIndex)
         intent.extras()
-        if (javaClass == target && intent.extras == null) return
-        val fromTab = currentTab()
-        if (fromTab >= 0) {
-            intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NO_ANIMATION
-            intent.putExtra(EXTRA_FROM_TAB, fromTab)
-            Motion.tick(window.decorView)
-            startActivity(intent)
-            Motion.noPendingTransition(this)
-        } else {
-            intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-            startActivity(intent)
-            finish()
-        }
+        startActivity(intent)
+        if (this !is MainActivity) finish()
     }
 
     /** A product card (photo, condition, price, title, program) that opens the listing. */
-    protected fun listingCard(parent: ViewGroup, listing: Listing): View {
+    internal fun listingCard(parent: ViewGroup, listing: Listing): View {
         val card = LayoutInflater.from(this).inflate(R.layout.item_listing_card, parent, false)
         card.findViewById<TextView>(R.id.cardPrice).text = Listings.priceLabel(this, listing)
         card.findViewById<TextView>(R.id.cardTitle).text = listing.title
@@ -189,7 +135,7 @@ open class BaseActivity : AppCompatActivity() {
      * Adds a listing row (thumbnail, title, price, status) to a list.
      * Returns the row so callers can change its trailing icon.
      */
-    protected fun addRow(
+    internal fun addRow(
         list: LinearLayout,
         title: String,
         price: CharSequence,
@@ -222,7 +168,7 @@ open class BaseActivity : AppCompatActivity() {
      * outlined; getting (things from others) is filled mint; swaps, where
      * both sides give and get, are amber.
      */
-    protected fun styleBadge(view: TextView, label: String, giving: Boolean, swap: Boolean = false) {
+    internal fun styleBadge(view: TextView, label: String, giving: Boolean, swap: Boolean = false) {
         view.text = label
         view.setBackgroundResource(
             when {
@@ -290,7 +236,7 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     /** Adds a heading with a one-line hint to a list. */
-    protected fun addSection(list: LinearLayout, title: Int, hint: Int) {
+    internal fun addSection(list: LinearLayout, title: Int, hint: Int) {
         val header = LayoutInflater.from(this).inflate(R.layout.item_section_header, list, false)
         header.findViewById<TextView>(R.id.sectionTitle).setText(title)
         header.findViewById<TextView>(R.id.sectionHint).setText(hint)

@@ -1,15 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Modern Shared-Axis X push: restrained glide with crisp fade-in (sleek, never harsh). -->
+<!-- Sleek Material 3 Shared-Axis Z open: soft scale-up + gentle rise + instant-feeling fade. -->
 <set xmlns:android="http://schemas.android.com/apk/res/android">
+    <scale
+        android:fromXScale="0.96"
+        android:toXScale="1.0"
+        android:fromYScale="0.96"
+        android:toYScale="1.0"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:duration="210"
+        android:interpolator="@interpolator/emphasized_decelerate" />
     <translate
-        android:zAdjustment="top"
-        android:fromXDelta="16%"
-        android:toXDelta="0%"
-        android:duration="250"
+        android:fromYDelta="2.5%"
+        android:toYDelta="0%"
+        android:duration="210"
         android:interpolator="@interpolator/emphasized_decelerate" />
     <alpha
         android:fromAlpha="0.0"
         android:toAlpha="1.0"
-        android:duration="130"
+        android:duration="95"
         android:interpolator="@interpolator/ease_out" />
 </set>

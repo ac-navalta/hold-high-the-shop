@@ -22,10 +22,5 @@ class ReportReceivedActivity : BaseActivity() {
     }
 
     /** Returns to the Campus Market. */
-    fun returnToMarket(view: View) {
-        val intent = Intent(this, MarketActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-        startActivity(intent)
-        finish()
-    }
+    fun returnToMarket(view: View) = switchTab(MainActivity.TAB_MARKET)
 }

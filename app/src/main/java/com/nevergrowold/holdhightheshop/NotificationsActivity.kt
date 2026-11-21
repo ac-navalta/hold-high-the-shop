@@ -58,6 +58,6 @@ class NotificationsActivity : BaseActivity() {
 
     /** "You received a new rating": the Completed tab lists finished exchanges. */
     fun openRatings(view: View) {
-        switchTab(ProfileActivity::class.java) { putExtra(EXTRA_TAB, ProfileActivity.TAB_COMPLETED) }
+        switchTab(MainActivity.TAB_PROFILE) { putExtra(EXTRA_TAB, ProfileActivity.TAB_COMPLETED) }
     }
 }

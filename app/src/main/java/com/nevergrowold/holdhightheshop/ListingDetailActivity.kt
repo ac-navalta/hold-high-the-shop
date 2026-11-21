@@ -40,18 +40,6 @@ class ListingDetailActivity : BaseActivity() {
         listing = Listings.byId(intent.getStringExtra(EXTRA_LISTING))
         bind()
 
-        // Calm, sleek arrival settle on the detail sheet (no bounce, no blank flash).
-        if (Motion.enabled(this)) {
-            val sheet = findViewById<View>(R.id.detailSheet)
-            sheet.translationY = 8f * resources.displayMetrics.density
-            sheet.animate()
-                .translationY(0f)
-                .setDuration(220)
-                .setInterpolator(Motion.EASE_OUT)
-                .withLayer()
-                .start()
-        }
-
         // Subtle scroll-linked parallax on the photo hero beneath the overlapping details sheet.
         val scroll = findViewById<android.widget.ScrollView>(R.id.detailScroll)
         val hero = findViewById<View>(R.id.detailHero)
@@ -493,7 +481,7 @@ class ListingDetailActivity : BaseActivity() {
             else -> notify(
                 getString(if (listing.isSwap) R.string.toast_swapped_with else R.string.toast_sold_to, first),
                 getString(R.string.action_view)
-            ) { switchTab(ProfileActivity::class.java) { putExtra(EXTRA_TAB, ProfileActivity.TAB_COMPLETED) } }
+            ) { switchTab(MainActivity.TAB_PROFILE) { putExtra(EXTRA_TAB, ProfileActivity.TAB_COMPLETED) } }
         }
     }
 
