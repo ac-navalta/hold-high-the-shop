@@ -2,9 +2,11 @@ package com.nevergrowold.holdhightheshop
 
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -29,6 +31,7 @@ internal class ProfileTab(
     private var lastRenderSignature: Any? = null
 
     init {
+        bindProfileHeader()
         selectTab(tab)
     }
 
@@ -43,10 +46,34 @@ internal class ProfileTab(
     }
 
     fun onShow() {
+        bindProfileHeader()
         Motion.countUp(root.findViewById(R.id.profileRating), Reliability.rating(), delay = 60)
         Motion.countUp(root.findViewById(R.id.profileOnTime), Reliability.onTime(), delay = 110)
         Motion.countUp(root.findViewById(R.id.profileCompleted), Reliability.completed().toString(), delay = 160)
         selectTab(tab)
+    }
+
+    private fun bindProfileHeader() {
+        val profile = UserState.profile
+        val initialsView = root.findViewById<TextView>(R.id.profileInitials)
+        val avatarPhoto = root.findViewById<ImageView>(R.id.profileAvatarPhoto)
+        initialsView?.text = profile.initials
+        if (avatarPhoto != null) {
+            AppIntents.bindImageUri(avatarPhoto, initialsView, profile.avatarUri)
+        } else {
+            initialsView?.isVisible = true
+        }
+        root.findViewById<TextView>(R.id.profileName)?.text = profile.name
+        root.findViewById<TextView>(R.id.profileMeta)?.text =
+            if (UserState.settings.showProgram) {
+                activity.getString(R.string.seller_meta_format, profile.program, profile.year)
+            } else {
+                profile.year
+            }
+        root.findViewById<TextView>(R.id.profileBio)?.apply {
+            text = profile.bio
+            isVisible = profile.bio.isNotBlank()
+        }
     }
 
     private fun scrollToTabs() {
@@ -102,7 +129,7 @@ internal class ProfileTab(
             selected,
             group,
             saved.map { it.id },
-            mine.map { Triple(it.id, UserState.accepted(it.id)?.meetMillis, UserState.pending(it.id).size) },
+            mine.map { listOf(it.id, it.title, it.price, it.type, UserState.accepted(it.id)?.meetMillis, UserState.pending(it.id).size) },
             reserved.map { Pair(it.id, UserState.reservation(it.id)?.meetMillis) },
             borrowing.map { Triple(it.first.id, it.second.dueMillis, it.second.returnPending) },
             lending.map { Triple(it.first.id, it.second.dueMillis, it.second.returnPending) },
@@ -286,15 +313,17 @@ internal class ProfileTab(
     fun openMenu(view: View) {
         val options = listOf(
             activity.getString(R.string.menu_edit_profile),
+            activity.getString(R.string.menu_share_profile),
             activity.getString(R.string.menu_settings),
             activity.getString(R.string.menu_logout),
         )
-        val icons = listOf(R.drawable.ic_profile, R.drawable.ic_settings, R.drawable.ic_logout)
-        Dropdown.show(view, options, icons = icons, widthDp = 200, alignEnd = true) {
+        val icons = listOf(R.drawable.ic_profile, R.drawable.ic_share, R.drawable.ic_settings, R.drawable.ic_logout)
+        Dropdown.show(view, options, icons = icons, widthDp = 210, alignEnd = true) {
             when (it) {
                 0 -> activity.startActivity(Intent(activity, EditProfileActivity::class.java))
-                1 -> activity.startActivity(Intent(activity, SettingsActivity::class.java))
-                2 -> activity.confirmLogout()
+                1 -> AppIntents.launch(activity, AppIntents.shareSellerChooser(activity, Listings.ME))
+                2 -> activity.startActivity(Intent(activity, SettingsActivity::class.java))
+                3 -> activity.confirmLogout()
             }
         }
     }

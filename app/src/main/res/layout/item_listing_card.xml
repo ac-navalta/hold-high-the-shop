@@ -27,11 +27,20 @@
             android:background="@drawable/bg_photo_placeholder">
 
             <ImageView
+                android:id="@+id/cardPhotoIcon"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_image"
                 android:tint="#CFC9B4"
+                android:contentDescription="@string/cd_item_photo" />
+
+            <ImageView
+                android:id="@+id/cardPhoto"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
                 android:contentDescription="@string/cd_item_photo" />
 
             <TextView

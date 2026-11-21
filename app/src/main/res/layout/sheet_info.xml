@@ -26,9 +26,25 @@
         android:textSize="13sp"
         android:lineSpacingExtra="4dp" />
 
-    <TextView
-        android:id="@+id/infoDone"
-        style="@style/PrimaryButton"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginTop="22dp"
-        android:text="@string/btn_got_it" />
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/infoAction"
+            style="@style/OutlineButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="10dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/infoDone"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="@string/btn_got_it" />
+    </LinearLayout>
 </LinearLayout>

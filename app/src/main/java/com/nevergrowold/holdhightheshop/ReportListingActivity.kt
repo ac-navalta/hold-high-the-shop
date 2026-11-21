@@ -12,6 +12,7 @@ import androidx.activity.enableEdgeToEdge
 
 class ReportListingActivity : BaseActivity() {
 
+    private lateinit var listing: Listing
     private var reason = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,7 +21,7 @@ class ReportListingActivity : BaseActivity() {
         setContentView(R.layout.activity_report_listing)
         BarInsets.apply(this)
 
-        val listing = Listings.byId(intent.getStringExtra(EXTRA_LISTING))
+        listing = Listings.byId(intent.getStringExtra(EXTRA_LISTING))
         findViewById<TextView>(R.id.reportItem).text = listing.title
         findViewById<TextView>(R.id.reportListedBy).text = getString(R.string.report_listed_by_format, listing.seller.name)
 
@@ -48,7 +49,7 @@ class ReportListingActivity : BaseActivity() {
         })
     }
 
-    /** Sends the report, shaking the first reason row if none is chosen. */
+    /** Records the report in [UserState], shows a Toast, and opens [ReportReceivedActivity] with the real reference. */
     fun submitReport(view: View) {
         if (reason < 0) {
             Motion.shake(findViewById(R.id.reason1))
@@ -57,7 +58,25 @@ class ReportListingActivity : BaseActivity() {
         }
         hideKeyboard(view)
         Motion.confirm(view)
-        startActivity(Intent(this, ReportReceivedActivity::class.java))
+        val details = findViewById<EditText>(R.id.inputReportDetails).text.toString().trim()
+        val issue = UserState.report(listing.id, REASON_STRINGS[reason], listing.seller, details)
+        Toast.makeText(this, getString(R.string.toast_report_submitted, issue.ref), Toast.LENGTH_SHORT).show()
+        startActivity(
+            Intent(this, ReportReceivedActivity::class.java)
+                .putExtra(EXTRA_LISTING, listing.id)
+                .putExtra(ReportReceivedActivity.EXTRA_REFERENCE, issue.ref)
+        )
         finish()
+    }
+
+    companion object {
+        private val REASON_STRINGS = listOf(
+            R.string.reason1,
+            R.string.reason2,
+            R.string.reason3,
+            R.string.reason4,
+            R.string.reason5,
+            R.string.reason6,
+        )
     }
 }

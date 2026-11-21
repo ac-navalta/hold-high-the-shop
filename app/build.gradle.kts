@@ -30,6 +30,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
@@ -40,6 +43,12 @@ dependencies {
     implementation(libs.androidx.dynamicanimation)
     implementation(libs.material)
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.asm)
+    testImplementation(libs.asm.commons)
+    testImplementation(libs.asm.tree)
+    testImplementation(libs.asm.util)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
 }

@@ -76,13 +76,20 @@
             android:paddingBottom="24dp">
 
             <FrameLayout
+                android:id="@+id/editAvatarContainer"
                 android:layout_width="96dp"
                 android:layout_height="96dp"
                 android:layout_gravity="center_horizontal"
                 android:background="@drawable/bg_avatar_ring"
-                android:elevation="3dp">
+                android:elevation="3dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:onClick="pickAvatar"
+                android:contentDescription="@string/cd_edit_avatar"
+                android:foreground="?attr/selectableItemBackgroundBorderless">
 
                 <TextView
+                    android:id="@+id/editInitials"
                     android:layout_width="84dp"
                     android:layout_height="84dp"
                     android:layout_gravity="center"
@@ -92,6 +99,15 @@
                     android:text="@string/me_initials"
                     android:textColor="@color/uc_green"
                     android:textSize="26sp" />
+
+                <ImageView
+                    android:id="@+id/editAvatarPhoto"
+                    android:layout_width="84dp"
+                    android:layout_height="84dp"
+                    android:layout_gravity="center"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone"
+                    android:contentDescription="@string/cd_edit_avatar" />
             </FrameLayout>
 
             <TextView
@@ -121,6 +137,7 @@
                 android:text="@string/settings_email" />
 
             <TextView
+                android:id="@+id/editEmailValue"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
                 android:layout_marginTop="8dp"

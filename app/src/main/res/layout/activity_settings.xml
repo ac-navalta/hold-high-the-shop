@@ -141,6 +141,7 @@
                                 android:text="@string/settings_email" />
 
                             <TextView
+                                android:id="@+id/rowEmailValue"
                                 style="@style/ActionHint"
                                 android:maxLines="1"
                                 android:ellipsize="middle"
@@ -156,6 +157,7 @@
                         android:background="@null">
 
                         <ImageView
+                            android:id="@+id/rowProgramIcon"
                             style="@style/SettingsIcon"
                             android:src="@drawable/ic_prog_citcs" />
 
@@ -340,6 +342,43 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
                             android:checked="false" />
+                    </LinearLayout>
+                    <View style="@style/SettingsDivider" />
+
+                    <LinearLayout
+                        android:id="@+id/rowSystemNotifications"
+                        style="@style/SettingsRow">
+
+                        <ImageView
+                            style="@style/SettingsIcon"
+                            android:src="@drawable/ic_settings" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="14dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/SettingsTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_weight="0"
+                                android:layout_marginStart="0dp"
+                                android:text="@string/settings_system_notifications" />
+
+                            <TextView
+                                style="@style/ActionHint"
+                                android:text="@string/settings_system_notifications_hint" />
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_marginStart="6dp"
+                            android:src="@drawable/ic_chevron_right"
+                            android:tint="@color/text_secondary"
+                            android:contentDescription="@null" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

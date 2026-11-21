@@ -48,7 +48,9 @@ data class Listing(
     /** Swap listings: what the seller would like in exchange. */
     val wants: String? = null,
     /** Rent listings: the longest a borrower can keep it, in weeks. */
-    val maxWeeks: Int = 4
+    val maxWeeks: Int = 4,
+    /** Local content/file URIs of photos attached via Create/Edit listing. */
+    val photoUris: List<String> = emptyList()
 ) {
     val isRent get() = type == 1
     val isSwap get() = type == 2
@@ -246,8 +248,10 @@ object Listings {
 
     val PROGRAMS = COLLEGES.map { it.code }
 
-    /** The signed-in student. */
-    val ME = Seller(
+    /** The signed-in student (reflects edits made in EditProfileActivity). */
+    val ME: Seller get() = UserState.me()
+
+    private val defaultMe = Seller(
         "Mika Dela Cruz", "MD", "CITCS", "3rd Year", "4.6", "92%", 14,
         "", true
     )
@@ -289,11 +293,15 @@ object Listings {
         carlo to "item14"
     )
 
-    val ALL = listOf(
+    private val INITIAL_MY_IDS = setOf("item1", "mine2", "mine3", "mine4", "mine5", "mine6")
+    private val myListingIds = INITIAL_MY_IDS.toMutableSet()
+    private var nextPostedNumber = 7
+
+    private fun seedListings(): MutableList<Listing> = mutableListOf(
         Listing(
             "item1", "Engineering Drawing Set", 850, "COE", 0, 0,
             "Complete drafting set with T-square, triangles and compass. Barely used, still in the original case.",
-            ME, "UC Main Gate Security Desk", 1
+            defaultMe, "UC Main Gate Security Desk", 1
         ),
         Listing(
             "item2", "Casio fx-991EX", 1200, "CITCS", 1, 0,
@@ -368,12 +376,12 @@ object Listings {
         Listing(
             "mine2", "Drafting Table Lamp", 150, "CAFA", 1, 1,
             "LED desk lamp with an adjustable arm. Borrow it for the week of your plates.",
-            ME, "CITCS Building Entrance", 3
+            defaultMe, "CITCS Building Entrance", 3
         ),
         Listing(
             "mine3", "Introduction to Psychology", 300, "CAS", 1, 0,
             "Used for one semester. Clean pages, a few sticky notes inside.",
-            ME, "UC Library Lobby", 6
+            defaultMe, "UC Library Lobby", 6
         ),
         Listing(
             "item14", "Arduino Starter Kit", 900, "COE", 1, 2,
@@ -385,24 +393,60 @@ object Listings {
         Listing(
             "mine4", "Calculus Reviewer", 350, "CAS", 1, 2,
             "Complete reviewer with worked examples for Calculus 1 and 2. A few notes in pencil.",
-            ME, "UC Library Lobby", 4,
+            defaultMe, "UC Library Lobby", 4,
             wants = "An electronics or Arduino kit"
         ),
         Listing(
             "mine5", "Safety Goggles", 40, "COE", 1, 1,
             "Clear anti-fog goggles for chem and shop labs. Cleaned after every use.",
-            ME, "CITCS Building Entrance", 1,
+            defaultMe, "CITCS Building Entrance", 1,
             maxWeeks = 4
         ),
         Listing(
             "mine6", "Drafting Triangles Set", 30, "CAFA", 1, 1,
             "45\u00B0 and 30/60\u00B0 triangles with a protractor. Borrow it for your plates.",
-            ME, "UC Library Lobby", 9,
+            defaultMe, "UC Library Lobby", 9,
             maxWeeks = 2
         )
     )
 
-    fun isMine(listing: Listing) = listing.seller == ME
+    private val items: MutableList<Listing> = seedListings()
+
+    val ALL: List<Listing> get() = items
+
+    fun isMine(listing: Listing) = listing.id in myListingIds
+
+    /** Current seller for [listing], reflecting profile edits on your own items. */
+    fun sellerOf(listing: Listing): Seller = if (isMine(listing)) ME else listing.seller
+
+    fun nextListingId(): String = "mine${nextPostedNumber++}"
+
+    fun referenceCode(listingId: String): String =
+        "HTS-%05d".format(24000 + (listingId.hashCode() and 0x7fffffff) % 1000)
+
+    /** Adds a newly posted listing by the signed-in student. */
+    fun addListing(listing: Listing): Listing {
+        myListingIds.add(listing.id)
+        items.add(0, listing.copy(seller = ME))
+        return items.first()
+    }
+
+    /** Updates an existing listing in place (used by Edit listing). */
+    fun updateListing(updated: Listing): Boolean {
+        val index = items.indexOfFirst { it.id == updated.id }
+        if (index < 0) return false
+        items[index] = if (isMine(updated)) updated.copy(seller = ME) else updated
+        return true
+    }
+
+    /** Restores seed listings (used by unit tests). */
+    fun reset() {
+        items.clear()
+        items.addAll(seedListings())
+        myListingIds.clear()
+        myListingIds.addAll(INITIAL_MY_IDS)
+        nextPostedNumber = 7
+    }
 
     /** Kicker for a chat or listing strip, e.g. YOU'RE BORROWING. */
     fun roleKicker(listing: Listing): Int = when {
@@ -548,9 +592,15 @@ object Listings {
 
     fun byId(id: String?): Listing = ALL.firstOrNull { it.id == id } ?: ALL.first { it.id == DEFAULT_ID }
 
-    fun sellerByName(name: String?): Seller = SELLERS.firstOrNull { it.name == name } ?: paolo
+    fun sellerByName(name: String?): Seller {
+        if (name.isNullOrBlank()) return paolo
+        val needle = name.trim()
+        return SELLERS.firstOrNull { it.name.equals(needle, ignoreCase = true) }
+            ?: SELLERS.firstOrNull { it.first.equals(needle, ignoreCase = true) }
+            ?: paolo
+    }
 
-    fun bySeller(seller: Seller): List<Listing> = ALL.filter { it.seller == seller }
+    fun bySeller(seller: Seller): List<Listing> = ALL.filter { sellerOf(it).name == seller.name }
 
     /**
      * What the market shows: other students' listings that are still open.
@@ -623,8 +673,198 @@ object Listings {
  */
 object UserState {
 
+    private const val PREFS_NAME = "hold_high_the_shop_prefs"
+    private var prefsLoaded = false
+
+    data class UserProfile(
+        val name: String = "Mika Dela Cruz",
+        val email: String = "mika.dela-cruz@s.uc-bcf.edu.ph",
+        val program: String = "CITCS",
+        val year: String = "3rd Year",
+        val bio: String = "",
+        val avatarUri: String? = null,
+    ) {
+        val first: String get() = name.trim().substringBefore(' ').ifEmpty { "UCian" }
+        val initials: String
+            get() {
+                val parts = name.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+                return when {
+                    parts.isEmpty() -> "UC"
+                    parts.size == 1 -> parts[0].take(2).uppercase(Locale.US)
+                    else -> (parts.first().take(1) + parts.last().take(1)).uppercase(Locale.US)
+                }
+            }
+    }
+
+    data class SettingsState(
+        val notifyMessages: Boolean = true,
+        val notifyReservations: Boolean = true,
+        val notifyReminders: Boolean = true,
+        val notifyPriceDrops: Boolean = false,
+        val showProgram: Boolean = true,
+        val showActiveStatus: Boolean = true,
+    )
+
+    data class ListingDraft(
+        val title: String,
+        val program: Int,
+        val condition: Int,
+        val listingType: Int,
+        val price: String,
+        val wants: String,
+        val maxWeeks: Int,
+        val description: String,
+        val meetup: Int,
+        val availability: Availability,
+        val photoUris: List<String?>,
+    )
+
+    data class ChatMessage(
+        val text: String? = null,
+        val photoUri: String? = null,
+        val outgoing: Boolean = true,
+        val timeLabel: String = "Just now",
+        val systemTitle: String? = null,
+        val systemDetail: String? = null,
+        val meetupPlace: String? = null,
+        val meetupMillis: Long? = null,
+    )
+
+    var profile: UserProfile = UserProfile()
+        private set
+
+    var settings: SettingsState = SettingsState()
+        private set
+
+    var draft: ListingDraft? = null
+
+    fun me(): Seller = Seller(
+        name = profile.name,
+        initials = profile.initials,
+        program = profile.program,
+        year = profile.year,
+        rating = "4.6",
+        onTime = "92%",
+        completed = 14,
+        lastMessage = "",
+        online = settings.showActiveStatus,
+    )
+
+    /** Loads persisted profile & settings once from SharedPreferences. */
+    fun ensureLoaded(context: Context) {
+        if (prefsLoaded) return
+        prefsLoaded = true
+        val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        profile = UserProfile(
+            name = prefs.getString("profile_name", profile.name) ?: profile.name,
+            email = prefs.getString("profile_email", profile.email) ?: profile.email,
+            program = prefs.getString("profile_program", profile.program) ?: profile.program,
+            year = prefs.getString("profile_year", profile.year) ?: profile.year,
+            bio = prefs.getString("profile_bio", profile.bio) ?: profile.bio,
+            avatarUri = prefs.getString("profile_avatar", null),
+        )
+        settings = SettingsState(
+            notifyMessages = prefs.getBoolean("sw_messages", true),
+            notifyReservations = prefs.getBoolean("sw_reservations", true),
+            notifyReminders = prefs.getBoolean("sw_reminders", true),
+            notifyPriceDrops = prefs.getBoolean("sw_price_drops", false),
+            showProgram = prefs.getBoolean("sw_show_program", true),
+            showActiveStatus = prefs.getBoolean("sw_active_status", true),
+        )
+        defaultMeetup = prefs.getInt("default_meetup", 0).coerceIn(0, Listings.MEETUP_POINTS.lastIndex)
+    }
+
+    fun updateEmail(context: Context, email: String) {
+        profile = profile.copy(email = email.trim())
+        context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit().putString("profile_email", profile.email).apply()
+    }
+
+    fun updateProfile(
+        context: Context,
+        name: String,
+        program: String,
+        year: String,
+        bio: String,
+        avatarUri: String? = profile.avatarUri,
+    ) {
+        profile = profile.copy(
+            name = name.trim(),
+            program = program,
+            year = year,
+            bio = bio.trim(),
+            avatarUri = avatarUri,
+        )
+        context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+            .putString("profile_name", profile.name)
+            .putString("profile_program", profile.program)
+            .putString("profile_year", profile.year)
+            .putString("profile_bio", profile.bio)
+            .putString("profile_avatar", profile.avatarUri)
+            .apply()
+    }
+
+    fun updateSettings(context: Context, next: SettingsState) {
+        settings = next
+        context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+            .putBoolean("sw_messages", next.notifyMessages)
+            .putBoolean("sw_reservations", next.notifyReservations)
+            .putBoolean("sw_reminders", next.notifyReminders)
+            .putBoolean("sw_price_drops", next.notifyPriceDrops)
+            .putBoolean("sw_show_program", next.showProgram)
+            .putBoolean("sw_active_status", next.showActiveStatus)
+            .apply()
+    }
+
+    fun updateDefaultMeetup(context: Context, index: Int) {
+        defaultMeetup = index.coerceIn(0, Listings.MEETUP_POINTS.lastIndex)
+        context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit().putInt("default_meetup", defaultMeetup).apply()
+    }
+
     private val saved = mutableSetOf("item3", "item5")
-    var notificationsRead: Boolean = false
+    private val readNotifications = mutableSetOf<Int>()
+
+    var notificationsRead: Boolean
+        get() = readNotifications.containsAll(listOf(1, 2))
+        set(value) {
+            if (value) readNotifications.addAll(listOf(1, 2)) else readNotifications.clear()
+        }
+
+    fun markNotificationRead(id: Int) {
+        readNotifications.add(id)
+    }
+
+    fun isNotificationRead(id: Int): Boolean = id in readNotifications
+
+    /** Per-seller messages sent during this session, plus unread state. */
+    private val chatLog = mutableMapOf<String, MutableList<ChatMessage>>()
+    private val readChats = mutableSetOf<String>()
+
+    fun chatMessages(sellerName: String): List<ChatMessage> = chatLog[sellerName].orEmpty()
+
+    fun appendChatMessage(sellerName: String, message: ChatMessage) {
+        chatLog.getOrPut(sellerName) { mutableListOf() }.add(message)
+        readChats.add(sellerName)
+    }
+
+    fun markChatRead(sellerName: String) {
+        readChats.add(sellerName)
+    }
+
+    fun isChatUnread(sellerIndex: Int, sellerName: String): Boolean =
+        (sellerIndex == 0 || sellerIndex == 2) && sellerName !in readChats
+
+    fun lastChatPreview(seller: Seller): Pair<String, String?> {
+        val last = chatLog[seller.name]?.lastOrNull() ?: return seller.lastMessage to null
+        val preview = when {
+            last.text != null -> last.text
+            last.photoUri != null -> "Sent a photo"
+            last.systemTitle != null -> last.systemTitle
+            else -> seller.lastMessage
+        }
+        return preview to last.timeLabel
+    }
 
     /**
      * A reservation or swap offer Mika made on someone else's listing.
@@ -662,9 +902,9 @@ object UserState {
         val proof: Int = Exchange.PROOF_CODE
     )
 
-    private val reserved: MutableMap<String, Reservation> by lazy {
+    private fun seedReserved(): MutableMap<String, Reservation> {
         val now = System.currentTimeMillis()
-        mutableMapOf(
+        return mutableMapOf(
             "item2" to Reservation(
                 "UC Main Gate Security Desk • Tomorrow, 1:30 PM",
                 meetMillis = Rentals.at(1, 13 * 60 + 30), madeMillis = now - 2 * HOUR
@@ -681,10 +921,9 @@ object UserState {
         )
     }
 
-    /** Sample loans, dated from today so the countdowns always make sense. */
-    private val rentals: MutableMap<String, Rental> by lazy {
+    private fun seedRentals(): MutableMap<String, Rental> {
         val now = System.currentTimeMillis()
-        mutableMapOf(
+        return mutableMapOf(
             "item5" to Rental(
                 Listings.byId("item5").seller, now + 4 * Rentals.DAY_MS, lending = false,
                 startMillis = now - 3 * Rentals.DAY_MS
@@ -706,6 +945,11 @@ object UserState {
             )
         )
     }
+
+    private val reserved: MutableMap<String, Reservation> by lazy { seedReserved() }
+
+    /** Sample loans, dated from today so the countdowns always make sense. */
+    private val rentals: MutableMap<String, Rental> by lazy { seedRentals() }
 
     /** Own listings taken off the market, with when. */
     private val closed = mutableMapOf<String, Long>()
@@ -1063,6 +1307,36 @@ object UserState {
     }
 
     fun issue(subject: String): Issue? = issues[subject]
+
+    /** Resets all in-memory session state to defaults (used by tests). */
+    fun reset() {
+        prefsLoaded = false
+        profile = UserProfile()
+        settings = SettingsState()
+        draft = null
+        defaultMeetup = 0
+        saved.clear()
+        saved.addAll(listOf("item3", "item5"))
+        readNotifications.clear()
+        chatLog.clear()
+        readChats.clear()
+        reserved.clear()
+        reserved.putAll(seedReserved())
+        rentals.clear()
+        rentals.putAll(seedRentals())
+        closed.clear()
+        closedByYou.clear()
+        finished.clear()
+        taken.clear()
+        answers.clear()
+        answers["rq4"] = Deals.ACCEPTED
+        acceptedAt.clear()
+        acceptedAt["rq4"] = System.currentTimeMillis() - 19 * HOUR
+        lateCancels = 0
+        ratings.clear()
+        ratedAt.clear()
+        issues.clear()
+    }
 
     private const val HOUR = 60 * 60 * 1000L
 }

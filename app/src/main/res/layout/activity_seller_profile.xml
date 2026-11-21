@@ -52,6 +52,25 @@
             android:text="@string/seller_profile_title"
             android:textColor="@color/white"
             android:textSize="20sp" />
+
+        <FrameLayout
+            android:id="@+id/btnShareSeller"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginEnd="-8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="shareSeller"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="21dp"
+                android:layout_height="21dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_share"
+                android:tint="@color/white"
+                android:contentDescription="@string/cd_share_profile" />
+        </FrameLayout>
     </LinearLayout>
 
     <ScrollView

@@ -288,6 +288,7 @@
                     </LinearLayout>
 
                     <TextView
+                        android:id="@+id/chatLast1"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="3dp"
@@ -307,6 +308,7 @@
                     android:gravity="center_horizontal">
 
                     <TextView
+                        android:id="@+id/chatTime1"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/poppins_regular"
@@ -315,6 +317,7 @@
                         android:textSize="10sp" />
 
                     <View
+                        android:id="@+id/chatUnread1"
                         android:layout_width="9dp"
                         android:layout_height="9dp"
                         android:layout_marginTop="8dp"
@@ -398,6 +401,7 @@
                     </LinearLayout>
 
                     <TextView
+                        android:id="@+id/chatLast2"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="3dp"
@@ -417,6 +421,7 @@
                     android:gravity="center_horizontal">
 
                     <TextView
+                        android:id="@+id/chatTime2"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/poppins_regular"
@@ -508,6 +513,7 @@
                     </LinearLayout>
 
                     <TextView
+                        android:id="@+id/chatLast3"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="3dp"
@@ -527,6 +533,7 @@
                     android:gravity="center_horizontal">
 
                     <TextView
+                        android:id="@+id/chatTime3"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/poppins_regular"
@@ -535,6 +542,7 @@
                         android:textSize="10sp" />
 
                     <View
+                        android:id="@+id/chatUnread3"
                         android:layout_width="9dp"
                         android:layout_height="9dp"
                         android:layout_marginTop="8dp"
@@ -618,6 +626,7 @@
                     </LinearLayout>
 
                     <TextView
+                        android:id="@+id/chatLast4"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="3dp"
@@ -637,6 +646,7 @@
                     android:gravity="center_horizontal">
 
                     <TextView
+                        android:id="@+id/chatTime4"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/poppins_regular"
@@ -722,6 +732,7 @@
                     </LinearLayout>
 
                     <TextView
+                        android:id="@+id/chatLast5"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="3dp"
@@ -741,6 +752,7 @@
                     android:gravity="center_horizontal">
 
                     <TextView
+                        android:id="@+id/chatTime5"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/poppins_regular"

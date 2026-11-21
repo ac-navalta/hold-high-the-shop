@@ -1,18 +1,28 @@
 package com.nevergrowold.holdhightheshop
 
 import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 /**
  * Shared behaviour for every screen in the app.
  */
 open class BaseActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        UserState.ensureLoaded(this)
+    }
 
     /**
      * Every screen gets the shared press feedback ([Motion.installPress]) and
@@ -89,13 +99,14 @@ open class BaseActivity : AppCompatActivity() {
         )
     }
 
-    /** Asks before signing out, then returns to the login screen. */
+    /** Asks before signing out, then returns to the login screen with a Toast confirmation. */
     fun confirmLogout() {
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.logout_title)
             .setMessage(R.string.logout_message)
             .setNegativeButton(R.string.logout_cancel, null)
             .setPositiveButton(R.string.logout_confirm) { _, _ ->
+                Toast.makeText(this, R.string.toast_logged_out, Toast.LENGTH_SHORT).show()
                 val intent = Intent(this, LoginActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
@@ -126,6 +137,12 @@ open class BaseActivity : AppCompatActivity() {
         card.findViewById<TextView>(R.id.cardTitle).text = listing.title
         card.findViewById<TextView>(R.id.cardProgram).text = listing.program
         card.findViewById<TextView>(R.id.cardCondition).text = Listings.conditionLabel(this, listing.condition)
+        val photoView = card.findViewById<ImageView>(R.id.cardPhoto)
+        val photoIcon = card.findViewById<View>(R.id.cardPhotoIcon)
+        val cover = listing.photoUris.firstOrNull()
+        if (photoView != null) {
+            AppIntents.bindImageUri(photoView, photoIcon, cover)
+        }
         // Every card says how it is offered: FOR SALE (mint), FOR RENT (outline), FOR SWAP (amber).
         val type = card.findViewById<TextView>(R.id.cardType)
         when {
@@ -256,6 +273,7 @@ open class BaseActivity : AppCompatActivity() {
         const val EXTRA_RESERVED = "reserved"
         const val EXTRA_TAB = "tab"
         const val EXTRA_FROM_TAB = "from_tab"
-
+        const val EXTRA_SEARCH_QUERY = "search_query"
+        const val EXTRA_EMAIL = "email"
     }
 }

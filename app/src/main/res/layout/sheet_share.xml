@@ -102,11 +102,27 @@
     <TextView
         style="@style/ActionHint"
         android:layout_marginTop="10dp"
-        android:text="@string/share_coming_soon" />
+        android:text="@string/share_hint" />
 
-    <TextView
-        android:id="@+id/shareCopy"
-        style="@style/PrimaryButton"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:text="@string/btn_copy_link" />
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/shareCopy"
+            style="@style/OutlineButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="@string/btn_copy_link" />
+
+        <TextView
+            android:id="@+id/shareExternal"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:text="@string/btn_share_via" />
+    </LinearLayout>
 </LinearLayout>

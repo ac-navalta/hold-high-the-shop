@@ -8,16 +8,29 @@
     android:layout_marginTop="14dp">
 
     <FrameLayout
+        android:id="@+id/bubblePhotoFrame"
         android:layout_width="180dp"
         android:layout_height="180dp"
-        android:background="@drawable/bg_bubble_photo">
+        android:background="@drawable/bg_bubble_photo"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground">
 
         <ImageView
+            android:id="@+id/bubblePhotoPlaceholder"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_gravity="center"
             android:src="@drawable/ic_image"
             android:tint="#CFC9B4"
+            android:contentDescription="@string/msg_photo" />
+
+        <ImageView
+            android:id="@+id/bubblePhotoImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
             android:contentDescription="@string/msg_photo" />
     </FrameLayout>
 

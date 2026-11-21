@@ -21,6 +21,8 @@ class LandingActivity : BaseActivity() {
     private var handedOff = false
 
     private val goToLogin = Runnable {
+        if (handedOff || isFinishing || isDestroyed) return@Runnable
+        handedOff = true
         val brand = findViewById<View>(R.id.brandRow)
         val intent = Intent(this, LoginActivity::class.java)
             .putExtra(LoginActivity.EXTRA_FROM_SPLASH, true)
@@ -31,7 +33,6 @@ class LandingActivity : BaseActivity() {
         } else {
             startActivity(intent)
         }
-        handedOff = true
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,6 +41,10 @@ class LandingActivity : BaseActivity() {
         setContentView(R.layout.activity_landing)
         BarInsets.apply(this)
         playEntrance()
+        findViewById<View>(R.id.main).setOnClickListener {
+            handler.removeCallbacks(goToLogin)
+            goToLogin.run()
+        }
         handler.postDelayed(goToLogin, SPLASH_MILLIS)
     }
 

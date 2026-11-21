@@ -2,6 +2,48 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!--
+        Package visibility declarations (required on Android 11+ / API 30+)
+        so implicit intents can resolve external handlers cleanly.
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="geo" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="text/plain" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="image/*" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.INSERT" />
+            <data android:mimeType="vnd.android.cursor.dir/event" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.GET_CONTENT" />
+            <data android:mimeType="image/*" />
+        </intent>
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+    </queries>
+
     <!-- Phone-only, portrait layouts (as designed in Figma). Every screen is locked to portrait. -->
     <application
         android:allowBackup="true"
@@ -12,6 +54,18 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.HoldHighTheShop">
+
+        <!-- FileProvider for safe camera capture URIs passed to ACTION_IMAGE_CAPTURE. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <activity
             android:name=".NotificationsActivity"
             android:screenOrientation="portrait"
@@ -126,11 +180,73 @@
             android:exported="false"
             android:parentActivityName=".ListingDetailActivity" />
 
+        <!--
+            MainActivity hosts the four primary tabs and acts as the exported entry point
+            for deep links (https://holdhightheshop.app/* and holdhightheshop://*),
+            campus search intents (ACTION_SEARCH), and incoming share-to-post intents (ACTION_SEND).
+        -->
         <activity
             android:name=".MainActivity"
             android:screenOrientation="portrait"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
+            android:launchMode="singleTop"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+
+            <!-- Web deep links: https://holdhightheshop.app/listing/item2, /market/CITCS, etc. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/listing" />
+                <data android:scheme="http" android:host="holdhightheshop.app" android:pathPrefix="/listing" />
+                <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/market" />
+                <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/chats" />
+                <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/chat" />
+                <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/profile" />
+                <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/seller" />
+                <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/map" />
+                <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/create" />
+                <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/saved" />
+                <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/notifications" />
+                <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/settings" />
+            </intent-filter>
+
+            <!-- Custom app scheme deep links: holdhightheshop://listing/item2, holdhightheshop://market/CITCS, etc. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="holdhightheshop" android:host="listing" />
+                <data android:scheme="holdhightheshop" android:host="market" />
+                <data android:scheme="holdhightheshop" android:host="chats" />
+                <data android:scheme="holdhightheshop" android:host="chat" />
+                <data android:scheme="holdhightheshop" android:host="profile" />
+                <data android:scheme="holdhightheshop" android:host="seller" />
+                <data android:scheme="holdhightheshop" android:host="map" />
+                <data android:scheme="holdhightheshop" android:host="create" />
+                <data android:scheme="holdhightheshop" android:host="saved" />
+                <data android:scheme="holdhightheshop" android:host="notifications" />
+                <data android:scheme="holdhightheshop" android:host="settings" />
+            </intent-filter>
+
+            <!-- System / voice / launcher search directly into Campus Market -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <!-- Receive shared text or item photos from other apps to prefill Create Listing -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

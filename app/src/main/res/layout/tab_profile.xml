@@ -95,6 +95,7 @@
                 android:elevation="3dp">
 
                 <TextView
+                    android:id="@+id/profileInitials"
                     android:layout_width="94dp"
                     android:layout_height="94dp"
                     android:layout_gravity="center"
@@ -104,9 +105,19 @@
                     android:text="@string/me_initials"
                     android:textColor="@color/uc_green"
                     android:textSize="28sp" />
+
+                <ImageView
+                    android:id="@+id/profileAvatarPhoto"
+                    android:layout_width="94dp"
+                    android:layout_height="94dp"
+                    android:layout_gravity="center"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone"
+                    android:contentDescription="@string/profile_title" />
             </FrameLayout>
 
             <TextView
+                android:id="@+id/profileName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
@@ -117,6 +128,7 @@
                 android:textSize="22sp" />
 
             <TextView
+                android:id="@+id/profileMeta"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
@@ -125,6 +137,20 @@
                 android:text="@string/me_meta"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/profileBio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="6dp"
+                android:paddingStart="28dp"
+                android:paddingEnd="28dp"
+                android:gravity="center"
+                android:fontFamily="@font/poppins_regular"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:visibility="gone" />
 
             <LinearLayout
                 android:layout_width="wrap_content"

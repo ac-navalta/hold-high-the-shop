@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Temporary photos captured via MediaStore.ACTION_IMAGE_CAPTURE for listings and chats. -->
+    <cache-path
+        name="captured_photos"
+        path="photos/" />
+</paths>

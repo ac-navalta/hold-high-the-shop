@@ -40,6 +40,7 @@ internal class ChatsTab(
             )
         }
         bindRoleChips()
+        refresh()
 
         search.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) = filter(animate = false)
@@ -58,6 +59,28 @@ internal class ChatsTab(
 
     fun applyTopInset(top: Int) {
         header.updatePadding(top = headerBaseTop + top)
+    }
+
+    /** Updates last-message previews, timestamps, and unread indicators after chatting. */
+    fun refresh() {
+        val lastIds = listOf(R.id.chatLast1, R.id.chatLast2, R.id.chatLast3, R.id.chatLast4, R.id.chatLast5)
+        val timeIds = listOf(R.id.chatTime1, R.id.chatTime2, R.id.chatTime3, R.id.chatTime4, R.id.chatTime5)
+        val unreadViews = mapOf(0 to R.id.chatUnread1, 2 to R.id.chatUnread3)
+
+        Listings.SELLERS.forEachIndexed { index, seller ->
+            val (preview, timeOverride) = UserState.lastChatPreview(seller)
+            val lastView = root.findViewById<TextView>(lastIds[index])
+            lastView.text = preview
+            val unread = UserState.isChatUnread(index, seller.name)
+            lastView.setTextColor(activity.getColor(if (unread) R.color.text_primary else R.color.text_secondary))
+            unreadViews[index]?.let { dotId ->
+                root.findViewById<View>(dotId)?.isVisible = unread
+            }
+            if (timeOverride != null) {
+                root.findViewById<TextView>(timeIds[index]).text = timeOverride
+            }
+        }
+        filter(animate = false)
     }
 
     fun onHide() {

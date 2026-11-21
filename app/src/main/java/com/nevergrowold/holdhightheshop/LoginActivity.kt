@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ScrollView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.dynamicanimation.animation.DynamicAnimation
 
@@ -25,10 +26,11 @@ class LoginActivity : BaseActivity() {
 
         val email = findViewById<EditText>(R.id.inputEmail)
         val check = findViewById<View>(R.id.emailCheck)
+        email.setText(UserState.profile.email)
+        Motion.setVisiblePop(check, isValidEmail(email.text?.toString().orEmpty()))
         email.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
-                val valid = !s.isNullOrBlank() && s.contains("@")
-                Motion.setVisiblePop(check, valid)
+                Motion.setVisiblePop(check, isValidEmail(s?.toString().orEmpty()))
             }
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
@@ -84,18 +86,41 @@ class LoginActivity : BaseActivity() {
         Motion.staggerIn(children, delay = cardDelay + 50L, riseDp = 8f, gapMs = 20L, subtleScale = false)
     }
 
+    private fun isValidEmail(raw: String): Boolean {
+        val trimmed = raw.trim()
+        val at = trimmed.indexOf('@')
+        if (at <= 0 || at != trimmed.lastIndexOf('@')) return false
+        val domain = trimmed.substring(at + 1)
+        val dot = domain.lastIndexOf('.')
+        return dot > 0 && dot < domain.length - 1 && !trimmed.any { it.isWhitespace() }
+    }
+
     /**
-     * Signs the student in and opens the dashboard. finish() drops this screen
-     * so back from the dashboard leaves the app instead of returning to login.
+     * Validates the UC email, signs the student in with a welcome Toast, and
+     * opens [MainActivity] via an explicit Intent carrying the email extra.
+     * finish() drops this screen so Back from the dashboard leaves the app.
      */
     fun signIn(view: View) {
+        val emailInput = findViewById<EditText>(R.id.inputEmail)
+        val emailText = emailInput.text.toString().trim()
+        if (!isValidEmail(emailText)) {
+            Motion.shake(emailInput)
+            Toast.makeText(this, R.string.toast_invalid_email, Toast.LENGTH_SHORT).show()
+            showKeyboard(emailInput)
+            return
+        }
         hideKeyboard(view)
         Motion.confirm(view)
+        UserState.updateEmail(this, emailText)
         findViewById<View>(R.id.signInArrow)?.let { arrow ->
             val dp = resources.displayMetrics.density
             Motion.spring(arrow, DynamicAnimation.TRANSLATION_X, 6f * dp, Motion.Spatial.SNAPPY)
         }
-        startActivity(Intent(this, MainActivity::class.java))
+        // User Communication (Toast): greets the student upon verified sign-in.
+        Toast.makeText(this, getString(R.string.toast_signed_in, UserState.profile.first), Toast.LENGTH_SHORT).show()
+        startActivity(
+            Intent(this, MainActivity::class.java).putExtra(EXTRA_EMAIL, emailText)
+        )
         finish()
     }
 

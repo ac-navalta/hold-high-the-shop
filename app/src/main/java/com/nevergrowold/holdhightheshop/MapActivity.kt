@@ -4,18 +4,20 @@ import android.graphics.PointF
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import kotlin.math.ceil
 import kotlin.math.hypot
 
 /**
- * Directions to a Safe Meetup Point, opened from the meetup sheet. Uses a
- * placeholder campus picture you can pinch, drag and double-tap to zoom.
- * A real map and live location come later.
+ * Directions to a Safe Meetup Point, opened from the meetup sheet, chat
+ * confirmation card, transaction details, or a deep link. Includes both the
+ * interactive campus walking map and an "Open in Maps" implicit intent (`geo:`).
  */
 class MapActivity : BaseActivity() {
 
     private lateinit var map: CampusMapView
+    private lateinit var place: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,7 +25,7 @@ class MapActivity : BaseActivity() {
         setContentView(R.layout.activity_map)
         BarInsets.apply(this)
 
-        val place = intent.getStringExtra(EXTRA_PLACE) ?: Listings.MEETUP_POINTS[0]
+        place = intent.getStringExtra(EXTRA_PLACE) ?: Listings.MEETUP_POINTS[0]
         val route = ROUTES[place] ?: ROUTES.getValue(Listings.MEETUP_POINTS[0])
 
         map = findViewById(R.id.campusMap)
@@ -35,6 +37,16 @@ class MapActivity : BaseActivity() {
         val minutes = ceil(meters / WALK_METERS_PER_MINUTE).toInt().coerceAtLeast(1)
         findViewById<TextView>(R.id.mapWalk).text =
             resources.getQuantityString(R.plurals.map_walk, minutes, minutes)
+    }
+
+    /** Launches an external maps app (`geo:` URI with Google Maps web fallback) for this UC meetup point. */
+    fun openInExternalMaps(view: View) {
+        Motion.tick(view)
+        AppIntents.launch(
+            context = this,
+            intent = AppIntents.mapGeoIntent(place),
+            fallback = AppIntents.mapWebIntent(place),
+        )
     }
 
     fun zoomIn(view: View) {
@@ -50,6 +62,7 @@ class MapActivity : BaseActivity() {
     fun recenter(view: View) {
         Motion.tick(view)
         map.recenter(animate = true)
+        Toast.makeText(this, R.string.toast_map_recentered, Toast.LENGTH_SHORT).show()
     }
 
     companion object {

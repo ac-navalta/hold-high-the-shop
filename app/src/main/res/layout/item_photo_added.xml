@@ -6,11 +6,20 @@
     android:background="@drawable/bg_photo_added">
 
     <ImageView
+        android:id="@+id/photoAddedPlaceholder"
         android:layout_width="26dp"
         android:layout_height="26dp"
         android:layout_gravity="center"
         android:src="@drawable/ic_image"
         android:tint="@color/uc_green"
+        android:contentDescription="@string/cd_item_photo" />
+
+    <ImageView
+        android:id="@+id/photoAddedPreview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:visibility="gone"
         android:contentDescription="@string/cd_item_photo" />
 
     <FrameLayout
