@@ -1,19 +1,24 @@
 package com.nevergrowold.holdhightheshop
 
+import android.animation.Keyframe
+import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
 import android.app.Activity
+import android.util.Property
 import android.view.View
 import android.view.ViewGroup
-import androidx.dynamicanimation.animation.DynamicAnimation
 
 /**
- * Confirmation choreography shared by "Listing posted" and "Report received".
+ * The full celebratory confirmation moment shared by "Listing posted" and
+ * "Report received": both close out something the student finished, so both
+ * get the signature UC stamp choreography.
  *
- * Uses expressive spring physics rather than long multi-beat keyframe tracks:
- * - The badge springs immediately from 0.78 -> 1.0 (`Spatial.EXPRESSIVE`);
- * - The verified mark rotates gently (-14° -> 0°) and lands with a confirm haptic;
- * - A single restrained mint halo expands once around the badge;
- * - Title, reference card and action button glide in right behind it so the
- *   whole moment feels celebratory, crisp and interactive within ~480ms.
+ * Built as keyframe tracks, each property on its own timeline:
+ * - the badge overshoots to 112%, dips to 97%, then settles cleanly at 100%;
+ * - the verified check twists in a beat later (-30° -> +8° -> 0°), as if being
+ *   stamped, landing with a firm confirm haptic;
+ * - two staggered mint rings ripple outward from the badge;
+ * - the title, reference card and action buttons settle in smoothly underneath.
  */
 object Celebration {
 
@@ -21,54 +26,74 @@ object Celebration {
         if (!Motion.enabled(activity)) return
         val badge = activity.findViewById<View>(R.id.celebrateBadge) ?: return
         val check = activity.findViewById<View>(R.id.celebrateCheck) ?: return
-        val ring = activity.findViewById<View>(R.id.celebrateRing)
-        val ring2 = activity.findViewById<View>(R.id.celebrateRing2)
         val content = activity.findViewById<ViewGroup>(R.id.celebrateContent) ?: return
 
-        badge.alpha = 0f
-        badge.scaleX = 0.78f
-        badge.scaleY = 0.78f
-
-        check.alpha = 0f
-        check.scaleX = 0.72f
-        check.scaleY = 0.72f
-        check.rotation = -14f
-
-        ring?.apply {
-            alpha = 0f
-            scaleX = 0.92f
-            scaleY = 0.92f
-        }
-        ring2?.alpha = 0f
-
-        badge.postDelayed({
-            if (!badge.isAttachedToWindow) return@postDelayed
-            Motion.spring(badge, DynamicAnimation.ALPHA, 1f, Motion.Effects.FAST)
-            Motion.springScale(badge, 1f, Motion.Spatial.EXPRESSIVE)
-        }, 40)
-
+        track(
+            badge,
+            duration = 640,
+            delay = 120,
+            View.SCALE_X to floatArrayOf(0f, 0.5f, 0.45f, 1.12f, 0.72f, 0.97f, 1f, 1f),
+            View.SCALE_Y to floatArrayOf(0f, 0.5f, 0.45f, 1.12f, 0.72f, 0.97f, 1f, 1f),
+            View.ALPHA to floatArrayOf(0f, 0f, 0.3f, 1f, 1f, 1f),
+        )
+        track(
+            check,
+            duration = 560,
+            delay = 260,
+            View.ROTATION to floatArrayOf(0f, -30f, 0.55f, 8f, 1f, 0f),
+            View.SCALE_X to floatArrayOf(0f, 0.3f, 0.6f, 1.15f, 1f, 1f),
+            View.SCALE_Y to floatArrayOf(0f, 0.3f, 0.6f, 1.15f, 1f, 1f),
+            View.ALPHA to floatArrayOf(0f, 0f, 0.25f, 1f, 1f, 1f),
+        )
+        // The stamp lands: one firm confirm tick when the check reaches full size.
         check.postDelayed({
-            if (!check.isAttachedToWindow) return@postDelayed
-            Motion.spring(check, DynamicAnimation.ALPHA, 1f, Motion.Effects.FAST)
-            Motion.springScale(check, 1f, Motion.Spatial.EXPRESSIVE)
-            Motion.spring(check, DynamicAnimation.ROTATION, 0f, Motion.Spatial.RESPONSIVE)
-            Motion.confirm(check)
-        }, 120)
+            if (check.isAttachedToWindow) Motion.confirm(check)
+        }, 260 + 330)
 
-        ring?.let { r ->
-            r.animate().cancel()
-            r.animate()
-                .withStartAction { r.alpha = 0.55f }
-                .alpha(0f)
-                .scaleX(1.9f)
-                .scaleY(1.9f)
-                .setStartDelay(130)
-                .setDuration(560)
-                .setInterpolator(Motion.EASE_OUT)
-                .start()
-        }
+        activity.findViewById<View>(R.id.celebrateRing)?.let { ripple(it, delay = 380, strength = 0.9f) }
+        activity.findViewById<View>(R.id.celebrateRing2)?.let { ripple(it, delay = 560, strength = 0.5f) }
 
         val items = (1 until content.childCount).map { content.getChildAt(it) }
-        Motion.staggerIn(items, delay = 140, riseDp = 12f, gapMs = 26L, subtleScale = true)
+        Motion.staggerIn(items, delay = 340, riseDp = 16f, gapMs = 30L, subtleScale = true)
+    }
+
+    /** One keyframe track per property: each array is pairs of (fraction, value). */
+    private fun track(
+        view: View,
+        duration: Long,
+        delay: Long,
+        vararg tracks: Pair<Property<View, Float>, FloatArray>,
+    ) {
+        val holders = tracks.map { (property, pairs) ->
+            val frames = (pairs.indices step 2).map { i ->
+                Keyframe.ofFloat(pairs[i], pairs[i + 1]).apply {
+                    if (i > 0) interpolator = Motion.EMPHASIZED
+                }
+            }
+            PropertyValuesHolder.ofKeyframe(property, *frames.toTypedArray())
+        }
+        // Hold the first frame during the delay so nothing flashes at full size.
+        tracks.forEach { (property, pairs) -> property.set(view, pairs[1]) }
+        ObjectAnimator.ofPropertyValuesHolder(view, *holders.toTypedArray()).apply {
+            this.duration = duration
+            startDelay = delay
+            start()
+        }
+    }
+
+    private fun ripple(ring: View, delay: Long, strength: Float) {
+        ring.animate().cancel()
+        ring.scaleX = 1f
+        ring.scaleY = 1f
+        ring.alpha = 0f
+        ring.animate()
+            .withStartAction { ring.alpha = strength }
+            .alpha(0f)
+            .scaleX(2.2f)
+            .scaleY(2.2f)
+            .setStartDelay(delay)
+            .setDuration(900)
+            .setInterpolator(Motion.EASE_OUT)
+            .start()
     }
 }

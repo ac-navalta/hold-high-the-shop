@@ -297,7 +297,6 @@ object Motion {
             return
         }
         if (!view.isClickable || view is EditText || view is CompoundButton || view is ScrollView) return
-        if (view is CampusMapView) return
 
         val screenWidth = view.resources.displayMetrics.widthPixels
         // Full-bleed list rows (chats, settings, notifications, dropdowns) keep clean ripple only;
