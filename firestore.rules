@@ -1,0 +1,281 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // Hold High The Shop — Production Firestore Security Rules (Firebase Spark)
+    // Enforces verified @students.uc-bcf.edu.ph accounts, suspension blocks,
+    // strict report privacy, anti-self-dealing, payload caps, and Console-only
+    // admin privileges (admins/{uid} cannot be written by any client).
+    // =========================================================================
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isUcStudentEmail() {
+      return isSignedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email.lower().matches('^[a-z0-9][a-z0-9._%+-]{0,63}@students\\.uc-bcf\\.edu\\.ph$');
+    }
+
+    function isVerifiedUcStudent() {
+      return isEmailVerified() && isUcStudentEmail();
+    }
+
+    function isAdmin() {
+      return isEmailVerified()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isSuspended() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.suspended == true;
+    }
+
+    function isActiveStudent() {
+      return isVerifiedUcStudent() && !isSuspended();
+    }
+
+    function isActiveStudentOrAdmin() {
+      return isActiveStudent() || isAdmin();
+    }
+
+    // ---- Admins: strictly managed in Firebase Console (zero client writes) ----
+    match /admins/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // ---- Users (Student Profiles) ----
+    match /users/{uid} {
+      // Newly registered (pre-verification) or suspended users can read their own profile
+      allow read: if isActiveStudentOrAdmin() || (isSignedIn() && request.auth.uid == uid);
+
+      // Initial profile creation during SignUp (before UC Outlook verification link is clicked)
+      allow create: if isUcStudentEmail()
+        && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.email.lower() == request.auth.token.email.lower()
+        && request.resource.data.suspended == false
+        && request.resource.data.warningCount == 0
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 60;
+
+      // Students cannot tamper with their own suspension/warning flags, UID, or verified email
+      allow update: if isAdmin()
+        || (isActiveStudent()
+            && request.auth.uid == uid
+            && !request.resource.data.diff(resource.data).affectedKeys()
+                .hasAny(['uid', 'email', 'suspended', 'suspendedReason', 'warningCount', 'createdAt']));
+
+      allow delete: if isAdmin() || (isActiveStudent() && request.auth.uid == uid);
+    }
+
+    // ---- Campus Listings ----
+    match /listings/{listingId} {
+      allow read: if isActiveStudentOrAdmin();
+
+      allow create: if isActiveStudent()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 60
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 300
+        && request.resource.data.price is int
+        && request.resource.data.price >= 0
+        && request.resource.data.price <= 50000
+        && request.resource.data.photoUris is list
+        && request.resource.data.photoUris.size() >= 1
+        && request.resource.data.photoUris.size() <= 10;
+
+      allow update: if isAdmin()
+        || (isActiveStudent()
+            && resource.data.ownerUid == request.auth.uid
+            && request.resource.data.ownerUid == resource.data.ownerUid
+            && request.resource.data.price >= 0
+            && request.resource.data.price <= 50000
+            && request.resource.data.photoUris.size() >= 1
+            && request.resource.data.photoUris.size() <= 10)
+        // Allow verified students submitting a report to atomically increment reportCount / auto-flag UNDER_REVIEW
+        || (isActiveStudent()
+            && resource.data.ownerUid != request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'reportedByUids', 'status'])
+            && request.resource.data.reportCount == resource.data.reportCount + 1
+            && request.resource.data.status in ['OPEN', 'UNDER_REVIEW'])
+        // Allow active deal lifecycle status updates (without letting non-owners edit listing content/price/photos)
+        || (isActiveStudent()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+            && request.resource.data.status in ['OPEN', 'RESERVED', 'ON_LOAN', 'CLOSED', 'PAUSED']);
+
+      allow delete: if isAdmin()
+        || (isActiveStudent()
+            && resource.data.ownerUid == request.auth.uid
+            && resource.data.status in ['OPEN', 'PAUSED']);
+    }
+
+    // ---- Deal Requests (Buy / Lend / Swap) ----
+    match /requests/{requestId} {
+      allow read: if isAdmin()
+        || (isActiveStudent()
+            && (request.auth.uid in resource.data.participants
+                || resource.data.ownerUid == request.auth.uid
+                || resource.data.requesterUid == request.auth.uid));
+
+      // Prevent self-dealing; Deals.PENDING == 0
+      allow create: if isActiveStudent()
+        && request.resource.data.requesterUid == request.auth.uid
+        && request.resource.data.ownerUid != request.auth.uid
+        && request.auth.uid in request.resource.data.participants
+        && request.resource.data.status == 0;
+
+      allow update: if isAdmin()
+        || (isActiveStudent()
+            && (request.auth.uid in resource.data.participants
+                || resource.data.ownerUid == request.auth.uid
+                || resource.data.requesterUid == request.auth.uid));
+
+      allow delete: if isAdmin();
+    }
+
+    // ---- Active & Completed Loans ----
+    match /rentals/{rentalId} {
+      allow read: if isAdmin()
+        || (isActiveStudent()
+            && (request.auth.uid in resource.data.participants
+                || resource.data.lenderUid == request.auth.uid
+                || resource.data.borrowerUid == request.auth.uid));
+
+      allow create: if isActiveStudent()
+        && request.auth.uid in request.resource.data.participants
+        && request.resource.data.lenderUid != request.resource.data.borrowerUid;
+
+      allow update, delete: if isAdmin()
+        || (isActiveStudent()
+            && (request.auth.uid in resource.data.participants
+                || resource.data.lenderUid == request.auth.uid
+                || resource.data.borrowerUid == request.auth.uid));
+    }
+
+    // ---- Completed Exchanges (Drives Verified Reliability Scores) ----
+    match /exchanges/{exchangeId} {
+      allow read: if isActiveStudentOrAdmin();
+
+      allow create: if isActiveStudent()
+        && (request.resource.data.giverUid == request.auth.uid
+            || request.resource.data.receiverUid == request.auth.uid);
+
+      allow update: if isAdmin()
+        || (isActiveStudent()
+            && (resource.data.giverUid == request.auth.uid
+                || resource.data.receiverUid == request.auth.uid));
+
+      allow delete: if isAdmin();
+    }
+
+    // ---- Per-Listing Chat Threads & Messages (Includes Schedule/Extension Proposals) ----
+    match /chats/{threadId} {
+      allow read: if isAdmin()
+        || (isActiveStudent() && request.auth.uid in resource.data.participants);
+
+      allow create: if isActiveStudent()
+        && request.auth.uid in request.resource.data.participants
+        && request.resource.data.participants.size() == 2;
+
+      allow update: if isAdmin()
+        || (isActiveStudent() && request.auth.uid in resource.data.participants);
+
+      allow delete: if isAdmin();
+
+      match /messages/{messageId} {
+        allow read: if isAdmin()
+          || (isActiveStudent()
+              && request.auth.uid in get(/databases/$(database)/documents/chats/$(threadId)).data.participants);
+
+        allow create: if isActiveStudent()
+          && request.resource.data.senderUid == request.auth.uid
+          && request.auth.uid in get(/databases/$(database)/documents/chats/$(threadId)).data.participants
+          && (request.resource.data.text == null || request.resource.data.text.size() <= 1000);
+
+        // Allow participants to accept/decline/withdraw nested proposal cards
+        allow update: if isAdmin()
+          || (isActiveStudent()
+              && request.auth.uid in get(/databases/$(database)/documents/chats/$(threadId)).data.participants
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['proposal']));
+
+        allow delete: if isAdmin();
+      }
+    }
+
+    // ---- In-App User Notifications ----
+    match /notifications/{notifId} {
+      allow read, update, delete: if isAdmin()
+        || (isActiveStudent() && resource.data.recipientUid == request.auth.uid);
+      allow create: if isActiveStudentOrAdmin();
+    }
+
+    // ---- Official Admin Campus Announcements ----
+    match /announcements/{announcementId} {
+      allow read: if isActiveStudentOrAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ---- Per-User Saved Bookmarks ----
+    match /saved/{uid}/items/{listingId} {
+      allow read, write: if isActiveStudent() && request.auth.uid == uid;
+    }
+
+    // ---- Per-User Blocked Accounts (Play UGC Compliance) ----
+    match /blocked/{uid}/users/{blockedUid} {
+      allow read, write: if isActiveStudent() && request.auth.uid == uid;
+    }
+
+    // ---- Private Student Reports (Never Readable by the Reported Student) ----
+    match /reports/{reportId} {
+      allow create: if isActiveStudent()
+        && request.resource.data.reporterUid == request.auth.uid
+        && request.resource.data.reportedUserUid != request.auth.uid
+        && request.resource.data.details.size() <= 500;
+      allow read: if isAdmin()
+        || (isActiveStudent() && resource.data.reporterUid == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    // ---- AI Prohibited-Item Moderation Audit Log ----
+    match /moderation_logs/{logId} {
+      allow create: if isActiveStudent()
+        && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ---- Immutable Admin Audit Trail ----
+    match /admin_audit_logs/{logId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // ---- Compressed WebP Photos (Firebase Spark Zero-Billing Media Store) ----
+    match /media/{mediaId} {
+      allow read: if isActiveStudentOrAdmin();
+      allow create: if isActiveStudent()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.base64Webp is string
+        && request.resource.data.base64Webp.size() <= 260000;
+      allow update: if false;
+      allow delete: if isAdmin()
+        || (isActiveStudent() && resource.data.ownerUid == request.auth.uid);
+    }
+
+    // Default deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #F9F6E7;
+    color: #1A1A1A;
+    font-family: 'Poppins', system-ui, sans-serif;
+  }
+}
+
+.uc-card {
+  @apply bg-white rounded-2xl border border-uc-divider/70 shadow-sm;
+}
