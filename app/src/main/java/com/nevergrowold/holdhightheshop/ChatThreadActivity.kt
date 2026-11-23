@@ -16,41 +16,74 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.dynamicanimation.animation.DynamicAnimation
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.DateValidatorPointForward
+import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import com.nevergrowold.holdhightheshop.data.AppRepository
+import com.nevergrowold.holdhightheshop.data.ProposalPayload
+import com.nevergrowold.holdhightheshop.data.ProposalStatus
+import com.nevergrowold.holdhightheshop.data.ProposalType
+import com.nevergrowold.holdhightheshop.media.ImagePipeline
+import com.nevergrowold.holdhightheshop.system.MarketplaceBroadcasts
+import com.nevergrowold.holdhightheshop.system.MarketplaceEventReceiver
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+import java.util.TimeZone
 
 /**
- * One conversation. Opened from the chat list, from a seller's profile, or
- * right after reserving a listing.
+ * Per-listing conversation thread with:
+ * - Zero-permission Photo Picker (`PickVisualMedia`) + Camera (`FileProvider`, `onSaveInstanceState`-safe)
+ * - Context-aware `+` menu:
+ *   - **Photo** (always)
+ *   - **Propose meetup change** (ONLY when listing has an active ACCEPTED deal!)
+ *   - **Propose return extension** (ONLY when listing has an active ON_LOAN rental!)
+ *   - **View listing** (always)
+ * - Two-party interactive Proposal Cards (Confirm / Decline / Withdraw) that atomically update
+ *   the deal schedule / loan due date AND reschedule AlarmManager reminders!
+ * - Header overflow menu for **Block student**, **Safe meetup point**, and **View listing**.
  */
 class ChatThreadActivity : BaseActivity() {
 
-    private lateinit var seller: Seller
+    private lateinit var threadId: String
+    private lateinit var partner: Seller
     private lateinit var listing: Listing
     private lateinit var messages: LinearLayout
     private lateinit var input: EditText
     private lateinit var sendButton: View
+
     private var pendingCameraUri: Uri? = null
 
-    /** Implicit intent launcher: pick a photo from gallery to send in chat. */
-    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val uri = result.data?.data ?: return@registerForActivityResult
-            sendPhotoMessage(uri.toString())
-        }
+    private val eventReceiver = MarketplaceEventReceiver { _, _ ->
+        renderMessages(scrollToBottom = false)
     }
 
-    /** Implicit intent launcher: take a photo with camera to send in chat. */
-    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val uri = pendingCameraUri ?: return@registerForActivityResult
-            sendPhotoMessage(uri.toString())
+    /** Zero-permission Android Photo Picker for sending a chat photo. */
+    private val photoPickerLauncher =
+        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri == null) return@registerForActivityResult
+            ingestAndSendPhoto(uri)
         }
-    }
+
+    /** Camera capture via scoped FileProvider. */
+    private val cameraLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val uri = pendingCameraUri ?: return@registerForActivityResult
+                ingestAndSendPhoto(uri)
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,18 +91,17 @@ class ChatThreadActivity : BaseActivity() {
         setContentView(R.layout.activity_chat_thread)
         BarInsets.apply(this)
 
-        seller = Listings.sellerByName(intent.getStringExtra(EXTRA_SELLER))
-        UserState.markChatRead(seller.name)
-        listing = intent.getStringExtra(EXTRA_LISTING)?.let { Listings.byId(it) }
-            ?: Listings.CHAT_LISTINGS[seller]?.let { Listings.byId(it) }
-            ?: Listings.bySeller(seller).firstOrNull()
-            ?: Listings.byId(null)
+        savedInstanceState?.getString(STATE_CAMERA_URI)?.let { pendingCameraUri = Uri.parse(it) }
+
+        resolveThreadContext()
+        UserState.markChatRead(threadId)
+
         messages = findViewById(R.id.messageList)
         input = findViewById(R.id.inputMessage)
         sendButton = findViewById(R.id.btnSend)
 
         bindHeader()
-        bindHistory()
+        renderMessages(scrollToBottom = true)
         updateSendReady(ready = false, animate = false)
 
         input.addTextChangedListener(object : TextWatcher {
@@ -87,9 +119,74 @@ class ChatThreadActivity : BaseActivity() {
                 false
             }
         }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                AppRepository.stateVersion.collect {
+                    Listings.byIdOrNull(listing.id)?.let { listing = it }
+                    renderMessages(scrollToBottom = false)
+                }
+            }
+        }
     }
 
-    /** Send button softens slightly while empty and springs vivid when ready to send. */
+    override fun onStart() {
+        super.onStart()
+        AppRepository.attachThreadListener(threadId)
+        MarketplaceBroadcasts.registerInternalReceiver(
+            this,
+            eventReceiver,
+            MarketplaceBroadcasts.ACTION_STATE_CHANGED,
+            MarketplaceBroadcasts.ACTION_NEW_CHAT_MESSAGE,
+            MarketplaceBroadcasts.ACTION_PROPOSAL_UPDATED,
+            MarketplaceBroadcasts.ACTION_DEAL_UPDATED,
+        )
+    }
+
+    override fun onStop() {
+        runCatching { unregisterReceiver(eventReceiver) }
+        AppRepository.detachThreadListener(threadId)
+        super.onStop()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        pendingCameraUri?.let { outState.putString(STATE_CAMERA_URI, it.toString()) }
+    }
+
+    private fun resolveThreadContext() {
+        val explicitThreadId = intent.getStringExtra(EXTRA_THREAD_ID)
+        val existingThread = explicitThreadId?.let { AppRepository.threadById(it) }
+        if (existingThread != null) {
+            threadId = existingThread.threadId
+            listing = Listings.byId(existingThread.listingId)
+            val partnerUid = existingThread.partnerUid(UserState.currentUid)
+            partner = Listings.sellerByUid(partnerUid) ?: Seller(
+                name = existingThread.partnerName(UserState.currentUid).ifBlank { "UC Student" },
+                initials = UserState.UserProfile(name = existingThread.partnerName(UserState.currentUid)).initials,
+                program = existingThread.partnerProgram(UserState.currentUid).ifBlank { "UC" },
+                year = "UCian",
+                rating = "New",
+                onTime = "\u2013",
+                completed = 0,
+                lastMessage = "",
+                online = true,
+                uid = partnerUid,
+            )
+            return
+        }
+
+        val listingId = intent.getStringExtra(EXTRA_LISTING_ID) ?: intent.getStringExtra(EXTRA_LISTING)
+        listing = Listings.byId(listingId)
+        val partnerUidExtra = intent.getStringExtra(EXTRA_SELLER_UID)
+        val partnerNameExtra = intent.getStringExtra(EXTRA_SELLER)
+        partner = Listings.sellerByUid(partnerUidExtra)
+            ?: if (!partnerNameExtra.isNullOrBlank()) Listings.sellerByName(partnerNameExtra) else Listings.sellerOf(listing)
+
+        val thread = UserState.threadFor(listing.id, partner.uid)
+        threadId = thread.threadId
+    }
+
     private fun updateSendReady(ready: Boolean, animate: Boolean) {
         val targetAlpha = if (ready) 1f else 0.48f
         val targetScale = if (ready) 1f else 0.94f
@@ -104,46 +201,45 @@ class ChatThreadActivity : BaseActivity() {
     }
 
     private fun bindHeader() {
-        findViewById<TextView>(R.id.threadInitials).text = seller.initials
-        findViewById<TextView>(R.id.threadName).text = seller.name
-        findViewById<View>(R.id.threadDot).isVisible = seller.online
+        findViewById<TextView>(R.id.threadInitials).text = partner.initials
+        findViewById<TextView>(R.id.threadName).text = partner.name
+        findViewById<View>(R.id.threadDot).isVisible = partner.online
         findViewById<TextView>(R.id.threadStatus).text = getString(
             R.string.thread_status_format,
-            getString(if (seller.online) R.string.status_active else R.string.status_away),
-            seller.program,
+            getString(if (partner.online) R.string.status_active else R.string.status_away),
+            partner.program,
         )
-        input.hint = getString(R.string.hint_message_format, seller.name.substringBefore(' '))
+        input.hint = getString(R.string.hint_message_format, partner.first)
 
         findViewById<TextView>(R.id.stripKicker).setText(Listings.roleKicker(listing))
         findViewById<TextView>(R.id.stripTitle).text = listing.title
         findViewById<TextView>(R.id.stripPrice).text = Listings.priceLabel(this, listing)
+        AppIntents.bindImageUri(
+            findViewById(R.id.stripPhoto),
+            findViewById(R.id.stripPhotoPlaceholder),
+            listing.photoUris.firstOrNull(),
+        )
     }
 
-    /** The design's sample history belongs to Paolo's Casio conversation. */
-    private fun isSampleThread() = seller.name == "Paolo Mendoza" && listing.id == Listings.DEFAULT_ID
+    private fun renderMessages(scrollToBottom: Boolean) {
+        val history = UserState.chatMessages(threadId)
+        messages.removeAllViews()
 
-    private fun bindHistory() {
-        if (!isSampleThread()) {
-            while (messages.childCount > 1) messages.removeViewAt(1)
-            val request = UserState.requestFrom(seller, listing.id)
-            if (request != null) {
-                addBubble(request.message, outgoing = false, animate = false)
-                if (UserState.status(request) == Deals.ACCEPTED) {
-                    addSystemCard(
-                        title = getString(R.string.sys_request_accepted),
-                        detail = getString(R.string.request_where_when, request.meetup, Rentals.whenLabel(this, request.meetMillis)),
-                        meetupPlace = request.meetup,
-                        meetupMillis = request.meetMillis,
-                    )
-                }
-            } else if (!intent.getBooleanExtra(EXTRA_RESERVED, false)) {
-                addBubble(seller.lastMessage, outgoing = false, animate = false)
+        if (history.isEmpty()) {
+            val hint = TextView(this).apply {
+                text = "Start coordinating with ${partner.first} about ${listing.title}."
+                setTextColor(getColor(R.color.text_secondary))
+                textSize = 12f
+                gravity = android.view.Gravity.CENTER
+                setPadding(dp(this@ChatThreadActivity, 16), dp(this@ChatThreadActivity, 32), dp(this@ChatThreadActivity, 16), 0)
             }
+            messages.addView(hint)
+            return
         }
 
-        val persisted = UserState.chatMessages(seller.name)
-        persisted.forEach { msg ->
+        history.forEach { msg ->
             when {
+                msg.proposal != null -> addProposalCard(msg.proposal)
                 msg.systemTitle != null -> addSystemCard(
                     title = msg.systemTitle,
                     detail = msg.systemDetail.orEmpty(),
@@ -151,42 +247,49 @@ class ChatThreadActivity : BaseActivity() {
                     meetupMillis = msg.meetupMillis,
                 )
                 msg.photoUri != null -> addPhotoBubble(msg.photoUri, animate = false)
-                msg.text != null -> addBubble(msg.text, outgoing = msg.outgoing, animate = false)
+                !msg.text.isNullOrBlank() -> addBubble(msg.text, outgoing = msg.outgoing, animate = false)
             }
         }
-
-        val detail = intent.getStringExtra(EXTRA_RESERVED_DETAIL)
-        val alreadyPersisted = detail != null && persisted.any { it.systemDetail == detail }
-        if (intent.getBooleanExtra(EXTRA_RESERVED, false) && detail != null && !alreadyPersisted) {
-            val sysTitle = getString(if (listing.isSwap) R.string.sys_swap_offered else R.string.sys_reserved)
-            val meetMillis = UserState.reservation(listing.id)?.meetMillis
-            UserState.appendChatMessage(
-                seller.name,
-                UserState.ChatMessage(
-                    systemTitle = sysTitle,
-                    systemDetail = detail,
-                    meetupPlace = listing.meetup,
-                    meetupMillis = meetMillis,
-                ),
-            )
-            addSystemCard(sysTitle, detail, listing.meetup, meetMillis)
-        }
-        scrollToEnd(smooth = false)
+        if (scrollToBottom) scrollToEnd(smooth = false)
     }
 
-    /** Tapping the seller's avatar/name in the header opens their profile via explicit Intent. */
     fun openThreadSeller(view: View) {
         Motion.tick(view)
-        openSeller(seller)
+        openSeller(partner)
     }
 
-    /** Opens the listing this conversation is about. */
     fun openThreadListing(view: View) = openListingById(listing.id)
 
-    /** Tapping the sample meetup confirmation card offers Directions (explicit) or Calendar (implicit). */
-    fun openSampleMeetupOptions(view: View) {
-        val meetMillis = UserState.reservation(listing.id)?.meetMillis ?: Rentals.at(1, 13 * 60 + 30)
-        showMeetupActions(listing.meetup, meetMillis)
+    /** Header 3-dot overflow: Safe meetup spot, View listing, Block student. */
+    fun openChatOverflow(view: View) {
+        Motion.tick(view)
+        val options = arrayOf(
+            getString(R.string.action_listing),
+            getString(R.string.chat_meetup_directions),
+            getString(R.string.menu_block_user),
+        )
+        MaterialAlertDialogBuilder(this)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> openListingById(listing.id)
+                    1 -> showSafeMeetupSheet(listing.meetup, listing.meetupNote)
+                    2 -> confirmBlockPartner()
+                }
+            }
+            .show()
+    }
+
+    private fun confirmBlockPartner() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.block_user_title, partner.first))
+            .setMessage(R.string.block_user_message)
+            .setNegativeButton(R.string.action_cancel, null)
+            .setPositiveButton(R.string.btn_block) { _, _ ->
+                UserState.blockUser(partner.uid)
+                Toast.makeText(this, getString(R.string.toast_user_blocked, partner.first), Toast.LENGTH_SHORT).show()
+                finish()
+            }
+            .show()
     }
 
     private fun showMeetupActions(place: String, meetMillis: Long?) {
@@ -196,12 +299,12 @@ class ChatThreadActivity : BaseActivity() {
             .setTitle(R.string.chat_meetup_sheet_title)
             .setItems(options.toTypedArray()) { _, which ->
                 if (which == 0) {
-                    startActivity(Intent(this, MapActivity::class.java).putExtra(MapActivity.EXTRA_PLACE, place))
+                    showSafeMeetupSheet(place, listing.meetupNote)
                 } else if (meetMillis != null) {
                     val calIntent = AppIntents.calendarEventIntent(
                         title = getString(R.string.calendar_meetup_title, listing.title),
                         location = place,
-                        description = getString(R.string.calendar_meetup_desc, seller.name, listing.title),
+                        description = getString(R.string.calendar_meetup_desc, partner.name, listing.title),
                         beginMillis = meetMillis,
                     )
                     if (AppIntents.launch(this, calIntent)) {
@@ -212,18 +315,21 @@ class ChatThreadActivity : BaseActivity() {
             .show()
     }
 
-    /** Send button and keyboard send key. */
     fun sendMessage(view: View) {
         val text = input.text.toString().trim()
         if (text.isEmpty()) return
         UserState.appendChatMessage(
-            seller.name,
-            UserState.ChatMessage(text = text, outgoing = true, timeLabel = getString(R.string.msg_sent_now)),
+            threadId,
+            UserState.ChatMessage(
+                senderUid = UserState.currentUid,
+                text = text,
+                outgoing = true,
+                timeLabel = getString(R.string.msg_sent_now),
+            ),
         )
-        addBubble(text, outgoing = true, animate = true)
         input.setText("")
+        renderMessages(scrollToBottom = true)
         Motion.tick(view)
-        // Send glyph flicks diagonally toward the sent bubble, then springs home.
         findViewById<View>(R.id.sendIcon)?.let { icon ->
             val dp = resources.displayMetrics.density
             icon.translationX = 0f
@@ -239,7 +345,6 @@ class ChatThreadActivity : BaseActivity() {
         bubble.findViewById<TextView>(R.id.bubbleText).text = text
         messages.addView(bubble)
         if (animate && outgoing) Motion.insert(bubble, fromEnd = true)
-        scrollToEnd(smooth = animate && outgoing)
     }
 
     private fun addSystemCard(title: String, detail: String, meetupPlace: String, meetupMillis: Long?) {
@@ -252,36 +357,134 @@ class ChatThreadActivity : BaseActivity() {
         messages.addView(card)
     }
 
-    private fun sendPhotoMessage(uriString: String) {
-        UserState.appendChatMessage(
-            seller.name,
-            UserState.ChatMessage(photoUri = uriString, outgoing = true, timeLabel = getString(R.string.msg_sent_now)),
+    /** Renders an interactive two-party Meetup Change or Return Extension Proposal card. */
+    private fun addProposalCard(proposal: ProposalPayload) {
+        val card = LayoutInflater.from(this).inflate(R.layout.item_proposal_card, messages, false)
+        val isMeetup = proposal.proposalType == ProposalType.MEETUP_CHANGE
+        card.findViewById<TextView>(R.id.proposalKicker).setText(
+            if (isMeetup) R.string.proposal_meetup_kicker else R.string.proposal_extension_kicker,
         )
-        addPhotoBubble(uriString, animate = true)
-        Toast.makeText(this, R.string.toast_photo_sent, Toast.LENGTH_SHORT).show()
+
+        val badge = card.findViewById<TextView>(R.id.proposalStatusBadge)
+        when (proposal.proposalStatus) {
+            ProposalStatus.ACCEPTED -> {
+                badge.setText(R.string.proposal_status_accepted)
+                badge.setBackgroundResource(R.drawable.bg_badge_mint)
+                badge.setTextColor(getColor(R.color.uc_green))
+            }
+            ProposalStatus.DECLINED -> {
+                badge.setText(R.string.proposal_status_declined)
+                badge.setBackgroundResource(R.drawable.bg_reminder_overdue)
+                badge.setTextColor(getColor(R.color.danger))
+            }
+            ProposalStatus.WITHDRAWN -> {
+                badge.setText(R.string.proposal_status_withdrawn)
+                badge.setBackgroundResource(R.drawable.bg_input)
+                badge.setTextColor(getColor(R.color.text_secondary))
+            }
+            ProposalStatus.EXPIRED -> {
+                badge.setText(R.string.proposal_status_expired)
+                badge.setBackgroundResource(R.drawable.bg_input)
+                badge.setTextColor(getColor(R.color.text_secondary))
+            }
+            else -> {
+                badge.setText(R.string.proposal_status_pending)
+                badge.setBackgroundResource(R.drawable.bg_badge_swap)
+                badge.setTextColor(getColor(R.color.swap_text))
+            }
+        }
+
+        val titleView = card.findViewById<TextView>(R.id.proposalTitle)
+        val diffView = card.findViewById<TextView>(R.id.proposalDiff)
+        if (isMeetup) {
+            titleView.text = "${proposal.proposerName} proposed a new meetup"
+            val oldWhen = proposal.oldMeetMillis?.let { Rentals.whenLabel(this, it) } ?: "Current schedule"
+            val newWhen = proposal.newMeetMillis?.let { Rentals.whenLabel(this, it) } ?: ""
+            val oldSpot = proposal.oldMeetup.orEmpty()
+            val newSpot = proposal.newMeetup.orEmpty() +
+                if (proposal.newMeetupNote.isNotBlank()) " (${proposal.newMeetupNote})" else ""
+            diffView.text = "From: $oldSpot \u2022 $oldWhen\nTo: $newSpot \u2022 $newWhen"
+        } else {
+            titleView.text = "${proposal.proposerName} requested +${Listings.daysLabel(this, proposal.extraDays)}"
+            val newDue = proposal.newDueMillis?.let { Rentals.dateLabel(it) } ?: ""
+            val feeText = if (proposal.extraCostPesos > 0) {
+                getString(R.string.extension_preview_format, newDue, Listings.price(proposal.extraCostPesos))
+            } else {
+                getString(R.string.extension_preview_free_format, newDue)
+            }
+            diffView.text = feeText
+        }
+
+        val noteView = card.findViewById<TextView>(R.id.proposalNote)
+        if (proposal.note.isNotBlank()) {
+            noteView.isVisible = true
+            noteView.text = "\u201C${proposal.note}\u201D"
+        }
+
+        val isPending = proposal.proposalStatus == ProposalStatus.PENDING
+        val isProposer = proposal.proposerUid == UserState.currentUid
+        card.findViewById<View>(R.id.proposalRecipientActions).isVisible = isPending && !isProposer
+        card.findViewById<View>(R.id.proposalProposerActions).isVisible = isPending && isProposer
+
+        card.findViewById<View>(R.id.btnProposalConfirm).setOnClickListener { btn ->
+            Motion.confirm(btn)
+            if (UserState.respondToProposal(threadId, proposal.proposalId, ProposalStatus.ACCEPTED)) {
+                Toast.makeText(this, R.string.toast_proposal_accepted, Toast.LENGTH_SHORT).show()
+                renderMessages(scrollToBottom = true)
+            }
+        }
+        card.findViewById<View>(R.id.btnProposalDecline).setOnClickListener { btn ->
+            Motion.tick(btn)
+            if (UserState.respondToProposal(threadId, proposal.proposalId, ProposalStatus.DECLINED)) {
+                Toast.makeText(this, R.string.toast_proposal_declined, Toast.LENGTH_SHORT).show()
+                renderMessages(scrollToBottom = false)
+            }
+        }
+        card.findViewById<View>(R.id.btnProposalWithdraw).setOnClickListener { btn ->
+            Motion.tick(btn)
+            if (UserState.respondToProposal(threadId, proposal.proposalId, ProposalStatus.WITHDRAWN)) {
+                Toast.makeText(this, R.string.toast_proposal_withdrawn, Toast.LENGTH_SHORT).show()
+                renderMessages(scrollToBottom = false)
+            }
+        }
+
+        messages.addView(card)
     }
 
-    private fun addPhotoBubble(uriString: String, animate: Boolean) {
+    private fun ingestAndSendPhoto(uri: Uri) {
+        lifecycleScope.launch {
+            val ref = ImagePipeline.ingestUri(this@ChatThreadActivity, uri) ?: uri.toString()
+            UserState.appendChatMessage(
+                threadId,
+                UserState.ChatMessage(
+                    senderUid = UserState.currentUid,
+                    photoUri = ref,
+                    outgoing = true,
+                    timeLabel = getString(R.string.msg_sent_now),
+                ),
+            )
+            renderMessages(scrollToBottom = true)
+            Toast.makeText(this@ChatThreadActivity, R.string.toast_photo_sent, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun addPhotoBubble(ref: String, animate: Boolean) {
         val photo = LayoutInflater.from(this).inflate(R.layout.item_bubble_photo, messages, false)
         val image = photo.findViewById<ImageView>(R.id.bubblePhotoImage)
         val placeholder = photo.findViewById<View>(R.id.bubblePhotoPlaceholder)
         val frame = photo.findViewById<View>(R.id.bubblePhotoFrame)
-        val uri = Uri.parse(uriString)
-        AppIntents.bindImageUri(image, placeholder, uriString)
-        frame.setOnClickListener {
-            AppIntents.launch(this, AppIntents.viewImageIntent(uri))
-        }
+        AppIntents.bindImageUri(image, placeholder, ref)
+        frame.setOnClickListener { AppIntents.viewMediaRef(this, ref) }
         messages.addView(photo)
         if (animate) {
             Motion.insert(photo, fromEnd = true)
             Motion.confirm(photo)
         }
-        scrollToEnd(smooth = animate)
     }
 
     internal fun launchChatGallery() {
         try {
-            galleryLauncher.launch(AppIntents.pickImageIntent())
+            photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         } catch (_: android.content.ActivityNotFoundException) {
             Toast.makeText(this, R.string.toast_no_app_available, Toast.LENGTH_SHORT).show()
         }
@@ -306,11 +509,27 @@ class ChatThreadActivity : BaseActivity() {
         }
     }
 
-    /** The + button: rotates into an X while the actions sheet is open. */
+    /**
+     * Context-aware `+` menu:
+     * - Always shows **Photo** and **View listing**.
+     * - Shows **Propose meetup change** ONLY when this listing has an active ACCEPTED deal.
+     * - Shows **Propose return extension** ONLY when this listing has an active ON_LOAN rental.
+     */
     fun openChatActions(view: View) {
         Motion.tick(view)
         val plus = findViewById<View>(R.id.attachIcon)
         plus?.let { Motion.rotateTo(it, 45f) }
+
+        val activeAccepted = UserState.accepted(listing.id)
+        val activeRental = UserState.rental(listing.id)
+        val myUid = UserState.currentUid
+        val canProposeMeetup = activeAccepted != null &&
+            (activeAccepted.ownerUid == myUid || activeAccepted.requesterUid == myUid) &&
+            activeRental == null
+        val canProposeExtension = activeRental != null &&
+            (activeRental.lenderUid == myUid || activeRental.borrowerUid == myUid) &&
+            !activeRental.returnPending
+
         Sheets.show(
             this,
             R.layout.sheet_chat_actions,
@@ -329,38 +548,21 @@ class ChatThreadActivity : BaseActivity() {
                     }
                     .show()
             }
-            sheet.findViewById<View>(R.id.actionMeetup).setOnClickListener {
+
+            val meetupRow = sheet.findViewById<View>(R.id.actionProposeMeetup)
+            meetupRow.isVisible = canProposeMeetup
+            meetupRow.setOnClickListener {
                 dialog.dismiss()
-                Dropdown.show(findViewById(R.id.bottomNav), Listings.MEETUP_POINTS, icons = listOf(R.drawable.ic_location)) {
-                    val msg = getString(R.string.msg_meetup_format, Listings.MEETUP_POINTS[it])
-                    UserState.appendChatMessage(
-                        seller.name,
-                        UserState.ChatMessage(text = msg, outgoing = true, timeLabel = getString(R.string.msg_sent_now)),
-                    )
-                    addBubble(msg, outgoing = true, animate = true)
-                }
+                if (activeAccepted != null) openProposeMeetupSheet(activeAccepted)
             }
-            sheet.findViewById<View>(R.id.actionTime).setOnClickListener {
+
+            val extRow = sheet.findViewById<View>(R.id.actionProposeExtension)
+            extRow.isVisible = canProposeExtension
+            extRow.setOnClickListener {
                 dialog.dismiss()
-                val picker = MaterialTimePicker.Builder()
-                    .setTimeFormat(TimeFormat.CLOCK_12H)
-                    .setHour(13)
-                    .setMinute(30)
-                    .setTitleText(R.string.action_time)
-                    .build()
-                picker.addOnPositiveButtonClickListener {
-                    val hour12 = if (picker.hour % 12 == 0) 12 else picker.hour % 12
-                    val amPm = if (picker.hour < 12) "AM" else "PM"
-                    val time = "%d:%02d %s".format(hour12, picker.minute, amPm)
-                    val msg = getString(R.string.msg_time_format, time)
-                    UserState.appendChatMessage(
-                        seller.name,
-                        UserState.ChatMessage(text = msg, outgoing = true, timeLabel = getString(R.string.msg_sent_now)),
-                    )
-                    addBubble(msg, outgoing = true, animate = true)
-                }
-                picker.show(supportFragmentManager, "time")
+                if (activeRental != null) openProposeExtensionSheet(activeRental)
             }
+
             sheet.findViewById<View>(R.id.actionListing).setOnClickListener {
                 dialog.dismiss()
                 openListingById(listing.id)
@@ -368,7 +570,149 @@ class ChatThreadActivity : BaseActivity() {
         }
     }
 
+    private fun openProposeMeetupSheet(deal: Request) {
+        var placeIndex = Listings.MEETUP_POINTS.indexOf(deal.meetup).coerceAtLeast(0)
+        val cal = Calendar.getInstance().apply { timeInMillis = deal.meetMillis }
+        var pickedYear = cal.get(Calendar.YEAR)
+        var pickedMonth = cal.get(Calendar.MONTH)
+        var pickedDay = cal.get(Calendar.DAY_OF_MONTH)
+        var pickedHour = cal.get(Calendar.HOUR_OF_DAY)
+        var pickedMinute = cal.get(Calendar.MINUTE)
+
+        fun currentMillis(): Long = Calendar.getInstance().apply {
+            set(pickedYear, pickedMonth, pickedDay, pickedHour, pickedMinute, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        Sheets.show(this, R.layout.sheet_propose_meetup) { sheet, dialog ->
+            val placeText = sheet.findViewById<TextView>(R.id.propPlaceText)
+            val noteInput = sheet.findViewById<EditText>(R.id.propMeetupNote)
+            val dateBtn = sheet.findViewById<TextView>(R.id.propPickDate)
+            val timeBtn = sheet.findViewById<TextView>(R.id.propPickTime)
+            val reasonInput = sheet.findViewById<EditText>(R.id.propReason)
+
+            placeText.text = Listings.MEETUP_POINTS[placeIndex]
+            noteInput.setText(deal.meetupNote)
+            dateBtn.text = Rentals.dateLabel(currentMillis())
+            timeBtn.text = Availability.time(pickedHour * 60 + pickedMinute)
+
+            sheet.findViewById<View>(R.id.propPlaceRow).setOnClickListener { row ->
+                Dropdown.show(row, Listings.MEETUP_POINTS, placeIndex, icons = listOf(R.drawable.ic_location)) {
+                    placeIndex = it
+                    placeText.text = Listings.MEETUP_POINTS[it]
+                }
+            }
+
+            dateBtn.setOnClickListener {
+                val picker = MaterialDatePicker.Builder.datePicker()
+                    .setTitleText(R.string.pick_date_title)
+                    .setCalendarConstraints(CalendarConstraints.Builder().setValidator(DateValidatorPointForward.now()).build())
+                    .build()
+                picker.addOnPositiveButtonClickListener { millis ->
+                    val utc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = millis }
+                    pickedYear = utc.get(Calendar.YEAR)
+                    pickedMonth = utc.get(Calendar.MONTH)
+                    pickedDay = utc.get(Calendar.DAY_OF_MONTH)
+                    dateBtn.text = SimpleDateFormat("EEE, MMM d", Locale.US).format(currentMillis())
+                }
+                picker.show(supportFragmentManager, "prop_date")
+            }
+
+            timeBtn.setOnClickListener {
+                val picker = MaterialTimePicker.Builder()
+                    .setTimeFormat(TimeFormat.CLOCK_12H)
+                    .setHour(pickedHour)
+                    .setMinute(pickedMinute)
+                    .setTitleText(R.string.pick_time_title)
+                    .build()
+                picker.addOnPositiveButtonClickListener {
+                    pickedHour = picker.hour
+                    pickedMinute = picker.minute
+                    timeBtn.text = Availability.time(pickedHour * 60 + pickedMinute)
+                }
+                picker.show(supportFragmentManager, "prop_time")
+            }
+
+            sheet.findViewById<View>(R.id.propSend).setOnClickListener { btn ->
+                Motion.confirm(btn)
+                UserState.proposeMeetupChange(
+                    threadId = threadId,
+                    listing = listing,
+                    request = deal,
+                    newMeetup = Listings.MEETUP_POINTS[placeIndex],
+                    newMeetupNote = noteInput.text.toString().trim(),
+                    newMeetMillis = currentMillis(),
+                    note = reasonInput.text.toString().trim(),
+                )
+                dialog.dismiss()
+                renderMessages(scrollToBottom = true)
+                Toast.makeText(this, R.string.toast_proposal_sent, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun openProposeExtensionSheet(rental: UserState.Rental) {
+        var extraDays = Listings.EXTENSION_DAYS.first()
+        Sheets.show(this, R.layout.sheet_propose_extension) { sheet, dialog ->
+            val chipContainer = sheet.findViewById<LinearLayout>(R.id.extDaysChips)
+            val customInput = sheet.findViewById<EditText>(R.id.extCustomDays)
+            val preview = sheet.findViewById<TextView>(R.id.extPreview)
+            val reasonInput = sheet.findViewById<EditText>(R.id.extReason)
+
+            fun updatePreview() {
+                val newDue = Rentals.dateLabel(rental.dueMillis + extraDays * Rentals.DAY_MS)
+                val cost = listing.price * extraDays
+                preview.text = if (cost > 0) {
+                    getString(R.string.extension_preview_format, newDue, Listings.price(cost))
+                } else {
+                    getString(R.string.extension_preview_free_format, newDue)
+                }
+            }
+
+            val chips = Listings.EXTENSION_DAYS.map { d ->
+                (LayoutInflater.from(this).inflate(R.layout.item_chip, chipContainer, false) as TextView).also {
+                    it.text = "+${Listings.daysLabel(this, d)}"
+                    chipContainer.addView(it)
+                }
+            }
+            Choice.chips(chips, 0) { idx ->
+                extraDays = Listings.EXTENSION_DAYS[idx]
+                if (!customInput.text.isNullOrEmpty()) customInput.setText("")
+                updatePreview()
+            }
+            customInput.addTextChangedListener(object : TextWatcher {
+                override fun afterTextChanged(s: Editable?) {
+                    val typed = s?.toString()?.toIntOrNull()
+                    if (typed != null && typed in 1..60) {
+                        extraDays = typed
+                        updatePreview()
+                    }
+                }
+                override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+                override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+            })
+            updatePreview()
+
+            sheet.findViewById<View>(R.id.extSend).setOnClickListener { btn ->
+                Motion.confirm(btn)
+                UserState.proposeReturnExtension(
+                    threadId = threadId,
+                    listing = listing,
+                    rental = rental,
+                    extraDays = extraDays,
+                    note = reasonInput.text.toString().trim(),
+                )
+                dialog.dismiss()
+                renderMessages(scrollToBottom = true)
+                Toast.makeText(this, R.string.toast_proposal_sent, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     companion object {
+        const val EXTRA_THREAD_ID = "thread_id"
+        const val EXTRA_LISTING_ID = EXTRA_LISTING
         const val EXTRA_RESERVED_DETAIL = "reserved_detail"
+        private const val STATE_CAMERA_URI = "state_chat_camera_uri"
     }
 }

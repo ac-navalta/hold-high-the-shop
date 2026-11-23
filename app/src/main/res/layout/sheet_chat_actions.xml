@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Opened by the + button in a chat. -->
+<!-- Context-aware '+' menu in ChatThreadActivity -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -17,6 +17,7 @@
         android:layout_marginBottom="6dp"
         android:text="@string/actions_title" />
 
+    <!-- Always available: Send a real photo -->
     <LinearLayout
         android:id="@+id/actionPhoto"
         style="@style/ActionRow">
@@ -46,9 +47,11 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!-- Context-aware: ONLY shown when listing has an ACCEPTED deal -->
     <LinearLayout
-        android:id="@+id/actionMeetup"
-        style="@style/ActionRow">
+        android:id="@+id/actionProposeMeetup"
+        style="@style/ActionRow"
+        android:visibility="gone">
 
         <FrameLayout style="@style/ActionTile">
 
@@ -67,17 +70,19 @@
 
             <TextView
                 style="@style/ActionTitle"
-                android:text="@string/action_meetup" />
+                android:text="@string/action_propose_meetup" />
 
             <TextView
                 style="@style/ActionHint"
-                android:text="@string/action_meetup_hint" />
+                android:text="@string/action_propose_meetup_hint" />
         </LinearLayout>
     </LinearLayout>
 
+    <!-- Context-aware: ONLY shown when listing has an active ON_LOAN rental -->
     <LinearLayout
-        android:id="@+id/actionTime"
-        style="@style/ActionRow">
+        android:id="@+id/actionProposeExtension"
+        style="@style/ActionRow"
+        android:visibility="gone">
 
         <FrameLayout style="@style/ActionTile">
 
@@ -96,14 +101,15 @@
 
             <TextView
                 style="@style/ActionTitle"
-                android:text="@string/action_time" />
+                android:text="@string/action_propose_extension" />
 
             <TextView
                 style="@style/ActionHint"
-                android:text="@string/action_time_hint" />
+                android:text="@string/action_propose_extension_hint" />
         </LinearLayout>
     </LinearLayout>
 
+    <!-- Always available: View listing -->
     <LinearLayout
         android:id="@+id/actionListing"
         style="@style/ActionRow">

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_sheet_top"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="20dp">
+
+    <View style="@style/SheetHandle" />
+
+    <TextView
+        style="@style/Kicker"
+        android:layout_marginTop="16dp"
+        android:text="@string/proposal_meetup_kicker" />
+
+    <TextView
+        style="@style/SheetTitle"
+        android:layout_marginTop="4dp"
+        android:text="@string/proposal_meetup_title" />
+
+    <TextView
+        style="@style/SheetLabel"
+        android:text="@string/reserve_where" />
+
+    <LinearLayout
+        android:id="@+id/propPlaceRow"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_input"
+        android:paddingHorizontal="14dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_marginEnd="10dp"
+            android:src="@drawable/ic_location"
+            app:tint="@color/uc_green"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:id="@+id/propPlaceText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="@font/poppins_medium"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp" />
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_chevron_down"
+            app:tint="@color/text_secondary"
+            android:contentDescription="@null" />
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/propMeetupNote"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_input"
+        android:paddingHorizontal="14dp"
+        android:fontFamily="@font/poppins_regular"
+        android:hint="@string/hint_meetup_note"
+        android:maxLength="100"
+        android:maxLines="1"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_secondary"
+        android:textSize="13sp" />
+
+    <TextView
+        style="@style/SheetLabel"
+        android:text="@string/reserve_day" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/propPickDate"
+            style="@style/OutlineButton"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:text="@string/chip_pick_date"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/propPickTime"
+            style="@style/OutlineButton"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="@string/chip_pick_time"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/propReason"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_input"
+        android:paddingHorizontal="14dp"
+        android:fontFamily="@font/poppins_regular"
+        android:hint="@string/proposal_note_hint"
+        android:maxLength="140"
+        android:maxLines="2"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_secondary"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/propSend"
+        style="@style/PrimaryButton"
+        android:layout_marginTop="16dp"
+        android:text="@string/btn_send_proposal" />
+</LinearLayout>

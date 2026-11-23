@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="14dp"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card"
+    android:elevation="2dp"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/proposalKicker"
+            style="@style/Kicker"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="@string/proposal_meetup_kicker" />
+
+        <TextView
+            android:id="@+id/proposalStatusBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_badge_swap"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="3dp"
+            android:fontFamily="@font/poppins_semibold"
+            android:text="@string/proposal_status_pending"
+            android:textColor="@color/swap_text"
+            android:textSize="9sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/proposalTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:fontFamily="@font/poppins_bold"
+        android:textColor="@color/text_primary"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/proposalDiff"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:fontFamily="@font/poppins_regular"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp"
+        android:lineSpacingExtra="3dp" />
+
+    <TextView
+        android:id="@+id/proposalNote"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_input"
+        android:padding="10dp"
+        android:fontFamily="@font/poppins_regular"
+        android:textColor="@color/text_primary"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
+    <!-- Recipient controls: Decline / Confirm change -->
+    <LinearLayout
+        android:id="@+id/proposalRecipientActions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/btnProposalDecline"
+            style="@style/DangerButton"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:text="@string/btn_decline"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/btnProposalConfirm"
+            style="@style/PrimaryButton"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1.3"
+            android:layout_marginStart="8dp"
+            android:text="@string/btn_confirm_change"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <!-- Proposer controls: waiting hint + Withdraw -->
+    <LinearLayout
+        android:id="@+id/proposalProposerActions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="@font/poppins_regular"
+            android:text="@string/proposal_waiting_other"
+            android:textColor="@color/text_secondary"
+            android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/btnProposalWithdraw"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:gravity="center"
+            android:paddingHorizontal="12dp"
+            android:background="@drawable/bg_btn_outline"
+            android:fontFamily="@font/poppins_semibold"
+            android:text="@string/btn_withdraw_proposal"
+            android:textColor="@color/danger"
+            android:textSize="12sp"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+</LinearLayout>

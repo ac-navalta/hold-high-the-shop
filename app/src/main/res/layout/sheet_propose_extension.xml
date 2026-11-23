@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_sheet_top"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="20dp">
+
+    <View style="@style/SheetHandle" />
+
+    <TextView
+        style="@style/Kicker"
+        android:layout_marginTop="16dp"
+        android:text="@string/proposal_extension_kicker" />
+
+    <TextView
+        style="@style/SheetTitle"
+        android:layout_marginTop="4dp"
+        android:text="@string/proposal_extension_title" />
+
+    <TextView
+        style="@style/SheetLabel"
+        android:text="@string/extension_extra_days_label" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/extDaysChips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+
+    <EditText
+        android:id="@+id/extCustomDays"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_input"
+        android:paddingHorizontal="14dp"
+        android:fontFamily="@font/poppins_regular"
+        android:hint="Or enter custom extra days (1–30)"
+        android:inputType="number"
+        android:digits="0123456789"
+        android:maxLength="2"
+        android:maxLines="1"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_secondary"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/extPreview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_banner_mint"
+        android:padding="12dp"
+        android:fontFamily="@font/poppins_semibold"
+        android:textColor="@color/uc_green"
+        android:textSize="13sp" />
+
+    <EditText
+        android:id="@+id/extReason"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_input"
+        android:paddingHorizontal="14dp"
+        android:fontFamily="@font/poppins_regular"
+        android:hint="@string/proposal_note_hint"
+        android:maxLength="140"
+        android:maxLines="2"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_secondary"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/extSend"
+        style="@style/PrimaryButton"
+        android:layout_marginTop="16dp"
+        android:text="@string/btn_send_proposal" />
+</LinearLayout>
