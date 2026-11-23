@@ -63,7 +63,7 @@
                     android:layout_height="36dp"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_verified"
-                    android:tint="@color/uc_green"
+                    app:tint="@color/uc_green"
                     android:contentDescription="@null" />
             </FrameLayout>
         </FrameLayout>

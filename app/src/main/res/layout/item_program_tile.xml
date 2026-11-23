@@ -28,7 +28,7 @@
             android:id="@+id/programIcon"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:tint="@color/uc_green"
+            app:tint="@color/uc_green"
             android:contentDescription="@null" />
 
         <TextView

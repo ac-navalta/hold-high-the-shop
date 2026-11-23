@@ -39,7 +39,7 @@
                 android:layout_height="24dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_chevron_left"
-                android:tint="@color/white"
+                app:tint="@color/white"
                 android:contentDescription="@string/cd_back" />
         </FrameLayout>
 
@@ -109,7 +109,7 @@
                         android:layout_height="28dp"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_bookmark"
-                        android:tint="@color/uc_green"
+                        app:tint="@color/uc_green"
                         android:contentDescription="@null" />
                 </FrameLayout>
 

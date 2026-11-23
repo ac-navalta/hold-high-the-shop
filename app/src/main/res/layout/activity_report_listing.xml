@@ -39,7 +39,7 @@
                 android:layout_height="24dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_chevron_left"
-                android:tint="@color/white"
+                app:tint="@color/white"
                 android:contentDescription="@string/cd_back" />
         </FrameLayout>
 
@@ -107,7 +107,7 @@
                             android:layout_height="22dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_image"
-                            android:tint="#CFC9B4"
+                            app:tint="#CFC9B4"
                             android:contentDescription="@string/cd_item_photo" />
                     </FrameLayout>
 
@@ -188,7 +188,7 @@
                     android:layout_width="21dp"
                     android:layout_height="21dp"
                     android:src="@drawable/ic_radio_off"
-                    android:tint="@color/text_secondary"
+                    app:tint="@color/text_secondary"
                     android:contentDescription="@null" />
 
                 <TextView
@@ -223,7 +223,7 @@
                     android:layout_width="21dp"
                     android:layout_height="21dp"
                     android:src="@drawable/ic_radio_off"
-                    android:tint="@color/text_secondary"
+                    app:tint="@color/text_secondary"
                     android:contentDescription="@null" />
 
                 <TextView
@@ -258,7 +258,7 @@
                     android:layout_width="21dp"
                     android:layout_height="21dp"
                     android:src="@drawable/ic_radio_off"
-                    android:tint="@color/text_secondary"
+                    app:tint="@color/text_secondary"
                     android:contentDescription="@null" />
 
                 <TextView
@@ -293,7 +293,7 @@
                     android:layout_width="21dp"
                     android:layout_height="21dp"
                     android:src="@drawable/ic_radio_off"
-                    android:tint="@color/text_secondary"
+                    app:tint="@color/text_secondary"
                     android:contentDescription="@null" />
 
                 <TextView
@@ -328,7 +328,7 @@
                     android:layout_width="21dp"
                     android:layout_height="21dp"
                     android:src="@drawable/ic_radio_off"
-                    android:tint="@color/text_secondary"
+                    app:tint="@color/text_secondary"
                     android:contentDescription="@null" />
 
                 <TextView
@@ -363,7 +363,7 @@
                     android:layout_width="21dp"
                     android:layout_height="21dp"
                     android:src="@drawable/ic_radio_off"
-                    android:tint="@color/text_secondary"
+                    app:tint="@color/text_secondary"
                     android:contentDescription="@null" />
 
                 <TextView
@@ -445,7 +445,7 @@
                     android:layout_width="22dp"
                     android:layout_height="22dp"
                     android:src="@drawable/ic_verified"
-                    android:tint="@color/uc_green"
+                    app:tint="@color/uc_green"
                     android:contentDescription="@null" />
 
                 <LinearLayout

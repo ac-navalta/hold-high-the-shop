@@ -59,7 +59,7 @@
                 android:layout_height="24dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_bookmark"
-                android:tint="@color/white"
+                app:tint="@color/white"
                 android:contentDescription="@string/cd_saved" />
         </FrameLayout>
     </LinearLayout>
@@ -108,7 +108,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:src="@drawable/ic_search"
-                    android:tint="@color/uc_green"
+                    app:tint="@color/uc_green"
                     android:contentDescription="@string/cd_search" />
 
                 <EditText
@@ -144,7 +144,7 @@
                         android:layout_height="18dp"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_close"
-                        android:tint="@color/text_secondary"
+                        app:tint="@color/text_secondary"
                         android:contentDescription="@string/cd_clear_search" />
                 </FrameLayout>
 
@@ -163,7 +163,7 @@
                         android:layout_height="19dp"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_filter"
-                        android:tint="@color/uc_green"
+                        app:tint="@color/uc_green"
                         android:contentDescription="@string/cd_filter" />
 
                     <View
@@ -245,7 +245,7 @@
                         android:layout_width="18dp"
                         android:layout_height="18dp"
                         android:src="@drawable/ic_chevron_down"
-                        android:tint="@color/text_secondary"
+                        app:tint="@color/text_secondary"
                         android:contentDescription="@null" />
                 </LinearLayout>
             </LinearLayout>
@@ -281,7 +281,7 @@
                         android:layout_height="28dp"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_search"
-                        android:tint="@color/uc_green"
+                        app:tint="@color/uc_green"
                         android:contentDescription="@null" />
                 </FrameLayout>
 
@@ -348,7 +348,7 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:src="@drawable/ic_plus"
-            android:tint="@color/white"
+            app:tint="@color/white"
             android:contentDescription="@null" />
 
         <TextView

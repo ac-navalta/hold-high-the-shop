@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- One block of free time on Create listing: days of the week plus From / To. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="10dp"
@@ -36,7 +37,7 @@
                 android:layout_height="18dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_close"
-                android:tint="@color/text_secondary"
+                app:tint="@color/text_secondary"
                 android:contentDescription="@null" />
         </FrameLayout>
     </LinearLayout>
@@ -175,7 +176,7 @@
                 android:layout_width="18dp"
                 android:layout_height="18dp"
                 android:src="@drawable/ic_clock"
-                android:tint="@color/uc_green"
+                app:tint="@color/uc_green"
                 android:contentDescription="@null" />
 
             <LinearLayout
@@ -221,7 +222,7 @@
                 android:layout_width="18dp"
                 android:layout_height="18dp"
                 android:src="@drawable/ic_clock"
-                android:tint="@color/uc_green"
+                app:tint="@color/uc_green"
                 android:contentDescription="@null" />
 
             <LinearLayout

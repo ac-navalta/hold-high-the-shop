@@ -32,7 +32,7 @@
                 android:layout_height="30dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_image"
-                android:tint="#CFC9B4"
+                app:tint="#CFC9B4"
                 android:contentDescription="@string/cd_item_photo" />
 
             <ImageView
