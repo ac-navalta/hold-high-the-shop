@@ -1,9 +1,14 @@
 package com.nevergrowold.holdhightheshop
 
+import android.Manifest
 import android.app.SearchManager
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import android.content.ServiceConnection
+import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
@@ -14,7 +19,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
-import androidx.core.content.IntentCompat
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -22,19 +27,40 @@ import androidx.core.view.updatePadding
 import androidx.dynamicanimation.animation.DynamicAnimation
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.nevergrowold.holdhightheshop.data.AppRepository
+import com.nevergrowold.holdhightheshop.media.ImagePipeline
+import com.nevergrowold.holdhightheshop.security.IntentSecurity
+import com.nevergrowold.holdhightheshop.system.MarketplaceBroadcasts
+import com.nevergrowold.holdhightheshop.system.MarketplaceEventReceiver
+import com.nevergrowold.holdhightheshop.system.MarketplaceSyncService
+import com.nevergrowold.holdhightheshop.system.MeetupCountdownService
+import com.nevergrowold.holdhightheshop.system.NetworkStateMonitor
+import com.nevergrowold.holdhightheshop.system.NotificationHelper
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 /**
  * Single-host shell for the four primary tabs (Home, Market, Chats, Profile).
  *
- * Also serves as the exported Manifest intent router for:
- * - Deep links (`ACTION_VIEW` for `https://holdhightheshop.app/...` and `holdhightheshop://...`)
- * - Campus Market search (`ACTION_SEARCH`)
- * - Incoming text/photo shares (`ACTION_SEND`) forwarded to [CreateListingActivity]
+ * Security & Component Architecture:
+ * - **Auth Gate**: Enforces verified `@students.uc-bcf.edu.ph` session on BOTH `onCreate` and
+ *   `onNewIntent` so external deep links, searches, or `ACTION_SEND` intents can never bypass login.
+ * - **IntentSanitizer**: Protects incoming `ACTION_SEND` against `file://` and self-FileProvider exfiltration.
+ * - **Bound Service**: Binds [MeetupCountdownService] for live upcoming meetup/loan countdowns.
+ * - **Foreground Service**: Triggers [MarketplaceSyncService] for clean background deal/reminder maintenance.
+ * - **Dynamic BroadcastReceiver**: Registers [MarketplaceEventReceiver] (`RECEIVER_NOT_EXPORTED`)
+ *   to update active tabs instantly on deal, chat, proposal, or sync events.
+ * - **Connectivity**: Observes [NetworkStateMonitor] for the offline status banner and reconnect sync.
  */
 class MainActivity : BaseActivity() {
 
     private lateinit var tabContainer: FrameLayout
+    private lateinit var offlineBanner: TextView
     private lateinit var bottomNav: View
     private lateinit var pill: View
     private lateinit var navTabs: List<View>
@@ -51,12 +77,50 @@ class MainActivity : BaseActivity() {
     private var pillSpring: SpringAnimation? = null
     private var pillInitialized = false
 
+    private var networkMonitor: NetworkStateMonitor? = null
+    private var countdownService: MeetupCountdownService? = null
+    private var countdownBound = false
+    private var countdownJob: Job? = null
+
+    private val eventReceiver = MarketplaceEventReceiver { _, _ ->
+        countdownService?.refreshNow()
+        refreshActiveTab()
+    }
+
+    private val countdownConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val svc = (service as? MeetupCountdownService.LocalBinder)?.service() ?: return
+            countdownService = svc
+            countdownBound = true
+            countdownJob?.cancel()
+            countdownJob = lifecycleScope.launch {
+                svc.soonestCountdown.collect { countdown ->
+                    homeTab?.updateCountdown(countdown)
+                }
+            }
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            countdownBound = false
+            countdownService = null
+            countdownJob?.cancel()
+        }
+    }
+
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ ->
+            // Always queried live via NotificationHelper.hasNotificationPermission(this) when needed.
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!enforceVerifiedAuthGate(intent)) return
+
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
         tabContainer = findViewById(R.id.tabContainer)
+        offlineBanner = findViewById(R.id.offlineBanner)
         bottomNav = findViewById(R.id.bottomNav)
         pill = findViewById(R.id.navIndicator)
         navTabs = listOf(
@@ -78,22 +142,55 @@ class MainActivity : BaseActivity() {
             findViewById(R.id.navLabel3),
         )
 
+        networkMonitor = NetworkStateMonitor(this)
+
         setupInsets()
         setupPillSpring()
         setupBackNavigation()
+        setupReactiveObservers()
 
         val initialTab = intent.getIntExtra(EXTRA_NAV_TAB, TAB_HOME).coerceIn(TAB_HOME, TAB_PROFILE)
         showTab(initialTab, animate = false)
-        handleIncomingIntent(intent, animateTab = false)
+        val forwardedExternal = handleIncomingIntent(intent, animateTab = false)
         if (activeTab == TAB_HOME) homeTab?.ringBellOnceIfUnread()
 
-        // Quietly pre-warm the remaining three tabs after frame 1 paints so even
-        // the very first tap on Market, Chats or Profile responds in 0ms.
         scheduleIdlePrewarm()
+        MarketplaceSyncService.startIfAllowed(this)
+        if (!forwardedExternal) maybePromptNotificationPermission()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (!UserState.isVerifiedSignedIn) return
+        MarketplaceBroadcasts.registerInternalReceiver(
+            this,
+            eventReceiver,
+            MarketplaceBroadcasts.ACTION_STATE_CHANGED,
+            MarketplaceBroadcasts.ACTION_DEAL_UPDATED,
+            MarketplaceBroadcasts.ACTION_NEW_CHAT_MESSAGE,
+            MarketplaceBroadcasts.ACTION_PROPOSAL_UPDATED,
+        )
+        networkMonitor?.start()
+        runCatching {
+            bindService(Intent(this, MeetupCountdownService::class.java), countdownConnection, Context.BIND_AUTO_CREATE)
+        }
+    }
+
+    override fun onStop() {
+        runCatching { unregisterReceiver(eventReceiver) }
+        networkMonitor?.stop()
+        countdownJob?.cancel()
+        if (countdownBound) {
+            runCatching { unbindService(countdownConnection) }
+            countdownBound = false
+            countdownService = null
+        }
+        super.onStop()
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        if (!enforceVerifiedAuthGate(intent)) return
         setIntent(intent)
         val target = intent.getIntExtra(EXTRA_NAV_TAB, -1)
         if (target in TAB_HOME..TAB_PROFILE) {
@@ -104,6 +201,8 @@ class MainActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (!UserState.isVerifiedSignedIn) return
+        countdownService?.refreshNow()
         refreshActiveTab()
     }
 
@@ -118,17 +217,84 @@ class MainActivity : BaseActivity() {
     }
 
     /**
-     * Handles all intents declared in AndroidManifest.xml on [MainActivity]:
-     * deep links (`ACTION_VIEW`), system search (`ACTION_SEARCH`), incoming
-     * shares (`ACTION_SEND`), and explicit internal routing extras.
+     * Strict auth gate protecting exported [MainActivity].
+     * External deep links, searches, or shares cannot bypass UC student login/verification.
      */
-    private fun handleIncomingIntent(intent: Intent?, animateTab: Boolean) {
-        if (intent == null) return
-
-        intent.getStringExtra(EXTRA_EMAIL)?.takeIf { it.isNotBlank() }?.let { email ->
-            UserState.updateEmail(this, email)
-            intent.removeExtra(EXTRA_EMAIL)
+    private fun enforceVerifiedAuthGate(incoming: Intent?): Boolean {
+        if (UserState.isVerifiedSignedIn) return true
+        val deepLinkStr = if (incoming?.action == Intent.ACTION_VIEW && IntentSecurity.hasSafeDeepLink(incoming.data)) {
+            incoming.data?.toString()
+        } else {
+            null
         }
+        val target = when {
+            UserState.isSignedIn && UserState.isSuspended -> AccountSuspendedActivity::class.java
+            UserState.isSignedIn -> VerifyEmailActivity::class.java
+            else -> LoginActivity::class.java
+        }
+        val redirect = Intent(this, target).apply {
+            if (deepLinkStr != null) putExtra(EXTRA_PENDING_DEEP_LINK, deepLinkStr)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(redirect)
+        finish()
+        return false
+    }
+
+    private fun setupReactiveObservers() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    AppRepository.stateVersion.collect {
+                        if (UserState.isSignedIn && UserState.isSuspended) {
+                            enforceVerifiedAuthGate(null)
+                            return@collect
+                        }
+                        countdownService?.refreshNow()
+                        refreshActiveTab()
+                    }
+                }
+                launch {
+                    networkMonitor?.isOnline?.collect { online ->
+                        offlineBanner.isVisible = !online
+                    }
+                }
+            }
+        }
+    }
+
+    private fun maybePromptNotificationPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (NotificationHelper.hasNotificationPermission(this)) return
+        val prefs = getSharedPreferences("hhts_ui_hints", Context.MODE_PRIVATE)
+        if (prefs.getBoolean("asked_post_notif", false)) return
+        prefs.edit().putBoolean("asked_post_notif", true).apply()
+
+        if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.notif_permission_title)
+                .setMessage(R.string.notif_permission_message)
+                .setNegativeButton(R.string.btn_not_now, null)
+                .setPositiveButton(R.string.btn_allow_notifications) { _, _ ->
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+                .show()
+        } else {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    /**
+     * Handles all intents declared in AndroidManifest.xml on [MainActivity]:
+     * - HTTPS/custom-scheme deep links (`ACTION_VIEW`)
+     * - Campus Market search (`ACTION_SEARCH`)
+     * - Sanitized incoming shares (`ACTION_SEND` via [IntentSecurity.sanitizeIncomingShare])
+     */
+    private fun handleIncomingIntent(intent: Intent?, animateTab: Boolean): Boolean {
+        if (intent == null) return false
+
+        // Security: Never honor external EXTRA_EMAIL overrides on exported MainActivity.
+        intent.removeExtra(EXTRA_EMAIL)
 
         when (intent.action) {
             Intent.ACTION_VIEW -> {
@@ -136,38 +302,43 @@ class MainActivity : BaseActivity() {
                 if (route != null) {
                     intent.data = null
                     dispatchDeepLink(route, animateTab)
-                    return
+                    return true
                 }
             }
             Intent.ACTION_SEARCH -> {
-                val query = intent.getStringExtra(SearchManager.QUERY)?.trim().orEmpty()
+                val query = intent.getStringExtra(SearchManager.QUERY)?.trim().orEmpty().take(100)
                 intent.removeExtra(SearchManager.QUERY)
                 showTab(TAB_MARKET, animate = animateTab)
                 if (query.isNotEmpty()) {
                     ensureMarket().setSearchQuery(query)
                     Toast.makeText(this, getString(R.string.toast_searching_format, query), Toast.LENGTH_SHORT).show()
                 }
-                return
+                return true
             }
             Intent.ACTION_SEND -> {
-                val subject = intent.getStringExtra(Intent.EXTRA_SUBJECT)
-                val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
-                val streamUri = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
-                val createIntent = Intent(this, CreateListingActivity::class.java).apply {
-                    if (!subject.isNullOrBlank()) putExtra(AppIntents.EXTRA_SHARED_SUBJECT, subject)
-                    if (!sharedText.isNullOrBlank()) putExtra(AppIntents.EXTRA_SHARED_TEXT, sharedText)
-                    if (streamUri != null) {
-                        putExtra(AppIntents.EXTRA_SHARED_IMAGE_URI, streamUri.toString())
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                }
+                val safe = IntentSecurity.sanitizeIncomingShare(this, intent)
                 intent.action = null
-                startActivity(createIntent)
-                return
+                if (safe == null) {
+                    Toast.makeText(this, R.string.toast_no_app_available, Toast.LENGTH_SHORT).show()
+                    return true
+                }
+                lifecycleScope.launch {
+                    val ingestedRef = safe.imageUri?.let { uri ->
+                        ImagePipeline.ingestUri(this@MainActivity, uri)
+                    }
+                    val createIntent = Intent(this@MainActivity, CreateListingActivity::class.java).apply {
+                        if (!safe.subject.isNullOrBlank()) putExtra(AppIntents.EXTRA_SHARED_SUBJECT, safe.subject)
+                        if (!safe.text.isNullOrBlank()) putExtra(AppIntents.EXTRA_SHARED_TEXT, safe.text)
+                        if (!ingestedRef.isNullOrBlank()) putExtra(AppIntents.EXTRA_SHARED_IMAGE_URI, ingestedRef)
+                    }
+                    startActivity(createIntent)
+                }
+                return true
             }
         }
 
         handleRoutingExtras(intent, animateTab)
+        return false
     }
 
     private fun dispatchDeepLink(route: AppIntents.DeepLinkRoute, animateTab: Boolean) {
@@ -188,10 +359,9 @@ class MainActivity : BaseActivity() {
                 showTab(TAB_PROFILE, animate = animateTab)
                 ensureProfile().openSubTab(route.subTab, scrollDown = false)
             }
-            is AppIntents.DeepLinkRoute.SellerProfile -> openSeller(Listings.sellerByName(route.sellerName))
-            is AppIntents.DeepLinkRoute.MapDirections -> startActivity(
-                Intent(this, MapActivity::class.java).putExtra(MapActivity.EXTRA_PLACE, route.place)
-            )
+            is AppIntents.DeepLinkRoute.SellerProfile -> {
+                if (route.sellerName.isNotBlank()) openSeller(Listings.sellerByName(route.sellerName))
+            }
             AppIntents.DeepLinkRoute.CreateListing -> startActivity(Intent(this, CreateListingActivity::class.java))
             AppIntents.DeepLinkRoute.Saved -> startActivity(Intent(this, SavedActivity::class.java))
             AppIntents.DeepLinkRoute.Notifications -> startActivity(Intent(this, NotificationsActivity::class.java))
@@ -226,6 +396,7 @@ class MainActivity : BaseActivity() {
         val root = findViewById<View>(R.id.main)
         val bottomBasePad = bottomNav.paddingBottom
         val rootBaseBottom = root.paddingBottom
+        val bannerBaseTop = offlineBanner.paddingTop
 
         ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -233,6 +404,7 @@ class MainActivity : BaseActivity() {
             val typing = insets.isVisible(WindowInsetsCompat.Type.ime()) && ime.bottom > 0
 
             lastTopInset = bars.top
+            offlineBanner.updatePadding(top = bannerBaseTop + bars.top)
             homeTab?.applyTopInset(bars.top)
             marketTab?.applyTopInset(bars.top)
             chatsTab?.applyTopInset(bars.top)
@@ -263,8 +435,6 @@ class MainActivity : BaseActivity() {
 
     private fun setupPillSpring() {
         val dp = resources.displayMetrics.density
-        // Listeners are attached ONCE here before start() — retargeting mid-flight
-        // via animateToFinalPosition() preserves velocity smoothly and never throws.
         pillSpring = SpringAnimation(pill, DynamicAnimation.TRANSLATION_X).apply {
             setMinimumVisibleChange(DynamicAnimation.MIN_VISIBLE_CHANGE_PIXELS)
             spring = SpringForce(0f).apply {
@@ -361,8 +531,6 @@ class MainActivity : BaseActivity() {
 
     private fun <T> inflateTab(layoutRes: Int, create: (View) -> T): T {
         val view = LayoutInflater.from(this).inflate(layoutRes, tabContainer, false)
-        // INVISIBLE (not GONE) pre-measures & pre-lays out idle-warmed tabs so
-        // switching tabs triggers zero measure/layout passes.
         view.visibility = View.INVISIBLE
         tabContainer.addView(view)
         return create(view)
@@ -406,7 +574,6 @@ class MainActivity : BaseActivity() {
         updateNavVisuals(previous, next, animate = switching)
         positionPill(next, animate = switching)
 
-        // Hide any other stale tab views left mid-transition from rapid tapping.
         listOf(homeTab?.root, marketTab?.root, chatsTab?.root, profileTab?.root).forEach { v ->
             if (v != null && v !== incomingView && v !== outgoingView) {
                 v.animate().cancel()
@@ -437,8 +604,6 @@ class MainActivity : BaseActivity() {
         val dp = resources.displayMetrics.density
         val direction = if (next > previous) 1 else -1
 
-        // Outgoing & incoming cross-transition simultaneously inside the same GPU window
-        // (zero Activity IPC, zero relayout, zero white flash, zero buffering).
         outgoingView?.let { out ->
             out.animate().cancel()
             out.animate()
@@ -492,14 +657,11 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    // ---------------------------------------------------------------- tab switches & XML onClick handlers
+    // ---------------------------------------------------------------- XML onClick handlers
 
     override fun openHome(view: View) = tapTab(TAB_HOME)
-
     override fun openMarket(view: View) = tapTab(TAB_MARKET)
-
     override fun openChats(view: View) = tapTab(TAB_CHATS)
-
     override fun openProfile(view: View) = tapTab(TAB_PROFILE)
 
     private fun tapTab(index: Int) {
@@ -514,37 +676,31 @@ class MainActivity : BaseActivity() {
         ensureMarket().selectProgram(view.tag as? String)
     }
 
-    /** Home: bell icon opens notifications. */
     fun openNotifications(view: View) {
         Motion.tick(view)
         startActivity(Intent(this, NotificationsActivity::class.java))
     }
 
-    /** Home: "Exchanged" stat card opens Profile on the Completed tab. */
     fun openExchanged(view: View) {
         Motion.tick(view)
         showTab(TAB_PROFILE, animate = true)
         ensureProfile().openSubTab(ProfileActivity.TAB_COMPLETED, scrollDown = true)
     }
 
-    /** Home: "Active listings" stat card opens Profile on the Active tab. */
     fun openActiveListings(view: View) {
         Motion.tick(view)
         showTab(TAB_PROFILE, animate = true)
         ensureProfile().openSubTab(ProfileActivity.TAB_ACTIVE, scrollDown = true)
     }
 
-    /** Market handlers forwarded from tab_market.xml. */
     fun openSort(view: View) = ensureMarket().openSort(view)
     fun clearSearch(view: View) = ensureMarket().clearSearch(view)
     fun clearAllFilters(view: View) = ensureMarket().clearAllFilters(view)
     fun openFilters(view: View) = ensureMarket().openFilters(view)
 
-    /** Chats handlers forwarded from tab_chats.xml. */
     fun toggleSearch(view: View) = ensureChats().toggleSearch(view)
     fun openThread(view: View) = ensureChats().openThread(view)
 
-    /** Profile handlers forwarded from tab_profile.xml. */
     fun openMenu(view: View) = ensureProfile().openMenu(view)
 
     companion object {
@@ -554,7 +710,6 @@ class MainActivity : BaseActivity() {
         const val TAB_PROFILE = 3
         const val EXTRA_NAV_TAB = "nav_tab"
 
-        /** Responsive, sleek, visibly springy pill physics (point-to-point glide). */
         private const val PILL_STIFFNESS = 600f
         private const val PILL_DAMPING = 0.74f
     }

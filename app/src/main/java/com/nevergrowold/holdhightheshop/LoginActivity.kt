@@ -1,8 +1,10 @@
 package com.nevergrowold.holdhightheshop
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
+import android.text.InputType
 import android.text.TextWatcher
 import android.transition.ChangeBounds
 import android.transition.Fade
@@ -11,11 +13,29 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ScrollView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.core.view.isVisible
 import androidx.dynamicanimation.animation.DynamicAnimation
+import androidx.lifecycle.lifecycleScope
+import com.nevergrowold.holdhightheshop.data.AppRepository
+import com.nevergrowold.holdhightheshop.data.AuthResult
+import com.nevergrowold.holdhightheshop.security.UcEmailValidator
+import kotlinx.coroutines.launch
 
+/**
+ * Verified UC Student Log-In screen.
+ * Enforces strictly `@students.uc-bcf.edu.ph` student emails paired with password
+ * authentication and UC Outlook email verification.
+ */
 class LoginActivity : BaseActivity() {
+
+    override val requiresVerifiedAuth: Boolean = false
+
+    private var passwordVisible = false
+    private var busy = false
+    private var pendingDeepLink: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,26 +44,72 @@ class LoginActivity : BaseActivity() {
         BarInsets.apply(this)
         playEntrance(fromSplash = intent.getBooleanExtra(EXTRA_FROM_SPLASH, false))
 
+        pendingDeepLink = intent.getStringExtra(EXTRA_PENDING_DEEP_LINK)
+
         val email = findViewById<EditText>(R.id.inputEmail)
+        val password = findViewById<EditText>(R.id.inputPassword)
         val check = findViewById<View>(R.id.emailCheck)
-        email.setText(UserState.profile.email)
-        Motion.setVisiblePop(check, isValidEmail(email.text?.toString().orEmpty()))
+        val togglePw = findViewById<TextView>(R.id.btnTogglePassword)
+        val errorView = findViewById<TextView>(R.id.loginError)
+
+        val initialEmail = intent.getStringExtra(EXTRA_EMAIL).orEmpty().ifBlank { UserState.profile.email }
+        if (initialEmail.isNotBlank()) email.setText(initialEmail)
+
+        Motion.setVisiblePop(check, UcEmailValidator.isValidUcStudentEmail(email.text?.toString()))
         email.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
-                Motion.setVisiblePop(check, isValidEmail(s?.toString().orEmpty()))
+                errorView.isVisible = false
+                Motion.setVisiblePop(check, UcEmailValidator.isValidUcStudentEmail(s?.toString()))
             }
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
         })
-        email.setOnEditorActionListener { v, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_GO) {
+
+        password.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                errorView.isVisible = false
+            }
+            override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+            override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+        })
+
+        password.setOnEditorActionListener { v, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
                 signIn(v)
                 true
             } else {
                 false
             }
         }
-        // Keep the whole sign-in card, including the button, visible when the keyboard opens.
+
+        togglePw.setOnClickListener {
+            passwordVisible = !passwordVisible
+            val pos = password.selectionEnd
+            password.inputType = if (passwordVisible) {
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+            } else {
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            }
+            togglePw.text = if (passwordVisible) "Hide" else "Show"
+            password.setSelection(pos.coerceAtLeast(0))
+        }
+
+        findViewById<View>(R.id.btnForgotPassword).setOnClickListener {
+            Motion.tick(it)
+            startActivity(
+                Intent(this, ForgotPasswordActivity::class.java)
+                    .putExtra(EXTRA_EMAIL, email.text?.toString()?.trim().orEmpty()),
+            )
+        }
+
+        findViewById<View>(R.id.btnGoSignUp).setOnClickListener {
+            Motion.tick(it)
+            startActivity(
+                Intent(this, SignUpActivity::class.java)
+                    .putExtra(EXTRA_PENDING_DEEP_LINK, pendingDeepLink),
+            )
+        }
+
         val scroll = findViewById<ScrollView>(R.id.loginScroll)
         scroll.addOnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
             if (bottom - top < oldBottom - oldTop) {
@@ -52,11 +118,6 @@ class LoginActivity : BaseActivity() {
         }
     }
 
-    /**
-     * Arriving from splash, the logo glides cleanly up while the sign-in card
-     * rises right in sync. Arriving from logout, the card arrives immediately
-     * with no artificial delay.
-     */
     private fun playEntrance(fromSplash: Boolean) {
         if (!Motion.enabled(this)) return
         window.sharedElementEnterTransition = ChangeBounds().apply {
@@ -80,48 +141,83 @@ class LoginActivity : BaseActivity() {
             .setInterpolator(Motion.EMPHASIZED)
             .withLayer()
             .start()
-
-        val content = card.getChildAt(0) as ViewGroup
-        val children = (0 until content.childCount).map { content.getChildAt(it) }
-        Motion.staggerIn(children, delay = cardDelay + 50L, riseDp = 8f, gapMs = 20L, subtleScale = false)
     }
 
-    private fun isValidEmail(raw: String): Boolean {
-        val trimmed = raw.trim()
-        val at = trimmed.indexOf('@')
-        if (at <= 0 || at != trimmed.lastIndexOf('@')) return false
-        val domain = trimmed.substring(at + 1)
-        val dot = domain.lastIndexOf('.')
-        return dot > 0 && dot < domain.length - 1 && !trimmed.any { it.isWhitespace() }
-    }
-
-    /**
-     * Validates the UC email, signs the student in with a welcome Toast, and
-     * opens [MainActivity] via an explicit Intent carrying the email extra.
-     * finish() drops this screen so Back from the dashboard leaves the app.
-     */
     fun signIn(view: View) {
+        if (busy) return
         val emailInput = findViewById<EditText>(R.id.inputEmail)
-        val emailText = emailInput.text.toString().trim()
-        if (!isValidEmail(emailText)) {
+        val passwordInput = findViewById<EditText>(R.id.inputPassword)
+        val errorView = findViewById<TextView>(R.id.loginError)
+        val emailText = UcEmailValidator.normalize(emailInput.text?.toString())
+        val passwordText = passwordInput.text?.toString().orEmpty()
+
+        if (!UcEmailValidator.isValidUcStudentEmail(emailText)) {
             Motion.shake(emailInput)
-            Toast.makeText(this, R.string.toast_invalid_email, Toast.LENGTH_SHORT).show()
+            errorView.text = getString(R.string.signup_domain_error)
+            errorView.isVisible = true
+            Toast.makeText(this, R.string.signup_domain_error, Toast.LENGTH_SHORT).show()
             showKeyboard(emailInput)
             return
         }
-        hideKeyboard(view)
-        Motion.confirm(view)
-        UserState.updateEmail(this, emailText)
-        findViewById<View>(R.id.signInArrow)?.let { arrow ->
-            val dp = resources.displayMetrics.density
-            Motion.spring(arrow, DynamicAnimation.TRANSLATION_X, 6f * dp, Motion.Spatial.SNAPPY)
+        if (passwordText.isEmpty()) {
+            Motion.shake(passwordInput)
+            errorView.text = getString(R.string.login_password_hint)
+            errorView.isVisible = true
+            showKeyboard(passwordInput)
+            return
         }
-        // User Communication (Toast): greets the student upon verified sign-in.
-        Toast.makeText(this, getString(R.string.toast_signed_in, UserState.profile.first), Toast.LENGTH_SHORT).show()
-        startActivity(
-            Intent(this, MainActivity::class.java).putExtra(EXTRA_EMAIL, emailText)
-        )
-        finish()
+
+        hideKeyboard(view)
+        setBusy(true)
+        lifecycleScope.launch {
+            val result = AppRepository.signIn(this@LoginActivity, emailText, passwordText)
+            setBusy(false)
+            when (result) {
+                is AuthResult.VerifiedSuccess -> {
+                    Motion.confirm(view)
+                    findViewById<View>(R.id.signInArrow)?.let { arrow ->
+                        val dp = resources.displayMetrics.density
+                        Motion.spring(arrow, DynamicAnimation.TRANSLATION_X, 6f * dp, Motion.Spatial.SNAPPY)
+                    }
+                    Toast.makeText(
+                        this@LoginActivity,
+                        getString(R.string.toast_signed_in, UserState.profile.first),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                    val mainIntent = Intent(this@LoginActivity, MainActivity::class.java).apply {
+                        pendingDeepLink?.takeIf { it.isNotBlank() }?.let { dl ->
+                            action = Intent.ACTION_VIEW
+                            data = Uri.parse(dl)
+                        }
+                    }
+                    startActivity(mainIntent)
+                    finish()
+                }
+                is AuthResult.NeedsVerification -> {
+                    startActivity(
+                        Intent(this@LoginActivity, VerifyEmailActivity::class.java)
+                            .putExtra(EXTRA_PENDING_DEEP_LINK, pendingDeepLink),
+                    )
+                    finish()
+                }
+                is AuthResult.Suspended -> {
+                    startActivity(Intent(this@LoginActivity, AccountSuspendedActivity::class.java))
+                    finish()
+                }
+                is AuthResult.Error -> {
+                    Motion.shake(findViewById(R.id.loginCard))
+                    errorView.text = result.message
+                    errorView.isVisible = true
+                }
+            }
+        }
+    }
+
+    private fun setBusy(loading: Boolean) {
+        busy = loading
+        findViewById<View>(R.id.signInProgress).isVisible = loading
+        findViewById<View>(R.id.signInArrow).isVisible = !loading
+        findViewById<View>(R.id.btnSignIn).isEnabled = !loading
     }
 
     companion object {

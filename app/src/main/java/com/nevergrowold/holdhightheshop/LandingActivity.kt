@@ -12,26 +12,53 @@ import androidx.activity.enableEdgeToEdge
 import androidx.dynamicanimation.animation.DynamicAnimation
 
 /**
- * Splash screen. The brand emblem springs into place with restrained physics,
- * then hands off directly to sign-in via a shared-element glide.
+ * Splash & smart session router.
+ *
+ * Routes cleanly based on the verified UC student session state:
+ * - Signed in & suspended -> [AccountSuspendedActivity]
+ * - Signed in & unverified -> [VerifyEmailActivity]
+ * - Signed in & verified -> [MainActivity]
+ * - Signed out -> [LoginActivity] (with shared-element brand glide)
  */
 class LandingActivity : BaseActivity() {
+
+    override val requiresVerifiedAuth: Boolean = false
 
     private val handler = Handler(Looper.getMainLooper())
     private var handedOff = false
 
-    private val goToLogin = Runnable {
+    private val routeNext = Runnable {
         if (handedOff || isFinishing || isDestroyed) return@Runnable
         handedOff = true
-        val brand = findViewById<View>(R.id.brandRow)
-        val intent = Intent(this, LoginActivity::class.java)
-            .putExtra(LoginActivity.EXTRA_FROM_SPLASH, true)
-        if (Motion.enabled(this)) {
-            window.exitTransition = Fade().setDuration(140)
-            val options = ActivityOptions.makeSceneTransitionAnimation(this, brand, getString(R.string.transition_brand))
-            startActivity(intent, options.toBundle())
-        } else {
-            startActivity(intent)
+        when {
+            UserState.isSignedIn && UserState.isSuspended -> {
+                startActivity(Intent(this, AccountSuspendedActivity::class.java))
+                finish()
+            }
+            UserState.isSignedIn && !UserState.isVerifiedSignedIn -> {
+                startActivity(Intent(this, VerifyEmailActivity::class.java))
+                finish()
+            }
+            UserState.isVerifiedSignedIn -> {
+                startActivity(Intent(this, MainActivity::class.java))
+                finish()
+            }
+            else -> {
+                val brand = findViewById<View>(R.id.brandRow)
+                val next = Intent(this, LoginActivity::class.java)
+                    .putExtra(LoginActivity.EXTRA_FROM_SPLASH, true)
+                if (Motion.enabled(this)) {
+                    window.exitTransition = Fade().setDuration(140)
+                    val options = ActivityOptions.makeSceneTransitionAnimation(
+                        this,
+                        brand,
+                        getString(R.string.transition_brand),
+                    )
+                    startActivity(next, options.toBundle())
+                } else {
+                    startActivity(next)
+                }
+            }
         }
     }
 
@@ -42,13 +69,12 @@ class LandingActivity : BaseActivity() {
         BarInsets.apply(this)
         playEntrance()
         findViewById<View>(R.id.main).setOnClickListener {
-            handler.removeCallbacks(goToLogin)
-            goToLogin.run()
+            handler.removeCallbacks(routeNext)
+            routeNext.run()
         }
-        handler.postDelayed(goToLogin, SPLASH_MILLIS)
+        handler.postDelayed(routeNext, SPLASH_MILLIS)
     }
 
-    /** Mark settles on a spring, wordmark glides beside it, tagline fades in softly. */
     private fun playEntrance() {
         if (!Motion.enabled(this)) return
         val row = findViewById<ViewGroup>(R.id.brandRow)
@@ -84,18 +110,17 @@ class LandingActivity : BaseActivity() {
         }, 220)
     }
 
-    /** Finish only after sign-in takes over so the shared-element handoff completes. */
     override fun onStop() {
         super.onStop()
         if (handedOff) finish()
     }
 
     override fun onDestroy() {
-        handler.removeCallbacks(goToLogin)
+        handler.removeCallbacks(routeNext)
         super.onDestroy()
     }
 
     companion object {
-        private const val SPLASH_MILLIS = 1150L
+        private const val SPLASH_MILLIS = 1100L
     }
 }

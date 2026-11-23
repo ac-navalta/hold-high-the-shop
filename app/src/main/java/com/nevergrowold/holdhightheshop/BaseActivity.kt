@@ -1,7 +1,9 @@
 package com.nevergrowold.holdhightheshop
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,23 +14,41 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.nevergrowold.holdhightheshop.data.AppRepository
+import com.nevergrowold.holdhightheshop.system.MarketplaceSyncService
+import kotlinx.coroutines.launch
 
 /**
- * Shared behaviour for every screen in the app.
+ * Shared behaviour for every screen in Hold High The Shop:
+ * - Touch targets & expressive press feedback
+ * - Live suspension gate (protects authenticated screens if Admin suspends the user)
+ * - Clean full logout (wipes session, cancels alarms/notifications, stops sync service)
+ * - Upgraded Safe Meetup Point bottom sheet (replaces placeholder map screen)
+ * - Per-listing deterministic chat routing & college-tag product cards
  */
 open class BaseActivity : AppCompatActivity() {
+
+    /** Override to false on auth/onboarding screens (`LandingActivity`, `LoginActivity`, etc.). */
+    protected open val requiresVerifiedAuth: Boolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         UserState.ensureLoaded(this)
     }
 
-    /**
-     * Every screen gets the shared press feedback ([Motion.installPress]) and
-     * 48dp touch areas ([TouchTargets]), deferred past frame 1 so screens open
-     * and render with zero startup scanning overhead.
-     */
+    override fun onResume() {
+        super.onResume()
+        if (requiresVerifiedAuth && UserState.isSignedIn && UserState.isSuspended) {
+            val intent = Intent(this, AccountSuspendedActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+            finish()
+        }
+    }
+
     override fun setContentView(layoutResID: Int) {
         super.setContentView(layoutResID)
         val content = findViewById<View>(android.R.id.content)
@@ -48,79 +68,135 @@ open class BaseActivity : AppCompatActivity() {
 
     open fun openProfile(view: View) = switchTab(MainActivity.TAB_PROFILE)
 
-    /** Opens the Campus Market already filtered to the program in the view's tag. */
+    /** Opens Campus Market pre-filtered to the college code (or `Listings.FILTER_ALL_COLLEGES`) in the view's tag. */
     open fun openProgram(view: View) {
         switchTab(MainActivity.TAB_MARKET) {
             putExtra(EXTRA_PROGRAM, view.tag as? String)
         }
     }
 
-    /** Opens the Create listing form. */
     fun openCreateListing(view: View) {
         Motion.tick(view)
         startActivity(Intent(this, CreateListingActivity::class.java))
     }
 
-    /**
-     * Opens the listing detail screen. The tapped view's tag holds the
-     * listing id (item1, item2, ...); views without one open the default.
-     */
     fun openListing(view: View) = openListingById(view.tag as? String)
 
     fun openListingById(id: String?) {
         startActivity(
-            Intent(this, ListingDetailActivity::class.java).putExtra(EXTRA_LISTING, id ?: Listings.DEFAULT_ID)
+            Intent(this, ListingDetailActivity::class.java)
+                .putExtra(EXTRA_LISTING, id ?: Listings.DEFAULT_ID),
         )
     }
 
-    /** Opens a listing from its card using the app's sleek Shared-Axis Z transition. */
     fun openListingFromCard(card: View, id: String) {
         Motion.tick(card)
         openListingById(id)
     }
 
-    /** Opens the saved items list. */
     fun openSaved(view: View) {
         Motion.tick(view)
         startActivity(Intent(this, SavedActivity::class.java))
     }
 
     fun openSeller(seller: Seller) {
-        startActivity(Intent(this, SellerProfileActivity::class.java).putExtra(EXTRA_SELLER, seller.name))
-    }
-
-    /** Opens the conversation with a seller, optionally about a listing. */
-    fun openChatWith(seller: Seller, listingId: String? = null, justReserved: Boolean = false) {
         startActivity(
-            Intent(this, ChatThreadActivity::class.java)
+            Intent(this, SellerProfileActivity::class.java)
                 .putExtra(EXTRA_SELLER, seller.name)
-                .putExtra(EXTRA_LISTING, listingId)
-                .putExtra(EXTRA_RESERVED, justReserved)
+                .putExtra(EXTRA_SELLER_UID, seller.uid),
         )
     }
 
-    /** Asks before signing out, then returns to the login screen with a Toast confirmation. */
+    /** Opens (or creates) the deterministic per-listing conversation thread with [seller]. */
+    fun openChatWith(seller: Seller, listingId: String? = null, justReserved: Boolean = false) {
+        val threadId = if (!listingId.isNullOrBlank() && seller.uid.isNotBlank() && UserState.isSignedIn) {
+            UserState.threadFor(listingId, seller.uid).threadId
+        } else {
+            null
+        }
+        startActivity(
+            Intent(this, ChatThreadActivity::class.java)
+                .putExtra(EXTRA_SELLER, seller.name)
+                .putExtra(EXTRA_SELLER_UID, seller.uid)
+                .putExtra(EXTRA_LISTING, listingId)
+                .putExtra(ChatThreadActivity.EXTRA_THREAD_ID, threadId)
+                .putExtra(EXTRA_RESERVED, justReserved),
+        )
+    }
+
+    fun openChatThread(threadId: String, listingId: String? = null) {
+        startActivity(
+            Intent(this, ChatThreadActivity::class.java)
+                .putExtra(ChatThreadActivity.EXTRA_THREAD_ID, threadId)
+                .putExtra(EXTRA_LISTING, listingId),
+        )
+    }
+
+    /**
+     * Upgraded Safe Meetup Point Bottom Sheet replacing the placeholder campus map.
+     * Shows UC landmark details, optional indoor floor/room note from the seller,
+     * one-tap clipboard copy, and one-tap UC Campus Security Desk dialer.
+     */
+    fun showSafeMeetupSheet(place: String, meetupNote: String = "") {
+        val spot = place.ifBlank { Listings.MEETUP_POINTS.first() }
+        val landmark = Listings.MEETUP_LANDMARKS[spot]
+            ?: getString(R.string.meetup_landmark_fallback)
+        Sheets.show(this, R.layout.sheet_meetup) { sheet, dialog ->
+            sheet.findViewById<TextView>(R.id.meetupSheetPlace).text = spot
+            sheet.findViewById<TextView>(R.id.meetupSheetLandmark).text = landmark
+            val noteBox = sheet.findViewById<View>(R.id.meetupNoteBox)
+            val noteText = sheet.findViewById<TextView>(R.id.meetupSheetNote)
+            if (meetupNote.isNotBlank()) {
+                noteBox.isVisible = true
+                noteText.text = meetupNote
+            } else {
+                noteBox.isVisible = false
+            }
+            sheet.findViewById<View>(R.id.meetupCopySpot).setOnClickListener {
+                Motion.tick(it)
+                val fullText = if (meetupNote.isNotBlank()) {
+                    "$spot — $meetupNote (University of the Cordilleras)"
+                } else {
+                    "$spot (University of the Cordilleras)"
+                }
+                val cm = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                cm?.setPrimaryClip(ClipData.newPlainText("UC Safe Meetup Spot", fullText))
+                Toast.makeText(this, R.string.toast_meetup_copied, Toast.LENGTH_SHORT).show()
+            }
+            sheet.findViewById<View>(R.id.meetupCallSecurity).setOnClickListener {
+                Motion.tick(it)
+                AppIntents.launch(this, AppIntents.dialSecurityIntent(), unavailableToastRes = R.string.toast_no_phone_app)
+            }
+            sheet.findViewById<View>(R.id.meetupDone).setOnClickListener { dialog.dismiss() }
+        }
+    }
+
+    /** Clean full logout: clears encrypted session, Firestore listeners, alarms, notifications, and sync service. */
     fun confirmLogout() {
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.logout_title)
             .setMessage(R.string.logout_message)
             .setNegativeButton(R.string.logout_cancel, null)
             .setPositiveButton(R.string.logout_confirm) { _, _ ->
-                Toast.makeText(this, R.string.toast_logged_out, Toast.LENGTH_SHORT).show()
-                val intent = Intent(this, LoginActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
+                lifecycleScope.launch {
+                    MarketplaceSyncService.stop(this@BaseActivity)
+                    AppRepository.signOut(this@BaseActivity)
+                    Toast.makeText(this@BaseActivity, R.string.toast_logged_out, Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this@BaseActivity, LoginActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    startActivity(intent)
+                    finish()
+                }
             }
             .show()
     }
 
-    /** Closes the current screen (the back arrow). */
     open fun goBack(view: View) {
         Motion.tick(view)
         finish()
     }
 
-    /** Jumps back to [MainActivity] on a specific tab from any pushed screen. */
     protected fun switchTab(tabIndex: Int, extras: Intent.() -> Unit = {}) {
         val intent = Intent(this, MainActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -130,12 +206,12 @@ open class BaseActivity : AppCompatActivity() {
         if (this !is MainActivity) finish()
     }
 
-    /** A product card (photo, condition, price, title, program) that opens the listing. */
+    /** A product card (cover photo, condition, price/FREE, title, college tags) that opens the listing. */
     internal fun listingCard(parent: ViewGroup, listing: Listing): View {
         val card = LayoutInflater.from(this).inflate(R.layout.item_listing_card, parent, false)
         card.findViewById<TextView>(R.id.cardPrice).text = Listings.priceLabel(this, listing)
         card.findViewById<TextView>(R.id.cardTitle).text = listing.title
-        card.findViewById<TextView>(R.id.cardProgram).text = listing.program
+        card.findViewById<TextView>(R.id.cardProgram).text = Listings.targetProgramsLabel(this, listing)
         card.findViewById<TextView>(R.id.cardCondition).text = Listings.conditionLabel(this, listing.condition)
         val photoView = card.findViewById<ImageView>(R.id.cardPhoto)
         val photoIcon = card.findViewById<View>(R.id.cardPhotoIcon)
@@ -143,7 +219,6 @@ open class BaseActivity : AppCompatActivity() {
         if (photoView != null) {
             AppIntents.bindImageUri(photoView, photoIcon, cover)
         }
-        // Every card says how it is offered: FOR SALE (mint), FOR RENT (outline), FOR SWAP (amber).
         val type = card.findViewById<TextView>(R.id.cardType)
         when {
             listing.isSwap -> styleBadge(type, getString(R.string.tag_for_swap), giving = false, swap = true)
@@ -154,10 +229,6 @@ open class BaseActivity : AppCompatActivity() {
         return card
     }
 
-    /**
-     * Adds a listing row (thumbnail, title, price, status) to a list.
-     * Returns the row so callers can change its trailing icon.
-     */
     internal fun addRow(
         list: LinearLayout,
         title: String,
@@ -167,7 +238,7 @@ open class BaseActivity : AppCompatActivity() {
         badge: String? = null,
         giving: Boolean = false,
         swap: Boolean = false,
-        onClick: (() -> Unit)?
+        onClick: (() -> Unit)?,
     ): View {
         val row = LayoutInflater.from(this).inflate(R.layout.item_listing_row, list, false)
         row.findViewById<TextView>(R.id.rowTitle).text = title
@@ -186,11 +257,6 @@ open class BaseActivity : AppCompatActivity() {
         return row
     }
 
-    /**
-     * Role tag such as LENDING or BORROWING. Giving (your own things) is
-     * outlined; getting (things from others) is filled mint; swaps, where
-     * both sides give and get, are amber.
-     */
     internal fun styleBadge(view: TextView, label: String, giving: Boolean, swap: Boolean = false) {
         view.text = label
         view.setBackgroundResource(
@@ -198,25 +264,18 @@ open class BaseActivity : AppCompatActivity() {
                 swap -> R.drawable.bg_badge_swap
                 giving -> R.drawable.bg_badge_outline
                 else -> R.drawable.bg_badge_mint
-            }
+            },
         )
         view.setTextColor(getColor(if (swap) R.color.swap_text else R.color.uc_green))
         view.visibility = View.VISIBLE
     }
 
-    /**
-     * "Report a problem": pick a reason, add details if you like, and it goes
-     * to student support as an issue with a reference number. Used for
-     * finished exchanges and for overdue loans.
-     *
-     * @param subject the exchange or listing id the problem is about.
-     */
     protected fun reportProblem(
         subject: String,
         itemTitle: String,
         partner: Seller?,
         reasons: List<Int>,
-        onReported: (Issue) -> Unit = {}
+        onReported: (Issue) -> Unit = {},
     ) {
         var picked = -1
         Sheets.show(this, R.layout.sheet_choose) { sheet, dialog ->
@@ -244,12 +303,18 @@ open class BaseActivity : AppCompatActivity() {
                 setOnClickListener {
                     if (picked < 0) {
                         Motion.shake(box)
-                        android.widget.Toast.makeText(this@BaseActivity, R.string.toast_select_reason, android.widget.Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@BaseActivity, R.string.toast_select_reason, Toast.LENGTH_SHORT).show()
                         return@setOnClickListener
                     }
                     hideKeyboard(input)
                     Motion.confirm(this)
-                    val issue = UserState.report(subject, reasons[picked], partner, input.text.toString().trim())
+                    val issue = UserState.report(
+                        subject = subject,
+                        reason = reasons[picked],
+                        partner = partner,
+                        details = input.text.toString().trim(),
+                        isListingReport = false,
+                    )
                     dialog.dismiss()
                     onReported(issue)
                     notify(getString(R.string.toast_problem_reported, issue.ref))
@@ -258,7 +323,6 @@ open class BaseActivity : AppCompatActivity() {
         }
     }
 
-    /** Adds a heading with a one-line hint to a list. */
     internal fun addSection(list: LinearLayout, title: Int, hint: Int) {
         val header = LayoutInflater.from(this).inflate(R.layout.item_section_header, list, false)
         header.findViewById<TextView>(R.id.sectionTitle).setText(title)
@@ -270,10 +334,12 @@ open class BaseActivity : AppCompatActivity() {
         const val EXTRA_LISTING = "listing"
         const val EXTRA_PROGRAM = "program"
         const val EXTRA_SELLER = "seller"
+        const val EXTRA_SELLER_UID = "seller_uid"
         const val EXTRA_RESERVED = "reserved"
         const val EXTRA_TAB = "tab"
         const val EXTRA_FROM_TAB = "from_tab"
         const val EXTRA_SEARCH_QUERY = "search_query"
         const val EXTRA_EMAIL = "email"
+        const val EXTRA_PENDING_DEEP_LINK = "pending_deep_link"
     }
 }
