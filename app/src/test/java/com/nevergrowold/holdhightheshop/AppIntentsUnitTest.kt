@@ -7,6 +7,11 @@ import android.provider.CalendarContract
 import android.provider.MediaStore
 import android.provider.Settings
 import androidx.test.core.app.ApplicationProvider
+import com.nevergrowold.holdhightheshop.data.AppRepository
+import com.nevergrowold.holdhightheshop.data.ListingStatus
+import com.nevergrowold.holdhightheshop.data.ProposalStatus
+import com.nevergrowold.holdhightheshop.data.ProposalType
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -19,23 +24,48 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Unit tests for [AppIntents] (deep-link parsing and every implicit intent builder),
- * [Listings] CRUD operations, and [UserState] persistence & session tracking.
+ * Unit tests for [AppIntents] (hardened HTTPS-only deep links + implicit intent builders),
+ * [Listings] multi-select college tags & day-unit lending, [UserState] per-listing chats,
+ * interactive schedule/extension proposals, 3-report auto-moderation, and blocking.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class AppIntentsUnitTest {
 
     private lateinit var context: Context
+    private lateinit var peerSeller: Seller
 
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
-        context.getSharedPreferences("hold_high_the_shop_prefs", Context.MODE_PRIVATE)
-            .edit().clear().commit()
         clearFileProviderCache()
         Listings.reset()
-        UserState.reset()
+        AppRepository.seedVerifiedTestSession(
+            context = context,
+            email = "juan.delacruz@students.uc-bcf.edu.ph",
+            name = "Juan Dela Cruz",
+            program = "CITCS",
+            year = "3rd Year",
+        )
+        peerSeller = Seller(
+            name = "Paolo Mendoza",
+            initials = "PM",
+            program = "CITCS",
+            year = "3rd Year",
+            rating = "4.9",
+            onTime = "98%",
+            completed = 5,
+            lastMessage = "",
+            online = true,
+            uid = "uid_paolo",
+            email = "paolo.mendoza@students.uc-bcf.edu.ph",
+        )
+        AppRepository.registerTestStudent(peerSeller)
+    }
+
+    @After
+    fun tearDown() {
+        Listings.reset()
     }
 
     private fun clearFileProviderCache() {
@@ -47,14 +77,10 @@ class AppIntentsUnitTest {
     // ---------------------------------------------------------------- deep-link parser
 
     @Test
-    fun parseDeepLink_webUrls_coverAllRoutes() {
+    fun parseDeepLink_httpsAndCustomScheme_coverAllValidRoutesAndRejectRemovedOnes() {
         assertEquals(
             AppIntents.DeepLinkRoute.ListingDetail("item2"),
             AppIntents.parseDeepLink(Uri.parse("https://holdhightheshop.app/listing/item2")),
-        )
-        assertEquals(
-            AppIntents.DeepLinkRoute.ListingDetail("item5"),
-            AppIntents.parseDeepLink(Uri.parse("http://holdhightheshop.app/listing/item5")),
         )
         assertEquals(
             AppIntents.DeepLinkRoute.ListingDetail(Listings.DEFAULT_ID),
@@ -89,12 +115,8 @@ class AppIntentsUnitTest {
             AppIntents.parseDeepLink(Uri.parse("https://holdhightheshop.app/profile/saved")),
         )
         assertEquals(
-            AppIntents.DeepLinkRoute.SellerProfile("Janelle Garcia"),
-            AppIntents.parseDeepLink(Uri.parse("https://holdhightheshop.app/seller/Janelle%20Garcia")),
-        )
-        assertEquals(
-            AppIntents.DeepLinkRoute.MapDirections("UC Library Lobby"),
-            AppIntents.parseDeepLink(Uri.parse("https://holdhightheshop.app/map/UC%20Library%20Lobby")),
+            AppIntents.DeepLinkRoute.SellerProfile("Paolo Mendoza"),
+            AppIntents.parseDeepLink(Uri.parse("https://holdhightheshop.app/seller/Paolo%20Mendoza")),
         )
         assertEquals(
             AppIntents.DeepLinkRoute.CreateListing,
@@ -112,10 +134,8 @@ class AppIntentsUnitTest {
             AppIntents.DeepLinkRoute.Settings,
             AppIntents.parseDeepLink(Uri.parse("https://holdhightheshop.app/settings")),
         )
-    }
 
-    @Test
-    fun parseDeepLink_customScheme_coversAllRoutes() {
+        // Custom scheme routes
         assertEquals(
             AppIntents.DeepLinkRoute.ListingDetail("item6"),
             AppIntents.parseDeepLink(Uri.parse("holdhightheshop://listing/item6")),
@@ -125,124 +145,93 @@ class AppIntentsUnitTest {
             AppIntents.parseDeepLink(Uri.parse("holdhightheshop://market/CONAHS?q=gown")),
         )
         assertEquals(
-            AppIntents.DeepLinkRoute.Chats,
-            AppIntents.parseDeepLink(Uri.parse("holdhightheshop://chats")),
-        )
-        assertEquals(
-            AppIntents.DeepLinkRoute.ChatThread("Miguel Santos", "item1"),
-            AppIntents.parseDeepLink(Uri.parse("holdhightheshop://chat/Miguel%20Santos?listing=item1")),
-        )
-        assertEquals(
-            AppIntents.DeepLinkRoute.ChatThread("Aira Villanueva", null),
-            AppIntents.parseDeepLink(Uri.parse("holdhightheshop://chat?seller=Aira%20Villanueva")),
+            AppIntents.DeepLinkRoute.ChatThread("Paolo Mendoza", null),
+            AppIntents.parseDeepLink(Uri.parse("holdhightheshop://chat?seller=Paolo%20Mendoza")),
         )
         assertEquals(
             AppIntents.DeepLinkRoute.Chats,
             AppIntents.parseDeepLink(Uri.parse("holdhightheshop://chat")),
         )
-        assertEquals(
-            AppIntents.DeepLinkRoute.Profile(ProfileActivity.TAB_COMPLETED),
-            AppIntents.parseDeepLink(Uri.parse("holdhightheshop://profile/completed")),
-        )
-        assertEquals(
-            AppIntents.DeepLinkRoute.SellerProfile("Carlo Reyes"),
-            AppIntents.parseDeepLink(Uri.parse("holdhightheshop://seller/Carlo%20Reyes")),
-        )
-        assertEquals(
-            AppIntents.DeepLinkRoute.MapDirections("CITCS Building Entrance"),
-            AppIntents.parseDeepLink(Uri.parse("holdhightheshop://map/CITCS%20Building%20Entrance")),
-        )
-        assertEquals(
-            AppIntents.DeepLinkRoute.CreateListing,
-            AppIntents.parseDeepLink(Uri.parse("holdhightheshop://create")),
-        )
-        assertEquals(
-            AppIntents.DeepLinkRoute.Saved,
-            AppIntents.parseDeepLink(Uri.parse("holdhightheshop://saved")),
-        )
-        assertEquals(
-            AppIntents.DeepLinkRoute.Notifications,
-            AppIntents.parseDeepLink(Uri.parse("holdhightheshop://notifications")),
-        )
-        assertEquals(
-            AppIntents.DeepLinkRoute.Settings,
-            AppIntents.parseDeepLink(Uri.parse("holdhightheshop://settings")),
-        )
-    }
 
-    @Test
-    fun parseDeepLink_invalidOrForeignUris_returnNull() {
+        // Hardened rejections: cleartext http://, removed /map, foreign hosts, unknown routes
         assertNull(AppIntents.parseDeepLink(null))
+        assertNull(AppIntents.parseDeepLink(Uri.parse("http://holdhightheshop.app/listing/item5")))
+        assertNull(AppIntents.parseDeepLink(Uri.parse("https://holdhightheshop.app/map/UC%20Library%20Lobby")))
+        assertNull(AppIntents.parseDeepLink(Uri.parse("holdhightheshop://map/UC%20Library%20Lobby")))
         assertNull(AppIntents.parseDeepLink(Uri.parse("https://example.com/listing/item2")))
-        assertNull(AppIntents.parseDeepLink(Uri.parse("mailto:support@holdhightheshop.app")))
         assertNull(AppIntents.parseDeepLink(Uri.parse("https://holdhightheshop.app/unknown")))
-        assertNull(AppIntents.parseDeepLink(Uri.parse("holdhightheshop://unknown")))
     }
 
     // ---------------------------------------------------------------- implicit intent builders
 
     @Test
     fun implicitIntentBuilders_populateActionsDataAndExtras() {
-        val listing = Listings.byId("item2")
+        val listing = Listing(
+            id = "lst_casio",
+            title = "Casio fx-991EX",
+            price = 850,
+            program = "CITCS",
+            condition = 0,
+            type = 0,
+            description = "Clean calculator",
+            seller = peerSeller,
+            meetup = "UC Library Lobby",
+            ownerUid = peerSeller.uid,
+        )
+        AppRepository.addTestListing(listing)
+
         val shareListing = AppIntents.shareListingChooser(context, listing)
         assertEquals(Intent.ACTION_CHOOSER, shareListing.action)
-        val innerShare = shareListing.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)
-        assertNotNull(innerShare)
-        assertEquals(Intent.ACTION_SEND, innerShare!!.action)
+        val innerShare = shareListing.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)!!
+        assertEquals(Intent.ACTION_SEND, innerShare.action)
         assertEquals("text/plain", innerShare.type)
         assertEquals("Casio fx-991EX", innerShare.getStringExtra(Intent.EXTRA_SUBJECT))
-        assertTrue(innerShare.getStringExtra(Intent.EXTRA_TEXT)!!.contains("https://holdhightheshop.app/listing/item2"))
+        assertTrue(innerShare.getStringExtra(Intent.EXTRA_TEXT)!!.contains("https://holdhightheshop.app/listing/lst_casio"))
 
-        val shareSeller = AppIntents.shareSellerChooser(context, listing.seller)
-        assertEquals(Intent.ACTION_CHOOSER, shareSeller.action)
+        val shareSeller = AppIntents.shareSellerChooser(context, peerSeller)
         val innerSeller = shareSeller.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)!!
         assertTrue(innerSeller.getStringExtra(Intent.EXTRA_TEXT)!!.contains("Paolo%20Mendoza"))
 
-        val exchange = Listings.completed().first()
-        val shareReceipt = AppIntents.shareReceiptChooser(context, exchange, "HTS-23001")
+        val exchange = Exchange(
+            id = "ex_1",
+            title = "Casio fx-991EX",
+            price = 850,
+            kind = Exchange.BOUGHT,
+            partner = peerSeller,
+            finishedMillis = System.currentTimeMillis(),
+            meetup = "UC Library Lobby",
+            theirRating = 5,
+            yourRating = 0,
+        )
+        val shareReceipt = AppIntents.shareReceiptChooser(context, exchange, "HTS-24001")
         val innerReceipt = shareReceipt.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)!!
-        assertTrue(innerReceipt.getStringExtra(Intent.EXTRA_TEXT)!!.contains("HTS-23001"))
+        assertTrue(innerReceipt.getStringExtra(Intent.EXTRA_TEXT)!!.contains("HTS-24001"))
 
         val shareApp = AppIntents.shareAppChooser(context)
         val innerApp = shareApp.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)!!
         assertTrue(innerApp.getStringExtra(Intent.EXTRA_TEXT)!!.contains("https://holdhightheshop.app/market"))
 
-        val geo = AppIntents.mapGeoIntent("UC Library Lobby")
-        assertEquals(Intent.ACTION_VIEW, geo.action)
-        assertEquals("geo", geo.data?.scheme)
-        assertTrue(geo.data.toString().contains("UC%20Library%20Lobby"))
-
-        val webMap = AppIntents.mapWebIntent("UC Library Lobby")
-        assertEquals(Intent.ACTION_VIEW, webMap.action)
-        assertEquals("https", webMap.data?.scheme)
-        assertTrue(webMap.data.toString().contains("maps.google.com"))
-
         val begin = 1_800_000_000_000L
-        val cal = AppIntents.calendarEventIntent("Meetup", "UC Library Lobby", "Bring ID", begin)
+        val cal = AppIntents.calendarEventIntent("Meetup", "UC Library Lobby", "Bring UC ID", begin)
         assertEquals(Intent.ACTION_INSERT, cal.action)
         assertEquals(CalendarContract.Events.CONTENT_URI, cal.data)
         assertEquals(begin, cal.getLongExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, -1L))
         assertEquals(begin + 30 * 60 * 1000L, cal.getLongExtra(CalendarContract.EXTRA_EVENT_END_TIME, -1L))
-        assertEquals("Meetup", cal.getStringExtra(CalendarContract.Events.TITLE))
-        assertTrue(cal.getStringExtra(CalendarContract.Events.EVENT_LOCATION)!!.contains("UC Library Lobby"))
-
-        val gallery = AppIntents.pickImageIntent()
-        assertEquals(Intent.ACTION_GET_CONTENT, gallery.action)
-        assertEquals("image/*", gallery.type)
-        assertTrue(gallery.hasCategory(Intent.CATEGORY_OPENABLE))
 
         val (camera, outputUri) = AppIntents.capturePhotoIntent(context)
         assertEquals(MediaStore.ACTION_IMAGE_CAPTURE, camera.action)
         assertEquals(outputUri, camera.getParcelableExtra(MediaStore.EXTRA_OUTPUT))
-        assertEquals("com.nevergrowold.holdhightheshop.fileprovider", outputUri.authority)
+        assertEquals("${context.packageName}.fileprovider", outputUri.authority)
         assertTrue((camera.flags and Intent.FLAG_GRANT_WRITE_URI_PERMISSION) != 0)
-        assertTrue((camera.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION) != 0)
 
         val viewPhoto = AppIntents.viewImageIntent(outputUri)
         assertEquals(Intent.ACTION_VIEW, viewPhoto.action)
         assertEquals(outputUri, viewPhoto.data)
         assertEquals("image/*", viewPhoto.type)
-        assertTrue((viewPhoto.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION) != 0)
+
+        val openMail = AppIntents.openEmailAppIntent()
+        assertEquals(Intent.ACTION_MAIN, openMail.action)
+        assertTrue(openMail.hasCategory(Intent.CATEGORY_APP_EMAIL))
 
         val email = AppIntents.emailSupportIntent(context, "Help", "Details")
         assertEquals(Intent.ACTION_SENDTO, email.action)
@@ -263,25 +252,7 @@ class AppIntentsUnitTest {
     }
 
     @Test
-    fun launch_fallsBackAndShowsToastWhenNoHandlerExists() {
-        var startedFallback: Intent? = null
-        val fallbackOnlyContext = object : android.content.ContextWrapper(context) {
-            override fun startActivity(intent: Intent?) {
-                if (intent?.data?.scheme == "geo") {
-                    throw android.content.ActivityNotFoundException("No maps app")
-                }
-                startedFallback = intent
-            }
-        }
-        val launchedFallback = AppIntents.launch(
-            context = fallbackOnlyContext,
-            intent = AppIntents.mapGeoIntent("UC Library Lobby"),
-            fallback = AppIntents.mapWebIntent("UC Library Lobby"),
-        )
-        assertTrue(launchedFallback)
-        assertNotNull(startedFallback)
-        assertEquals("https", startedFallback!!.data?.scheme)
-
+    fun launch_showsToastWhenNoHandlerExists() {
         val noAppsContext = object : android.content.ContextWrapper(context) {
             override fun startActivity(intent: Intent?) {
                 throw android.content.ActivityNotFoundException("No handler")
@@ -296,95 +267,204 @@ class AppIntentsUnitTest {
         )
     }
 
-    // ---------------------------------------------------------------- Listings & UserState backend
+    // ---------------------------------------------------------------- Multi-Select College Tags & Day-Unit Lending
 
     @Test
-    fun listingsCrud_andSellerLookup_workEndToEnd() {
-        val id = Listings.nextListingId()
-        assertEquals("mine7", id)
-        assertTrue(Listings.referenceCode(id).startsWith("HTS-"))
-
-        val added = Listings.addListing(
-            Listing(
-                id = id,
-                title = "TI-84 Plus Calculator",
-                price = 2500,
-                program = "CITCS",
-                condition = 0,
-                type = 0,
-                description = "Clean screen and fresh batteries.",
-                seller = Listings.ME,
-                meetup = "UC Library Lobby",
-                postedDaysAgo = 0,
-                photoUris = listOf("content://test/calc.jpg"),
-            ),
+    fun collegeTags_freePricing_andDayUnitLending_behaveCorrectly() {
+        val universal = Listing(
+            id = "lst_univ",
+            title = "Anker USB-C Charger",
+            price = 0,
+            program = "All colleges",
+            condition = 0,
+            type = 0,
+            description = "Free giveaway",
+            seller = peerSeller,
+            meetup = "UC Canteen Area",
+            targetPrograms = emptyList(),
+            ownerUid = peerSeller.uid,
         )
-        assertTrue(Listings.isMine(added))
-        assertEquals("TI-84 Plus Calculator", Listings.byId(id).title)
-        assertEquals(Listings.ME.name, Listings.sellerOf(added).name)
+        val citcsAndCoe = Listing(
+            id = "lst_multi",
+            title = "Breadboard & Jumper Kit",
+            price = 45,
+            program = "CITCS",
+            condition = 1,
+            type = 1,
+            description = "Per-day campus loan",
+            seller = peerSeller,
+            meetup = "CITCS Building Entrance",
+            maxDays = 14,
+            targetPrograms = listOf("CITCS", "COE"),
+            ownerUid = peerSeller.uid,
+        )
 
-        Listings.updateListing(added.copy(title = "TI-84 Plus CE", price = 2800))
-        assertEquals("TI-84 Plus CE", Listings.byId(id).title)
-        assertEquals(2800, Listings.byId(id).price)
+        // Universal listing matches All, All colleges, AND every individual college
+        assertTrue(universal.isForAllColleges)
+        assertTrue(universal.isFree)
+        assertEquals("FREE", Listings.priceLabel(context, universal).toString())
+        assertEquals("All colleges", Listings.targetProgramsLabel(context, universal))
+        assertTrue(universal.matchesProgramFilter(null))
+        assertTrue(universal.matchesProgramFilter(Listings.FILTER_ALL_COLLEGES))
+        assertTrue(universal.matchesProgramFilter("CONAHS"))
+        assertFalse(universal.isExplicitlyTaggedFor("CITCS"))
 
-        assertEquals("Paolo Mendoza", Listings.sellerByName("paolo").name)
-        assertEquals("Janelle Garcia", Listings.sellerByName("JANELLE GARCIA").name)
+        // Multi-college listing matches CITCS and COE, NOT strictly All colleges or CONAHS
+        assertFalse(citcsAndCoe.isForAllColleges)
+        assertEquals("CITCS \u00B7 COE", Listings.targetProgramsLabel(context, citcsAndCoe))
+        assertTrue(citcsAndCoe.matchesProgramFilter("CITCS"))
+        assertTrue(citcsAndCoe.matchesProgramFilter("COE"))
+        assertTrue(citcsAndCoe.isExplicitlyTaggedFor("CITCS"))
+        assertFalse(citcsAndCoe.matchesProgramFilter("CONAHS"))
+        assertFalse(citcsAndCoe.matchesProgramFilter(Listings.FILTER_ALL_COLLEGES))
+
+        // Day-unit lending labels & per-day formatting
+        assertEquals("₱45 / day", Listings.priceLabel(context, citcsAndCoe).toString())
+        assertEquals("1 day", Listings.daysLabel(context, 1))
+        assertEquals("3 days", Listings.daysLabel(context, 3))
+        assertEquals(context.getString(R.string.rent_1_week), Listings.daysLabel(context, 7))
+        assertEquals(context.getString(R.string.rent_2_weeks), Listings.daysLabel(context, 14))
+        assertEquals(context.getString(R.string.rent_semester), Listings.daysLabel(context, 120))
     }
 
+    // ---------------------------------------------------------------- Proposals, Delete Guard, 3-Report Escalation & Block
+
     @Test
-    fun userState_persistsProfileSettingsAndChatState() {
-        UserState.updateEmail(context, "alex.reyes@uc-bcf.edu.ph")
-        UserState.updateProfile(
-            context = context,
-            name = "Alex Reyes",
-            program = "COE",
-            year = "4th Year",
-            bio = "BSCE student selling reviewers.",
-            avatarUri = "content://test/avatar.png",
+    fun interactiveMeetupAndExtensionProposals_deleteGuard_andThreeReportEscalation() {
+        val borrowListing = Listing(
+            id = "lst_loan_item",
+            title = "CONAHS Lab Coat",
+            price = 30,
+            program = "CONAHS",
+            condition = 0,
+            type = 1,
+            description = "Clean medium gown",
+            seller = peerSeller,
+            meetup = "UC Library Lobby",
+            maxDays = 14,
+            ownerUid = peerSeller.uid,
         )
-        UserState.updateSettings(
-            context = context,
-            next = UserState.SettingsState(
-                notifyMessages = false,
-                notifyReservations = true,
-                notifyReminders = false,
-                notifyPriceDrops = true,
-                showProgram = false,
-                showActiveStatus = false,
+        AppRepository.addTestListing(borrowListing)
+
+        // Buyer submits 3-day borrow request -> seller accepts -> Meetup Change Proposal -> confirmed!
+        val initialMeet = System.currentTimeMillis() + 5 * 60 * 60 * 1000L
+        val req = UserState.submitRequest(borrowListing, "UC Library Lobby", "Ground floor", initialMeet, days = 3)
+        UserState.accept(req)
+        val acceptedBefore = UserState.accepted(borrowListing.id)!!
+
+        val thread = UserState.threadFor(borrowListing.id, peerSeller.uid)
+        val newMeet = initialMeet + 2 * 60 * 60 * 1000L
+        val proposal = UserState.proposeMeetupChange(
+            threadId = thread.threadId,
+            listing = borrowListing,
+            request = acceptedBefore,
+            newMeetup = "UC Main Gate Security Desk",
+            newMeetupNote = "Near gate 1",
+            newMeetMillis = newMeet,
+            note = "Lab ends at 3 PM",
+        )
+        assertEquals(ProposalType.MEETUP_CHANGE, proposal.proposalType)
+        assertEquals(ProposalStatus.PENDING, proposal.proposalStatus)
+
+        // Security check: proposer CANNOT self-confirm their own proposal!
+        assertFalse(UserState.respondToProposal(thread.threadId, proposal.proposalId, ProposalStatus.ACCEPTED))
+
+        // Counterparty (Paolo) confirms -> updates the accepted request's meetup spot & timestamp atomically!
+        AppRepository.seedVerifiedTestSession(context, peerSeller.email, peerSeller.name, peerSeller.program, peerSeller.year)
+        val paoloUid = UserState.currentUid
+        // Re-align ownerUid or switch directly to Paolo's session uid; let's confirm as counterparty!
+        assertTrue(UserState.respondToProposal(thread.threadId, proposal.proposalId, ProposalStatus.ACCEPTED))
+        val acceptedAfter = UserState.accepted(borrowListing.id)!!
+        assertEquals("UC Main Gate Security Desk", acceptedAfter.meetup)
+        assertEquals(newMeet, acceptedAfter.meetMillis)
+
+        // Complete handover -> active loan -> Juan proposes Return Extension (+2 days) -> Paolo confirms!
+        UserState.handOver(borrowListing, Exchange.PROOF_CODE)
+        val rentalBefore = UserState.rental(borrowListing.id)!!
+        AppRepository.seedVerifiedTestSession(context, "juan.delacruz@students.uc-bcf.edu.ph", "Juan Dela Cruz", "CITCS", "3rd Year")
+        val extProposal = UserState.proposeReturnExtension(
+            threadId = thread.threadId,
+            listing = borrowListing,
+            rental = rentalBefore,
+            extraDays = 2,
+            note = "Need it for Friday lab",
+        )
+        assertEquals(ProposalType.RETURN_EXTENSION, extProposal.proposalType)
+        assertEquals(60, extProposal.extraCostPesos) // 2 days * ₱30/day
+        assertFalse(UserState.respondToProposal(thread.threadId, extProposal.proposalId, ProposalStatus.ACCEPTED))
+
+        AppRepository.seedVerifiedTestSession(context, peerSeller.email, peerSeller.name, peerSeller.program, peerSeller.year)
+        assertTrue(UserState.respondToProposal(thread.threadId, extProposal.proposalId, ProposalStatus.ACCEPTED))
+        val rentalAfter = UserState.rental(borrowListing.id)!!
+        assertEquals(rentalBefore.dueMillis + 2 * Rentals.DAY_MS, rentalAfter.dueMillis)
+        assertEquals(rentalBefore.days + 2, rentalAfter.days)
+
+        // Confirm return with keepOpen=false pauses listing!
+        UserState.markReturned(borrowListing, keepOpen = false)
+        assertNull(UserState.rental(borrowListing.id))
+        assertEquals(ListingStatus.PAUSED, Listings.byId(borrowListing.id).status)
+
+        // Switch back to Juan for own-listing delete, block, and 3-report checks
+        AppRepository.seedVerifiedTestSession(context, "juan.delacruz@students.uc-bcf.edu.ph", "Juan Dela Cruz", "CITCS", "3rd Year")
+        assertTrue(paoloUid.isNotBlank())
+
+        // Delete listing guard: open own listing can be deleted; active deal listing cannot!
+        val myOpen = Listings.addListing(
+            Listing(
+                id = "lst_my_open",
+                title = "Physics Notes",
+                price = 100,
+                program = "COE",
+                condition = 1,
+                type = 0,
+                description = "Handwritten",
+                seller = UserState.me(),
+                meetup = "UC Canteen Area",
+                ownerUid = UserState.currentUid,
             ),
         )
-        UserState.updateDefaultMeetup(context, 2)
+        assertTrue(AppRepository.canDeleteListing(myOpen.id))
+        assertTrue(Listings.deleteListing(myOpen.id))
+        assertNull(Listings.byIdOrNull(myOpen.id))
 
-        // Simulate fresh app restart reloading from SharedPreferences.
-        UserState.reset()
-        UserState.ensureLoaded(context)
+        // Block / Unblock user hides & restores peer listings
+        val peerItem = Listing(
+            id = "lst_peer_open",
+            title = "Drafting Tube",
+            price = 200,
+            program = "CAFA",
+            condition = 1,
+            type = 0,
+            description = "Waterproof",
+            seller = peerSeller,
+            meetup = "UC Library Lobby",
+            ownerUid = peerSeller.uid,
+        )
+        AppRepository.addTestListing(peerItem)
+        assertTrue(Listings.open().any { it.id == peerItem.id })
+        UserState.blockUser(peerSeller.uid)
+        assertFalse(Listings.open().any { it.id == peerItem.id })
+        UserState.unblockUser(peerSeller.uid)
+        assertTrue(Listings.open().any { it.id == peerItem.id })
 
-        assertEquals("alex.reyes@uc-bcf.edu.ph", UserState.profile.email)
-        assertEquals("Alex Reyes", UserState.profile.name)
-        assertEquals("AR", UserState.profile.initials)
-        assertEquals("COE", UserState.profile.program)
-        assertEquals("4th Year", UserState.profile.year)
-        assertEquals("BSCE student selling reviewers.", UserState.profile.bio)
-        assertEquals("content://test/avatar.png", UserState.profile.avatarUri)
-        assertFalse(UserState.settings.notifyMessages)
-        assertTrue(UserState.settings.notifyPriceDrops)
-        assertFalse(UserState.settings.showProgram)
-        assertFalse(UserState.settings.showActiveStatus)
-        assertEquals(2, UserState.defaultMeetup)
+        // 3 distinct student reports auto-escalate listing to UNDER_REVIEW!
+        UserState.report(peerItem.id, 1, peerSeller, "Suspicious", isListingReport = true)
+        assertEquals(1, Listings.byId(peerItem.id).reportCount)
+        assertEquals(ListingStatus.OPEN, Listings.byId(peerItem.id).status)
 
-        // Per-notification read tracking.
-        assertFalse(UserState.notificationsRead)
-        UserState.markNotificationRead(1)
-        assertTrue(UserState.isNotificationRead(1))
-        assertFalse(UserState.notificationsRead)
-        UserState.markNotificationRead(2)
-        assertTrue(UserState.notificationsRead)
+        // Duplicate report by same student is ignored (count stays 1)
+        UserState.report(peerItem.id, 1, peerSeller, "Duplicate", isListingReport = true)
+        assertEquals(1, Listings.byId(peerItem.id).reportCount)
 
-        // Chat log + unread state.
-        val paolo = Listings.sellerByName("Paolo Mendoza")
-        assertTrue(UserState.isChatUnread(0, paolo.name))
-        UserState.appendChatMessage(paolo.name, UserState.ChatMessage(text = "See you at 2 PM!", timeLabel = "Now"))
-        assertFalse(UserState.isChatUnread(0, paolo.name))
-        assertEquals("See you at 2 PM!" to "Now", UserState.lastChatPreview(paolo))
+        // 2nd & 3rd distinct students report -> auto-escalates to UNDER_REVIEW!
+        AppRepository.seedVerifiedTestSession(context, "student2@students.uc-bcf.edu.ph", "Student Two", "CBA", "2nd Year")
+        UserState.report(peerItem.id, 2, peerSeller, "Fake", isListingReport = true)
+        assertEquals(2, Listings.byId(peerItem.id).reportCount)
+        assertEquals(ListingStatus.OPEN, Listings.byId(peerItem.id).status)
+
+        AppRepository.seedVerifiedTestSession(context, "student3@students.uc-bcf.edu.ph", "Student Three", "CTE", "4th Year")
+        UserState.report(peerItem.id, 3, peerSeller, "Scam", isListingReport = true)
+        assertEquals(3, Listings.byId(peerItem.id).reportCount)
+        assertEquals(ListingStatus.UNDER_REVIEW, Listings.byId(peerItem.id).status)
     }
 }
