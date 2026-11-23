@@ -1,19 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Network access for Firebase Auth, Cloud Firestore, and Gemini Safety Gate -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- System Notifications (API 33+ runtime prompt handled with 3-state flow) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Foreground Service (dataSync) & reboot alarm recovery -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!--
-        Package visibility declarations (required on Android 11+ / API 30+)
-        so implicit intents can resolve external handlers cleanly.
+        Signature-protected permission required by `ContextCompat.RECEIVER_NOT_EXPORTED`
+        on minSdk 24..32 so dynamic internal receivers cannot be spoofed by third-party apps.
     -->
+    <permission
+        android:name="${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+
+    <!-- Package visibility declarations (Android 11+) for outgoing implicit intents -->
     <queries>
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="https" />
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <data android:scheme="geo" />
         </intent>
         <intent>
             <action android:name="android.intent.action.SEND" />
@@ -28,6 +41,10 @@
             <data android:scheme="mailto" />
         </intent>
         <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.APP_EMAIL" />
+        </intent>
+        <intent>
             <action android:name="android.intent.action.DIAL" />
             <data android:scheme="tel" />
         </intent>
@@ -36,26 +53,24 @@
             <data android:mimeType="vnd.android.cursor.dir/event" />
         </intent>
         <intent>
-            <action android:name="android.intent.action.GET_CONTENT" />
-            <data android:mimeType="image/*" />
-        </intent>
-        <intent>
             <action android:name="android.media.action.IMAGE_CAPTURE" />
         </intent>
     </queries>
 
-    <!-- Phone-only, portrait layouts (as designed in Figma). Every screen is locked to portrait. -->
+    <!-- Phone-only portrait layouts; HTTPS-only networkSecurityConfig; hardened backups -->
     <application
-        android:allowBackup="true"
+        android:name=".HoldHighApp"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.HoldHighTheShop">
 
-        <!-- FileProvider for safe camera capture URIs passed to ACTION_IMAGE_CAPTURE. -->
+        <!-- Scoped FileProvider strictly for camera captures (`cache/photos`) and cached media (`files/media`) -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -66,152 +81,176 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <activity
-            android:name=".NotificationsActivity"
-            android:screenOrientation="portrait"
-            android:exported="false"
-            android:parentActivityName=".MainActivity" />
-
-        <activity
-            android:name=".ProfileActivity"
-            android:screenOrientation="portrait"
-            android:exported="false"
-            android:parentActivityName=".MainActivity" />
-
+        <!-- Auth & Onboarding Activities -->
         <activity
             android:name=".LandingActivity"
-            android:theme="@style/Theme.HoldHighTheShop.Onboarding"
+            android:exported="true"
             android:screenOrientation="portrait"
-            android:exported="true">
+            android:theme="@style/Theme.HoldHighTheShop.Onboarding">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <activity
             android:name=".LoginActivity"
-            android:theme="@style/Theme.HoldHighTheShop.Onboarding"
+            android:exported="false"
             android:screenOrientation="portrait"
-            android:exported="false" />
+            android:theme="@style/Theme.HoldHighTheShop.Onboarding"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".SignUpActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.HoldHighTheShop.Onboarding"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".VerifyEmailActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.HoldHighTheShop.Onboarding" />
+
+        <activity
+            android:name=".ForgotPasswordActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.HoldHighTheShop.Onboarding"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".AccountSuspendedActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.HoldHighTheShop.Onboarding" />
+
+        <!-- Primary Marketplace Activities (all non-exported except MainActivity) -->
+        <activity
+            android:name=".NotificationsActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ReportListingActivity"
-            android:screenOrientation="portrait"
             android:exported="false"
-            android:parentActivityName=".ListingDetailActivity" />
+            android:parentActivityName=".ListingDetailActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".ReportReceivedActivity"
-            android:screenOrientation="portrait"
             android:exported="false"
-            android:parentActivityName=".ListingDetailActivity" />
+            android:parentActivityName=".ListingDetailActivity"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ChatsActivity"
-            android:screenOrientation="portrait"
             android:exported="false"
-            android:parentActivityName=".MainActivity" />
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ChatThreadActivity"
-            android:screenOrientation="portrait"
             android:exported="false"
-            android:parentActivityName=".ChatsActivity" />
+            android:parentActivityName=".ChatsActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".ListingPostedActivity"
-            android:screenOrientation="portrait"
             android:exported="false"
-            android:parentActivityName=".MainActivity" />
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".CreateListingActivity"
-            android:screenOrientation="portrait"
             android:exported="false"
-            android:parentActivityName=".MainActivity" />
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".ListingDetailActivity"
-            android:screenOrientation="portrait"
             android:exported="false"
-            android:parentActivityName=".MarketActivity" />
+            android:parentActivityName=".MarketActivity"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".MarketActivity"
-            android:screenOrientation="portrait"
             android:exported="false"
-            android:parentActivityName=".MainActivity" />
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".SavedActivity"
-            android:screenOrientation="portrait"
             android:exported="false"
-            android:parentActivityName=".MarketActivity" />
+            android:parentActivityName=".MarketActivity"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".SellerProfileActivity"
-            android:screenOrientation="portrait"
             android:exported="false"
-            android:parentActivityName=".ListingDetailActivity" />
+            android:parentActivityName=".ListingDetailActivity"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ExchangeDetailActivity"
-            android:screenOrientation="portrait"
             android:exported="false"
-            android:parentActivityName=".ProfileActivity" />
+            android:parentActivityName=".ProfileActivity"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".SettingsActivity"
-            android:screenOrientation="portrait"
             android:exported="false"
-            android:parentActivityName=".ProfileActivity" />
+            android:parentActivityName=".ProfileActivity"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".EditProfileActivity"
-            android:screenOrientation="portrait"
             android:exported="false"
-            android:parentActivityName=".ProfileActivity" />
-
-        <activity
-            android:name=".MapActivity"
+            android:parentActivityName=".ProfileActivity"
             android:screenOrientation="portrait"
-            android:exported="false"
-            android:parentActivityName=".ListingDetailActivity" />
+            android:windowSoftInputMode="adjustResize" />
 
         <!--
-            MainActivity hosts the four primary tabs and acts as the exported entry point
-            for deep links (https://holdhightheshop.app/* and holdhightheshop://*),
-            campus search intents (ACTION_SEARCH), and incoming share-to-post intents (ACTION_SEND).
+            MainActivity hosts the four primary tabs and acts as the auth-gated exported
+            entry point for HTTPS deep links, custom-scheme deep links, ACTION_SEARCH,
+            and IntentSanitizer-protected incoming ACTION_SEND shares.
         -->
         <activity
             android:name=".MainActivity"
-            android:screenOrientation="portrait"
-            android:launchMode="singleTop"
             android:exported="true"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize">
 
-            <!-- Web deep links: https://holdhightheshop.app/listing/item2, /market/CITCS, etc. -->
+            <!-- HTTPS-only web deep links (cleartext http:// and removed /map intentionally excluded) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/listing" />
-                <data android:scheme="http" android:host="holdhightheshop.app" android:pathPrefix="/listing" />
                 <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/market" />
                 <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/chats" />
                 <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/chat" />
                 <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/profile" />
                 <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/seller" />
-                <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/map" />
                 <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/create" />
                 <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/saved" />
                 <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/notifications" />
                 <data android:scheme="https" android:host="holdhightheshop.app" android:pathPrefix="/settings" />
             </intent-filter>
 
-            <!-- Custom app scheme deep links: holdhightheshop://listing/item2, holdhightheshop://market/CITCS, etc. -->
+            <!-- Custom scheme deep links -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -222,20 +261,19 @@
                 <data android:scheme="holdhightheshop" android:host="chat" />
                 <data android:scheme="holdhightheshop" android:host="profile" />
                 <data android:scheme="holdhightheshop" android:host="seller" />
-                <data android:scheme="holdhightheshop" android:host="map" />
                 <data android:scheme="holdhightheshop" android:host="create" />
                 <data android:scheme="holdhightheshop" android:host="saved" />
                 <data android:scheme="holdhightheshop" android:host="notifications" />
                 <data android:scheme="holdhightheshop" android:host="settings" />
             </intent-filter>
 
-            <!-- System / voice / launcher search directly into Campus Market -->
+            <!-- System / launcher search into Campus Market -->
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
-            <!-- Receive shared text or item photos from other apps to prefill Create Listing -->
+            <!-- Receive shared text or photos from other apps (validated via IntentSanitizer) -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -247,6 +285,33 @@
                 <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
+
+        <!-- Android Services (both strictly non-exported) -->
+        <service
+            android:name=".system.MarketplaceSyncService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <service
+            android:name=".system.MeetupCountdownService"
+            android:exported="false" />
+
+        <!-- Static BroadcastReceivers -->
+        <receiver
+            android:name=".system.BootAndTimeReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".system.DealAlertReceiver"
+            android:exported="false" />
+
     </application>
 
 </manifest>

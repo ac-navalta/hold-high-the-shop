@@ -210,10 +210,10 @@
     <string name="login_kicker">FOR UC STUDENTS ONLY</string>
     <string name="login_welcome">Welcome, UCian</string>
     <string name="login_desc">Sign in with your university email to join the verified campus marketplace.</string>
-    <string name="login_email_label">UC email address</string>
-    <string name="login_email_value">mika.dela-cruz@s.uc-bcf.edu.ph</string>
-    <string name="btn_sign_in">Sign in securely</string>
-    <string name="login_privacy">Your campus identity stays private</string>
+    <string name="login_email_label">UC student email</string>
+    <string name="login_email_value">juan.delacruz@students.uc-bcf.edu.ph</string>
+    <string name="btn_sign_in">Sign in</string>
+    <string name="login_privacy">Strictly for verified @students.uc-bcf.edu.ph students</string>
 
     <!-- Profile -->
     <string name="profile_title">Profile</string>
@@ -923,7 +923,203 @@
     <string name="notif_report_sheet_body">Thank you for helping keep the UC marketplace safe. Our student support team reviewed your report on UC PE Uniform and took action according to our community guidelines.</string>
     <string name="btn_view_reported_item">View listing</string>
     <string name="chat_meetup_sheet_title">Meetup options</string>
-    <string name="chat_meetup_directions">Open campus directions</string>
+    <string name="chat_meetup_directions">View safe meetup spot</string>
     <string name="chat_meetup_calendar">Add meetup to calendar</string>
     <string name="cd_edit_avatar">Change profile photo</string>
+
+    <!-- ===== Full-App Production Strings ===== -->
+
+    <!-- Auth: Sign-Up, Log-In, Verify UC Outlook, Forgot Password, Suspended -->
+    <string name="btn_create_account">Create UC student account</string>
+    <string name="login_password_label">Password</string>
+    <string name="login_password_hint">Enter your password</string>
+    <string name="btn_forgot_password">Forgot password?</string>
+    <string name="login_no_account">New to Hold High The Shop? Sign up</string>
+    <string name="signup_kicker">VERIFIED UC STUDENT ACCOUNT</string>
+    <string name="signup_title">Create your account</string>
+    <string name="signup_desc">Use your official University of the Cordilleras student Outlook email.</string>
+    <string name="signup_name_label">Full name *</string>
+    <string name="signup_name_hint">e.g. Juan Dela Cruz</string>
+    <string name="signup_email_hint">name@students.uc-bcf.edu.ph</string>
+    <string name="signup_password_hint">At least 8 characters (letters + numbers)</string>
+    <string name="signup_confirm_password_label">Confirm password *</string>
+    <string name="signup_confirm_password_hint">Re-enter your password</string>
+    <string name="signup_program_label">College / Program *</string>
+    <string name="signup_year_label">Year level *</string>
+    <string name="signup_have_account">Already have an account? Sign in</string>
+    <string name="signup_password_mismatch">Passwords do not match</string>
+    <string name="signup_domain_error">Only @students.uc-bcf.edu.ph student emails are allowed</string>
+    <string name="verify_kicker">VERIFY YOUR UC EMAIL</string>
+    <string name="verify_title">Check your UC Outlook</string>
+    <string name="verify_body">We sent a verification link to %1$s. Open your UC Outlook inbox and tap the link, then come back here.</string>
+    <string name="verify_local_note">Firebase is not connected yet in this local build. Tap “Continue (Local Preview)” below or add google-services.json to send real UC Outlook emails.</string>
+    <string name="btn_open_email_app">Open Mail app</string>
+    <string name="btn_ive_verified">I\u2019ve verified my email</string>
+    <string name="btn_continue_local_preview">Continue (Local Preview)</string>
+    <string name="btn_resend_verification">Resend verification email</string>
+    <string name="btn_resend_countdown">Resend in %1$ds</string>
+    <string name="btn_use_different_email">Use a different email</string>
+    <string name="toast_verification_sent">Verification email sent! Check your UC Outlook inbox.</string>
+    <string name="toast_not_verified_yet">Email not verified yet. Tap the link in your UC Outlook first.</string>
+    <string name="toast_no_email_app">No email app installed on this device</string>
+    <string name="forgot_kicker">RESET PASSWORD</string>
+    <string name="forgot_title">Reset your password</string>
+    <string name="forgot_desc">Enter your @students.uc-bcf.edu.ph email and we\u2019ll send a password reset link to your UC Outlook.</string>
+    <string name="btn_send_reset">Send reset link</string>
+    <string name="forgot_sent_message">If a Hold High The Shop account exists for %1$s, a reset link has been sent to your UC Outlook inbox.</string>
+    <string name="suspended_kicker">ACCOUNT SUSPENDED</string>
+    <string name="suspended_title">Your account is suspended</string>
+    <string name="suspended_default_reason">Your account violated Hold High The Shop\u2019s UC campus marketplace guidelines.</string>
+    <string name="btn_contact_support">Contact UC Student Support</string>
+
+    <!-- Multi-Select College Tags, Free & Day-Unit Lending -->
+    <string name="tag_all_colleges">All colleges</string>
+    <string name="lbl_target_colleges">Applicable colleges (optional)</string>
+    <string name="hint_target_colleges">Tap colleges this item is for. Leave unselected for All colleges.</string>
+    <string name="price_free">FREE</string>
+    <string name="price_rent_day_format">%1$s / day</string>
+    <string name="lbl_price_per_day">Fee per day (0 for Free) *</string>
+    <string name="lbl_price_or_free">Price (0 for Free) *</string>
+    <string name="rent_1_week">1 week (7d)</string>
+    <string name="rent_2_weeks">2 weeks (14d)</string>
+    <plurals name="rent_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <string name="custom_days_hint">Custom days (1\u2013%1$d)</string>
+    <string name="toast_price_too_high">Maximum price on campus is \u20B150,000</string>
+    <string name="lbl_meetup_note">Exact spot / floor note (optional)</string>
+    <string name="hint_meetup_note">e.g. 3rd floor lobby near M304</string>
+    <string name="edit_locked_price_type">Price and listing type are locked while a request or loan is active.</string>
+
+    <!-- 1-10 Photo Rail -->
+    <string name="photo_counter_10_format">%1$d / 10</string>
+    <string name="photo_cover_badge">Cover</string>
+    <string name="btn_add_photos_hint">Add photos (1\u201310)</string>
+    <string name="toast_need_photo">Add at least 1 real photo of your item</string>
+    <string name="toast_photo_limit_reached">You can attach up to 10 photos per listing</string>
+    <string name="toast_no_gallery_app">No compatible photo viewer installed</string>
+
+    <!-- Hybrid Gemini Safety Gate -->
+    <string name="safety_checking_title">Checking UC Campus Guidelines\u2026</string>
+    <string name="safety_blocked_title">Prohibited Item Notice</string>
+    <string name="safety_blocked_message">%1$s\n\nPolicy: %2$s\n\nPlease edit or remove prohibited content before posting on Hold High The Shop.</string>
+    <string name="btn_edit_listing_short">Edit listing</string>
+    <string name="toast_posted_pending_ai">Listing posted! Queued for campus safety verification.</string>
+
+    <!-- Safe Meetup Bottom Sheet (Replaces Map) -->
+    <string name="meetup_note_label">SELLER\u2019S SPOT NOTE</string>
+    <string name="meetup_landmark_fallback">Meet inside University of the Cordilleras premises during school hours.</string>
+    <string name="btn_copy_meetup_spot">Copy spot</string>
+    <string name="toast_meetup_copied">Meetup spot copied</string>
+    <string name="toast_no_phone_app">No phone dialer available on this device</string>
+
+    <!-- Listing Detail Enhancements -->
+    <string name="btn_message_owner">Message</string>
+    <string name="btn_delete_listing">Delete listing</string>
+    <string name="delete_listing_title">Delete \u201C%1$s\u201D?</string>
+    <string name="delete_listing_message">This permanently removes the listing from Campus Market.</string>
+    <string name="delete_listing_confirm">Delete</string>
+    <string name="toast_listing_deleted">Listing deleted</string>
+    <string name="toast_cannot_delete_active">Finish or cancel the active deal before deleting this listing.</string>
+    <string name="status_pending_seller_title">Request sent \u2022 waiting for %1$s</string>
+    <string name="status_pending_seller_sub">Your 4-digit handover code unlocks once %1$s accepts (within 24 hours).</string>
+    <string name="status_under_review_banner">Under moderation review \u2022 hidden from Campus Market</string>
+    <string name="post_return_title">Item returned! What\u2019s next?</string>
+    <string name="post_return_message">Keep \u201C%1$s\u201D open so other UC students can borrow it, or pause it for now?</string>
+    <string name="btn_keep_listed">Keep listed</string>
+    <string name="btn_pause_listing">Pause listing</string>
+    <string name="btn_resume_listing">Resume listing</string>
+    <string name="toast_listing_paused">Listing paused</string>
+    <string name="toast_listing_resumed">Listing is live again</string>
+    <string name="swap_empty_title">You don\u2019t have an active listing to offer yet</string>
+    <string name="swap_empty_sub">Post an item first so you can trade it with %1$s.</string>
+    <string name="btn_post_item_to_swap">Post an item to swap</string>
+    <string name="discard_changes_title">Discard unsaved changes?</string>
+    <string name="discard_changes_message">Your edits haven\u2019t been saved yet.</string>
+    <string name="btn_discard">Discard</string>
+    <string name="btn_keep_editing">Keep editing</string>
+    <string name="toast_already_reported">You already reported this listing</string>
+
+    <!-- Context-Aware Chat '+' Actions & Interactive Proposals -->
+    <string name="action_propose_meetup">Propose meetup change</string>
+    <string name="action_propose_meetup_hint">Offer a new campus spot or schedule (requires confirmation)</string>
+    <string name="action_propose_extension">Propose return extension</string>
+    <string name="action_propose_extension_hint">Request extra borrow days (requires lender confirmation)</string>
+    <string name="proposal_meetup_kicker">MEETUP CHANGE PROPOSAL</string>
+    <string name="proposal_extension_kicker">RETURN EXTENSION PROPOSAL</string>
+    <string name="proposal_status_pending">PENDING CONFIRMATION</string>
+    <string name="proposal_status_accepted">CONFIRMED</string>
+    <string name="proposal_status_declined">DECLINED</string>
+    <string name="proposal_status_withdrawn">WITHDRAWN</string>
+    <string name="proposal_status_expired">EXPIRED</string>
+    <string name="btn_confirm_change">Confirm change</string>
+    <string name="btn_withdraw_proposal">Withdraw</string>
+    <string name="proposal_waiting_other">Waiting for the other student to confirm\u2026</string>
+    <string name="proposal_meetup_title">Propose a new meetup</string>
+    <string name="proposal_extension_title">Propose return extension</string>
+    <string name="proposal_note_hint">Short reason (optional, e.g. class ran late)</string>
+    <string name="btn_send_proposal">Send proposal</string>
+    <string name="toast_proposal_sent">Proposal sent \u2022 waiting for confirmation</string>
+    <string name="toast_proposal_accepted">Schedule updated and reminders rescheduled!</string>
+    <string name="toast_proposal_declined">Proposal declined</string>
+    <string name="toast_proposal_withdrawn">Proposal withdrawn</string>
+    <string name="extension_extra_days_label">Add extra days</string>
+    <string name="extension_preview_format">New return date: %1$s \u2022 %2$s extra</string>
+    <string name="extension_preview_free_format">New return date: %1$s \u2022 FREE extension</string>
+
+    <!-- Block User & Delete Account -->
+    <string name="menu_block_user">Block student</string>
+    <string name="menu_unblock_user">Unblock student</string>
+    <string name="block_user_title">Block %1$s?</string>
+    <string name="block_user_message">You won\u2019t see their listings or chat threads. You can unblock them anytime in Settings.</string>
+    <string name="btn_block">Block</string>
+    <string name="toast_user_blocked">%1$s blocked</string>
+    <string name="toast_user_unblocked">%1$s unblocked</string>
+    <string name="settings_blocked_users">Blocked students</string>
+    <string name="settings_blocked_users_hint">Manage students you\u2019ve blocked</string>
+    <string name="blocked_empty">You haven\u2019t blocked anyone.</string>
+    <string name="settings_delete_account">Delete account</string>
+    <string name="settings_delete_account_hint">Permanently close your listings and remove your account</string>
+    <string name="delete_account_title">Delete your account?</string>
+    <string name="delete_account_message">This permanently deletes your Hold High The Shop profile and closes your open listings. Enter your password to confirm.</string>
+    <string name="delete_account_confirm">Delete permanently</string>
+    <string name="toast_account_deleted">Your account has been deleted</string>
+
+    <!-- System Notifications, Services, Alarms & Offline Banner -->
+    <string name="notif_channel_messages">Chat messages</string>
+    <string name="notif_channel_messages_desc">Direct messages and schedule proposals from UC students</string>
+    <string name="notif_channel_deals">Deals &amp; reservations</string>
+    <string name="notif_channel_deals_desc">Requests, acceptances, handovers, and ratings</string>
+    <string name="notif_channel_reminders">Meetup &amp; loan reminders</string>
+    <string name="notif_channel_reminders_desc">Scheduled campus meetup and return-due alerts</string>
+    <string name="notif_channel_announcements">Campus announcements</string>
+    <string name="notif_channel_announcements_desc">Notices from UC Hold High The Shop moderators</string>
+    <string name="notif_action_reply">Reply</string>
+    <string name="notif_action_reply_hint">Type a reply\u2026</string>
+    <string name="notif_action_mark_read">Mark read</string>
+    <string name="notif_action_snooze">Snooze 15m</string>
+    <string name="notif_permission_title">Stay updated on meetups &amp; chats</string>
+    <string name="notif_permission_message">Allow notifications so you never miss a buyer\u2019s message, a meetup reminder, or a loan return deadline on campus.</string>
+    <string name="btn_allow_notifications">Allow notifications</string>
+    <string name="btn_not_now">Not now</string>
+    <string name="sync_notif_title">Syncing Hold High The Shop</string>
+    <string name="sync_notif_body">Updating campus deals and meetup reminders\u2026</string>
+    <string name="alarm_meetup_1h_title">Meetup in 1 hour: %1$s</string>
+    <string name="alarm_meetup_15m_title">Meetup in 15 min: %1$s</string>
+    <string name="alarm_meetup_body">Safe Meetup Point: %1$s</string>
+    <string name="alarm_loan_tomorrow_title">Return due tomorrow: %1$s</string>
+    <string name="alarm_loan_tomorrow_body">Message the lender in chat to confirm a campus drop-off spot.</string>
+    <string name="alarm_loan_due_title">Loan due today: %1$s</string>
+    <string name="alarm_loan_due_body">Return on campus today to keep your reliability score high.</string>
+    <string name="alarm_request_expiring_title">Request expiring soon: %1$s</string>
+    <string name="alarm_request_expiring_body">Review and answer within 2 hours before this request expires.</string>
+    <string name="offline_banner_text">You\u2019re offline \u2022 Showing saved campus data</string>
+    <string name="home_countdown_kicker_meetup">UPCOMING MEETUP</string>
+    <string name="home_countdown_kicker_loan">ACTIVE LOAN DUE</string>
+    <string name="home_countdown_in_format">In %1$s</string>
+    <string name="home_empty_fresh">No campus listings yet \u2022 be the first UCian to post!</string>
+    <string name="chats_empty_new">No conversations yet. Tap Message on any listing to start chatting.</string>
+    <string name="notif_empty">All caught up! New requests, messages, and campus notices appear here.</string>
+    <string name="notif_announcements_section">CAMPUS ANNOUNCEMENTS</string>
 </resources>

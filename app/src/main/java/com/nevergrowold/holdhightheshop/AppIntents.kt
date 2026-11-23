@@ -3,7 +3,6 @@ package com.nevergrowold.holdhightheshop
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.provider.CalendarContract
@@ -13,25 +12,27 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.content.FileProvider
-import androidx.core.view.isVisible
+import com.nevergrowold.holdhightheshop.media.ImagePipeline
 import java.io.File
 
 /**
  * Centralised intent builders, deep-link parser, and safe implicit-intent
  * launchers for Hold High The Shop.
  *
- * Covers every outgoing implicit intent the app supports:
- * - Share listing / seller profile / receipt / app (ACTION_SEND)
- * - External maps directions to UC Baguio meetup points (ACTION_VIEW geo: / https:)
- * - Calendar reminders for meetups and loan return dates (ACTION_INSERT CalendarContract)
- * - Gallery photo picker (ACTION_GET_CONTENT for images) and camera capture (ACTION_IMAGE_CAPTURE)
- * - External photo viewer (ACTION_VIEW for images)
- * - Email student support (ACTION_SENDTO mailto:)
- * - Dial UC Campus Security Desk (ACTION_DIAL tel:)
- * - Open University of the Cordilleras website (ACTION_VIEW https:)
- * - Open Android OS notification settings (ACTION_APP_NOTIFICATION_SETTINGS)
+ * Outgoing implicit intents supported:
+ * - Share listing / seller profile / receipt / app (`ACTION_SEND`)
+ * - Calendar reminders for campus meetups & loan return dates (`ACTION_INSERT CalendarContract`)
+ * - Zero-permission Photo Picker (`PickVisualMedia`/`PickMultipleVisualMedia`) + Camera (`ACTION_IMAGE_CAPTURE` via scoped `FileProvider`)
+ * - External photo viewer (`ACTION_VIEW` with temporary `FLAG_GRANT_READ_URI_PERMISSION`)
+ * - Open email app for UC Outlook verification (`ACTION_MAIN` + `CATEGORY_APP_EMAIL`)
+ * - Email student support (`ACTION_SENDTO mailto:`)
+ * - Dial UC Campus Security Desk (`ACTION_DIAL tel:`)
+ * - Open University of the Cordilleras website (`ACTION_VIEW https:`)
+ * - Open Android OS notification & app settings (`ACTION_APP_NOTIFICATION_SETTINGS`, `ACTION_APPLICATION_DETAILS_SETTINGS`)
  *
- * Also parses incoming deep links declared in AndroidManifest.xml on [MainActivity].
+ * Security hardening:
+ * - Web deep links require `https://` strictly (no cleartext `http://`).
+ * - Removed legacy placeholder `/map` deep link and external `geo:` map intents.
  */
 object AppIntents {
 
@@ -41,18 +42,10 @@ object AppIntents {
     const val UC_SECURITY_PHONE = "+63744423316"
     const val UC_WEBSITE_URL = "https://www.uc-bcf.edu.ph"
 
-    /** Extra keys for incoming ACTION_SEND content forwarded from [MainActivity] to [CreateListingActivity]. */
+    /** Extra keys for incoming sanitized ACTION_SEND content forwarded to [CreateListingActivity]. */
     const val EXTRA_SHARED_SUBJECT = "shared_subject"
     const val EXTRA_SHARED_TEXT = "shared_text"
     const val EXTRA_SHARED_IMAGE_URI = "shared_image_uri"
-
-    /** Approximate coordinates of the four UC Baguio Safe Meetup Points (Gov. Pack Rd., Baguio City). */
-    private val MEETUP_COORDS = mapOf(
-        "UC Main Gate Security Desk" to Pair(16.40880, 120.59790),
-        "UC Library Lobby" to Pair(16.40905, 120.59755),
-        "CITCS Building Entrance" to Pair(16.40920, 120.59825),
-        "UC Canteen Area" to Pair(16.40865, 120.59815),
-    )
 
     sealed class DeepLinkRoute {
         data class ListingDetail(val listingId: String) : DeepLinkRoute()
@@ -61,7 +54,6 @@ object AppIntents {
         data class ChatThread(val sellerName: String, val listingId: String? = null) : DeepLinkRoute()
         data class Profile(val subTab: Int = ProfileActivity.TAB_ACTIVE) : DeepLinkRoute()
         data class SellerProfile(val sellerName: String) : DeepLinkRoute()
-        data class MapDirections(val place: String) : DeepLinkRoute()
         object CreateListing : DeepLinkRoute()
         object Saved : DeepLinkRoute()
         object Notifications : DeepLinkRoute()
@@ -69,8 +61,9 @@ object AppIntents {
     }
 
     /**
-     * Parses both web deep links (`https://holdhightheshop.app/listing/item2`)
+     * Parses strictly HTTPS web deep links (`https://holdhightheshop.app/listing/item2`)
      * and custom-scheme links (`holdhightheshop://listing/item2`).
+     * Cleartext `http://` links and removed `/map` routes are explicitly rejected.
      */
     fun parseDeepLink(uri: Uri?): DeepLinkRoute? {
         if (uri == null) return null
@@ -84,7 +77,7 @@ object AppIntents {
                 section = uri.host?.lowercase() ?: return null
                 arg = segments.firstOrNull()
             }
-            (scheme == "https" || scheme == "http") && uri.host.equals(WEB_HOST, ignoreCase = true) -> {
+            scheme == "https" && uri.host.equals(WEB_HOST, ignoreCase = true) -> {
                 section = segments.firstOrNull()?.lowercase() ?: return null
                 arg = segments.getOrNull(1)
             }
@@ -114,8 +107,7 @@ object AppIntents {
                 }
                 DeepLinkRoute.Profile(subTab)
             }
-            "seller" -> DeepLinkRoute.SellerProfile(decodedArg ?: Listings.SELLERS.first().name)
-            "map" -> DeepLinkRoute.MapDirections(decodedArg ?: Listings.MEETUP_POINTS.first())
+            "seller" -> DeepLinkRoute.SellerProfile(decodedArg ?: Listings.SELLERS.firstOrNull()?.name ?: "")
             "create" -> DeepLinkRoute.CreateListing
             "saved" -> DeepLinkRoute.Saved
             "notifications" -> DeepLinkRoute.Notifications
@@ -191,20 +183,6 @@ object AppIntents {
         )
     }
 
-    // ---------------------------------------------------------------- maps (ACTION_VIEW geo:)
-
-    fun mapGeoIntent(place: String): Intent {
-        val (lat, lng) = MEETUP_COORDS[place] ?: MEETUP_COORDS.values.first()
-        val label = Uri.encode("$place, University of the Cordilleras, Baguio")
-        return Intent(Intent.ACTION_VIEW, Uri.parse("geo:$lat,$lng?q=$lat,$lng($label)"))
-    }
-
-    fun mapWebIntent(place: String): Intent {
-        val (lat, lng) = MEETUP_COORDS[place] ?: MEETUP_COORDS.values.first()
-        val query = Uri.encode("$place, University of the Cordilleras, Baguio")
-        return Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?q=$query&ll=$lat,$lng"))
-    }
-
     // ---------------------------------------------------------------- calendar (ACTION_INSERT)
 
     fun calendarEventIntent(
@@ -222,12 +200,7 @@ object AppIntents {
         putExtra(CalendarContract.Events.DESCRIPTION, description)
     }
 
-    // ---------------------------------------------------------------- photos (gallery / camera / viewer)
-
-    fun pickImageIntent(): Intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-        type = "image/*"
-        addCategory(Intent.CATEGORY_OPENABLE)
-    }
+    // ---------------------------------------------------------------- photos (camera / viewer)
 
     fun capturePhotoIntent(context: Context): Pair<Intent, Uri> {
         val dir = File(context.cacheDir, "photos").apply { mkdirs() }
@@ -245,7 +218,19 @@ object AppIntents {
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
 
-    // ---------------------------------------------------------------- support, security & system settings
+    /** Opens a `media://` or `content://` image reference safely in an external image viewer. */
+    fun viewMediaRef(context: Context, ref: String): Boolean {
+        val uri = ImagePipeline.viewableUri(context, ref) ?: return false
+        return launch(context, viewImageIntent(uri), unavailableToastRes = R.string.toast_no_gallery_app)
+    }
+
+    // ---------------------------------------------------------------- email, support, security & settings
+
+    /** Opens the device's email client (e.g. Outlook / Gmail) so the student can click their UC verification link. */
+    fun openEmailAppIntent(): Intent = Intent(Intent.ACTION_MAIN).apply {
+        addCategory(Intent.CATEGORY_APP_EMAIL)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
 
     fun emailSupportIntent(context: Context, subject: String, body: String): Intent =
         Intent(Intent.ACTION_SENDTO).apply {
@@ -267,18 +252,16 @@ object AppIntents {
                 putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
             }
         } else {
-            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                data = Uri.fromParts("package", context.packageName, null)
-            }
+            appDetailsSettingsIntent(context)
         }
 
-    // ---------------------------------------------------------------- safe launcher
+    fun appDetailsSettingsIntent(context: Context): Intent =
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", context.packageName, null)
+        }
 
-    /**
-     * Launches an implicit [intent] safely. If no handler exists on the device,
-     * tries [fallback] if provided, otherwise shows a Toast explaining that no
-     * compatible app is installed.
-     */
+    // ---------------------------------------------------------------- safe launcher & async photo bind
+
     fun launch(
         context: Context,
         intent: Intent,
@@ -294,7 +277,7 @@ object AppIntents {
                     context.startActivity(fallback)
                     return true
                 } catch (_: ActivityNotFoundException) {
-                    // Fall through to Toast below.
+                    // Fall through to Toast.
                 }
             }
             Toast.makeText(context, unavailableToastRes, Toast.LENGTH_SHORT).show()
@@ -303,38 +286,11 @@ object AppIntents {
     }
 
     /**
-     * Safely decodes a local photo URI into [target], toggling [placeholder] visibility.
-     * Decoding up front via ContentResolver prevents lazy SecurityException/IOException
-     * crashes during ImageView.onMeasure when a persisted URI is no longer readable.
+     * Off-main-thread image binding via [ImagePipeline.bindAsync] (eliminates main-thread
+     * bitmap decoding ANRs & supports both `media://` Firestore-synced WebP and `content://`).
      */
     fun bindImageUri(target: ImageView, placeholder: View?, uriString: String?): Boolean {
-        if (uriString.isNullOrBlank()) {
-            target.setImageDrawable(null)
-            target.isVisible = false
-            placeholder?.isVisible = true
-            return false
-        }
-        return try {
-            val uri = Uri.parse(uriString)
-            val bitmap = target.context.contentResolver.openInputStream(uri)?.use { stream ->
-                BitmapFactory.decodeStream(stream)
-            }
-            if (bitmap != null) {
-                target.setImageBitmap(bitmap)
-                target.isVisible = true
-                placeholder?.isVisible = false
-                true
-            } else {
-                target.setImageDrawable(null)
-                target.isVisible = false
-                placeholder?.isVisible = true
-                false
-            }
-        } catch (_: Exception) {
-            target.setImageDrawable(null)
-            target.isVisible = false
-            placeholder?.isVisible = true
-            false
-        }
+        ImagePipeline.bindAsync(target, placeholder, uriString)
+        return !uriString.isNullOrBlank()
     }
 }
