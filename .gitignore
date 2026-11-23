@@ -9,3 +9,9 @@
 .cxx
 local.properties
 .kotlin/
+app/google-services.json
+admin-web/node_modules/
+admin-web/dist/
+admin-web/.env
+admin-web/.env.local
+.firebase/
