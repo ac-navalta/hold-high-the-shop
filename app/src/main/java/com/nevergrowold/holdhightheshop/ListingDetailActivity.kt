@@ -3,8 +3,9 @@ package com.nevergrowold.holdhightheshop
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
@@ -16,6 +17,9 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.isVisible
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.CompositeDateValidator
 import com.google.android.material.datepicker.DateValidatorPointForward
@@ -23,6 +27,11 @@ import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import com.nevergrowold.holdhightheshop.data.AppRepository
+import com.nevergrowold.holdhightheshop.data.ListingStatus
+import com.nevergrowold.holdhightheshop.system.MarketplaceBroadcasts
+import com.nevergrowold.holdhightheshop.system.MarketplaceEventReceiver
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -33,16 +42,25 @@ class ListingDetailActivity : BaseActivity() {
     private lateinit var listing: Listing
     private var photoIndex = 0
 
+    private val eventReceiver = MarketplaceEventReceiver { _, _ ->
+        reloadAndBind(animate = true)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_listing_detail)
         BarInsets.apply(this)
 
-        listing = Listings.byId(intent.getStringExtra(EXTRA_LISTING))
+        val listingId = intent.getStringExtra(EXTRA_ID) ?: intent.getStringExtra(EXTRA_LISTING)
+        listing = Listings.byId(listingId)
         bind()
 
-        // Subtle scroll-linked parallax on the photo hero beneath the overlapping details sheet.
+        findViewById<View>(R.id.detailHeroPhoto).setOnLongClickListener {
+            val current = listing.photoUris.getOrNull(photoIndex)
+            if (current != null) AppIntents.viewMediaRef(this, current) else false
+        }
+
         val scroll = findViewById<android.widget.ScrollView>(R.id.detailScroll)
         val hero = findViewById<View>(R.id.detailHero)
         val heroIcon = findViewById<View>(R.id.detailHeroIcon)
@@ -53,15 +71,47 @@ class ListingDetailActivity : BaseActivity() {
             val t = (y / fadeSpan).coerceIn(0f, 1f)
             heroIcon.alpha = 1f - 0.55f * t
         }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                AppRepository.stateVersion.collect {
+                    reloadAndBind(animate = false)
+                }
+            }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        MarketplaceBroadcasts.registerInternalReceiver(
+            this,
+            eventReceiver,
+            MarketplaceBroadcasts.ACTION_STATE_CHANGED,
+            MarketplaceBroadcasts.ACTION_DEAL_UPDATED,
+            MarketplaceBroadcasts.ACTION_PROPOSAL_UPDATED,
+        )
+    }
+
+    override fun onStop() {
+        runCatching { unregisterReceiver(eventReceiver) }
+        super.onStop()
     }
 
     override fun onResume() {
         super.onResume()
-        // Edits, profile updates, saved or reserved state can change on other screens.
-        listing = Listings.byId(listing.id)
+        reloadAndBind(animate = false)
+    }
+
+    private fun reloadAndBind(animate: Boolean) {
+        val latest = Listings.byIdOrNull(listing.id)
+        if (latest == null) {
+            finish()
+            return
+        }
+        listing = latest
         bind()
         bindSaved()
-        bindActions(animate = false)
+        bindActions(animate = animate)
     }
 
     private val isMine get() = Listings.isMine(listing)
@@ -69,26 +119,31 @@ class ListingDetailActivity : BaseActivity() {
     private fun bind() {
         val seller = Listings.sellerOf(listing)
         bindHeroPhoto()
+        findViewById<View>(R.id.underReviewBanner).isVisible = listing.status == ListingStatus.UNDER_REVIEW
         findViewById<TextView>(R.id.detailCondition).text =
             getString(R.string.condition_badge_format, Listings.conditionLabel(this, listing.condition))
+        findViewById<TextView>(R.id.detailColleges).text = Listings.targetProgramsLabel(this, listing)
         findViewById<TextView>(R.id.detailTitle).text = listing.title
         findViewById<TextView>(R.id.detailPrice).text = Listings.priceLabel(this, listing)
         findViewById<TextView>(R.id.detailDesc).text = listing.description
-        findViewById<View>(R.id.swapWantsCard).isVisible = listing.isSwap && listing.wants != null
+        findViewById<View>(R.id.swapWantsCard).isVisible = listing.isSwap && !listing.wants.isNullOrBlank()
         findViewById<TextView>(R.id.swapWants).text = listing.wants
         findViewById<TextView>(R.id.sellerInitials).text = seller.initials
         findViewById<TextView>(R.id.sellerName).text =
             if (isMine) getString(R.string.seller_you_format, seller.name) else seller.name
-        // Your own listing: nothing to save or report.
         findViewById<View>(R.id.btnSave).isVisible = !isMine
         findViewById<TextView>(R.id.sellerMeta).text =
             if (isMine && !UserState.settings.showProgram) seller.year
             else getString(R.string.seller_meta_format, seller.program, seller.year)
-        // Your own reliability is worked out from your history; other students' comes with their profile.
         findViewById<TextView>(R.id.statRating).text = if (isMine) Reliability.rating() else seller.rating
         findViewById<TextView>(R.id.statOnTime).text = if (isMine) Reliability.onTime() else seller.onTime
-        findViewById<TextView>(R.id.statCompleted).text = (if (isMine) Reliability.completed() else seller.completed).toString()
-        findViewById<TextView>(R.id.meetupPlace).text = listing.meetup
+        findViewById<TextView>(R.id.statCompleted).text =
+            (if (isMine) Reliability.completed() else seller.completed).toString()
+        findViewById<TextView>(R.id.meetupPlace).text = if (listing.meetupNote.isNotBlank()) {
+            "${listing.meetup} \u2022 ${listing.meetupNote}"
+        } else {
+            listing.meetup
+        }
         findViewById<TextView>(R.id.meetupAvailability).text = freeLabel()
     }
 
@@ -100,15 +155,15 @@ class ListingDetailActivity : BaseActivity() {
         if (photos.isEmpty()) {
             photoView.isVisible = false
             placeholderIcon.isVisible = true
-            countPill.setText(R.string.photo_count)
+            countPill.isVisible = false
             return
         }
+        countPill.isVisible = true
         photoIndex = photoIndex.coerceIn(0, photos.lastIndex)
         AppIntents.bindImageUri(photoView, placeholderIcon, photos[photoIndex])
         countPill.text = getString(R.string.photo_count_format, photoIndex + 1, photos.size)
     }
 
-    /** Cycles through multiple real photos, or opens a single photo in the system viewer. */
     fun cycleHeroPhoto(view: View) {
         val photos = listing.photoUris
         if (photos.isEmpty()) return
@@ -117,15 +172,14 @@ class ListingDetailActivity : BaseActivity() {
             Motion.tick(view)
             bindHeroPhoto()
         } else {
-            AppIntents.launch(this, AppIntents.viewImageIntent(Uri.parse(photos.first())))
+            AppIntents.viewMediaRef(this, photos.first())
         }
     }
 
-    /** "Paolo is free Mon, Wed, Fri • 1:00–4:00 PM", or "You're free …" on your own listing. */
     private fun freeLabel(): String = if (isMine) {
         getString(R.string.you_free_format, listing.availability.label())
     } else {
-        getString(R.string.seller_free_format, listing.seller.name.substringBefore(' '), listing.availability.label())
+        getString(R.string.seller_free_format, Listings.sellerOf(listing).first, listing.availability.label())
     }
 
     private fun bindSaved() {
@@ -137,45 +191,37 @@ class ListingDetailActivity : BaseActivity() {
         }
     }
 
-    /**
-     * Status card and bottom bar. One set per state, checked in this order:
-     * - on loan (either way): due date, Message and the return actions;
-     * - your listing promised to someone: who and when, Cancel / Message / Enter code;
-     * - your listing with requests waiting: Edit / Review requests;
-     * - your listing, nothing going on: Edit / Mark as sold (or Lend it out);
-     * - reserved by you: meetup, your handover code, Message / Cancel;
-     * - offered to you in a swap you accepted: Message;
-     * - bought or swapped for: done, Message;
-     * - anyone else's open listing: Report / Reserve.
-     */
     private fun bindActions(animate: Boolean = true) {
         if (animate) {
             Motion.layoutTransition(findViewById(R.id.detailSheet), durationMs = 220L)
             Motion.layoutTransition(findViewById(R.id.bottomNav), durationMs = 200L)
         }
         val closed = UserState.isClosed(listing.id)
+        val paused = UserState.isPaused(listing.id)
         val rental = UserState.rental(listing.id)
         val reservation = UserState.reservation(listing.id)
         val onLoan = rental != null
-        val open = isMine && !closed && !onLoan
-        val deal = if (open) UserState.accepted(listing.id) else null
-        val pending = if (open && deal == null) UserState.pending(listing.id) else emptyList()
+        val ownerManageable = isMine && !closed && !onLoan
+        val deal = if (ownerManageable) UserState.accepted(listing.id) else null
+        val pending = if (ownerManageable && deal == null) UserState.pending(listing.id) else emptyList()
         val incoming = if (!isMine && !onLoan && reservation == null) UserState.incomingOffer(listing.id) else null
-        // Bought or swapped for: finished, no more actions besides messaging.
         val done = !isMine && !onLoan && reservation == null && incoming == null && UserState.hasReceived(listing.id)
         val dealMissed = deal != null && Deals.meetupMissed(deal.meetMillis)
-        val reservationMissed = reservation != null && Deals.meetupMissed(reservation.meetMillis)
+        val reservationMissed = reservation != null && reservation.isAccepted && Deals.meetupMissed(reservation.meetMillis)
         val loanIssue = UserState.issue(listing.id)
 
-        // Returns are the lender's call: the borrower can only report it, then waits.
         val lenderToConfirm = rental?.lending == true && rental.returnPending
         val borrowerWaiting = rental?.lending == false && rental.returnPending
         val lentOverdue = rental?.lending == true && !rental.returnPending && Rentals.isOverdue(rental.dueMillis)
 
+        // Bottom bar button states
         findViewById<View>(R.id.btnReport).isVisible = !isMine && incoming == null
+        findViewById<View>(R.id.btnQuickChat).isVisible = !isMine && !onLoan && !done && reservation == null && incoming == null
         findViewById<View>(R.id.btnReserve).isVisible = !isMine && !onLoan && !done && incoming == null
-        findViewById<View>(R.id.btnEdit).isVisible = open && deal == null
-        findViewById<View>(R.id.btnMarkDone).isVisible = open && deal == null && pending.isEmpty()
+        findViewById<View>(R.id.btnDeleteListing).isVisible =
+            ownerManageable && AppRepository.canDeleteListing(listing.id) && deal == null
+        findViewById<View>(R.id.btnEdit).isVisible = ownerManageable && deal == null
+        findViewById<View>(R.id.btnMarkDone).isVisible = ownerManageable && deal == null && pending.isEmpty()
         findViewById<View>(R.id.closedState).isVisible = isMine && closed
         findViewById<View>(R.id.btnCancelDeal).isVisible = deal != null
         findViewById<View>(R.id.btnProblem).isVisible = lentOverdue && loanIssue == null
@@ -196,24 +242,25 @@ class ListingDetailActivity : BaseActivity() {
                 lenderToConfirm -> R.string.btn_confirm_returned
                 rental?.lending == true -> R.string.btn_mark_returned
                 else -> R.string.btn_ive_returned
-            }
+            },
         )
         findViewById<View>(R.id.btnCancelReservation).isVisible = !isMine && reservation != null
         findViewById<TextView>(R.id.btnMarkDone).setText(
-            when (listing.type) {
-                1 -> R.string.btn_lend_out
-                2 -> R.string.btn_mark_swapped
+            when {
+                paused -> R.string.btn_resume_listing
+                listing.type == 1 -> R.string.btn_lend_out
+                listing.type == 2 -> R.string.btn_mark_swapped
                 else -> R.string.btn_mark_sold
-            }
+            },
         )
         findViewById<TextView>(R.id.btnCancelReservation).setText(
-            if (listing.isSwap) R.string.btn_withdraw_short else R.string.btn_cancel_short
+            if (listing.isSwap) R.string.btn_withdraw_short else R.string.btn_cancel_short,
         )
         if (!isMine && !onLoan && !done) bindReserveButton()
-        val partner = rental?.partner ?: deal?.from ?: listing.seller
+        val partner = rental?.partner ?: deal?.from ?: Listings.sellerOf(listing)
         findViewById<TextView>(R.id.btnMessage).text = getString(R.string.btn_message_seller, partner.first)
 
-        // Status card above the seller.
+        // Status card above Seller
         val card = findViewById<View>(R.id.reservationCard)
         val title = findViewById<TextView>(R.id.reservationTitle)
         val detail = findViewById<TextView>(R.id.reservationDetail)
@@ -224,15 +271,15 @@ class ListingDetailActivity : BaseActivity() {
         codeBox.isVisible = false
         addCalendar.isVisible = rental != null ||
             (deal != null && !dealMissed) ||
-            (!isMine && reservation?.meetMillis != null && !reservationMissed)
-        received.isVisible = !isMine && reservation != null
+            (!isMine && reservation?.isAccepted == true && reservation.meetMillis != null && !reservationMissed)
+        received.isVisible = !isMine && reservation?.isAccepted == true
         received.setText(
             when {
                 reservationMissed -> R.string.btn_did_meetup_happen
                 listing.isSwap -> R.string.btn_swap_done
                 listing.isRent -> R.string.btn_picked_up
                 else -> R.string.btn_got_item
-            }
+            },
         )
         fun dueLine(text: String, color: Int) {
             due.isVisible = true
@@ -251,11 +298,11 @@ class ListingDetailActivity : BaseActivity() {
                     borrowerWaiting -> dueLine(getString(R.string.loan_waiting_confirm, rental.partner.first), R.color.text_secondary)
                     loanIssue != null -> dueLine(
                         getString(R.string.status_reported_format, Rentals.countdown(this, rental.dueMillis), loanIssue.ref),
-                        R.color.danger
+                        R.color.danger,
                     )
                     else -> dueLine(
                         Rentals.countdown(this, rental.dueMillis),
-                        if (Rentals.isOverdue(rental.dueMillis)) R.color.danger else R.color.uc_green
+                        if (Rentals.isOverdue(rental.dueMillis)) R.color.danger else R.color.uc_green,
                     )
                 }
             }
@@ -266,7 +313,7 @@ class ListingDetailActivity : BaseActivity() {
                         listing.isRent -> R.string.deal_lending_title
                         else -> R.string.deal_reserved_title
                     },
-                    deal.from.name
+                    deal.from.name,
                 )
                 detail.text = requestSummary(deal)
                 val waiting = UserState.requests(listing.id).count { UserState.status(it) == Deals.WAITLIST }
@@ -276,7 +323,7 @@ class ListingDetailActivity : BaseActivity() {
                     val hint = getString(R.string.deal_code_hint, deal.from.first)
                     dueLine(
                         if (waiting == 0) hint else hint + " \u2022 " + resources.getQuantityString(R.plurals.waitlist_count, waiting, waiting),
-                        R.color.text_secondary
+                        R.color.text_secondary,
                     )
                 }
             }
@@ -289,7 +336,7 @@ class ListingDetailActivity : BaseActivity() {
                             listing.isRent -> R.string.requests_one_borrow
                             else -> R.string.requests_one_buy
                         },
-                        first.from.name
+                        first.from.name,
                     )
                 } else {
                     resources.getQuantityString(R.plurals.requests_many, pending.size, pending.size)
@@ -297,42 +344,58 @@ class ListingDetailActivity : BaseActivity() {
                 detail.text = if (pending.size == 1) requestSummary(first) else pending.joinToString(", ") { it.from.name }
                 dueLine(
                     getString(R.string.answer_within_format, Rentals.timeLeft(this, pending.minOf { it.expiresMillis })),
-                    R.color.swap_text
+                    R.color.swap_text,
                 )
             }
             !isMine && reservation != null -> {
-                title.setText(if (listing.isSwap) R.string.swap_card_title else R.string.reservation_card_title)
-                detail.text = reservation.summary
-                if (reservationMissed) {
-                    dueLine(getString(R.string.meetup_missed_format, Rentals.whenLabel(this, reservation.meetMillis!!)), R.color.swap_text)
+                val sellerFirst = Listings.sellerOf(listing).first
+                if (reservation.isPending) {
+                    title.text = getString(R.string.status_pending_seller_title, sellerFirst)
+                    detail.text = reservation.summary
+                    dueLine(getString(R.string.status_pending_seller_sub, sellerFirst), R.color.swap_text)
                 } else {
-                    due.isVisible = false
-                    codeBox.isVisible = true
-                    findViewById<TextView>(R.id.codeValue).text = Deals.myCode(listing.id)
-                    findViewById<TextView>(R.id.codeHint).text = getString(
-                        if (listing.isSwap) R.string.code_your_hint_swap else R.string.code_your_hint, listing.seller.first
-                    )
+                    title.setText(if (listing.isSwap) R.string.swap_card_title else R.string.reservation_card_title)
+                    detail.text = reservation.summary
+                    if (reservationMissed) {
+                        dueLine(
+                            getString(R.string.meetup_missed_format, Rentals.whenLabel(this, reservation.meetMillis!!)),
+                            R.color.swap_text,
+                        )
+                    } else {
+                        due.isVisible = false
+                        codeBox.isVisible = reservation.handoverCode.isNotBlank()
+                        findViewById<TextView>(R.id.codeValue).text = reservation.handoverCode
+                        findViewById<TextView>(R.id.codeHint).text = getString(
+                            if (listing.isSwap) R.string.code_your_hint_swap else R.string.code_your_hint,
+                            sellerFirst,
+                        )
+                    }
                 }
             }
             incoming != null -> {
                 title.text = getString(R.string.incoming_title, incoming.from.name)
                 detail.text = getString(
-                    R.string.incoming_detail, Listings.byId(incoming.listingId).title,
-                    Rentals.whenLabel(this, incoming.meetMillis)
+                    R.string.incoming_detail,
+                    Listings.byId(incoming.listingId).title,
+                    Rentals.whenLabel(this, incoming.meetMillis),
                 )
                 due.isVisible = false
             }
             done -> {
                 val swapped = listing.isSwap || UserState.gotInSwap(listing.id)
-                title.text = getString(if (swapped) R.string.done_swapped_title else R.string.done_bought_title, listing.seller.name)
+                title.text = getString(if (swapped) R.string.done_swapped_title else R.string.done_bought_title, Listings.sellerOf(listing).name)
                 detail.setText(R.string.done_detail)
+                due.isVisible = false
+            }
+            isMine && paused -> {
+                title.setText(R.string.toast_listing_paused)
+                detail.text = "Hidden from Campus Market until you tap Resume listing."
                 due.isVisible = false
             }
             else -> card.isVisible = false
         }
     }
 
-    /** Implicit Calendar Intent: inserts the meetup or loan return due date into the device Calendar. */
     fun addToCalendar(view: View) {
         Motion.tick(view)
         val rental = UserState.rental(listing.id)
@@ -361,8 +424,8 @@ class ListingDetailActivity : BaseActivity() {
             )
             reservation?.meetMillis != null -> AppIntents.calendarEventIntent(
                 title = getString(R.string.calendar_meetup_title, listing.title),
-                location = listing.meetup,
-                description = getString(R.string.calendar_meetup_desc, listing.seller.name, listing.title),
+                location = reservation.meetup.ifBlank { listing.meetup },
+                description = getString(R.string.calendar_meetup_desc, Listings.sellerOf(listing).name, listing.title),
                 beginMillis = reservation.meetMillis,
             )
             else -> return
@@ -372,22 +435,21 @@ class ListingDetailActivity : BaseActivity() {
         }
     }
 
-    /** "UC Main Gate Security Desk • Tomorrow, 2:00 PM", plus how long or what they offer. */
     private fun requestSummary(request: Request): String {
         val base = getString(R.string.request_where_when, request.meetup, Rentals.whenLabel(this, request.meetMillis))
         return when {
             request.offerId != null -> base + "\n" + getString(R.string.request_offers, Listings.byId(request.offerId).title)
             listing.isRent -> base + "\n" + getString(
-                R.string.request_borrow_for, Listings.weeksLabel(this, request.weeks),
-                Listings.price(listing.price * request.weeks)
+                R.string.request_borrow_for,
+                Listings.daysLabel(this, request.days.coerceAtLeast(1)),
+                Listings.price(request.agreedPrice),
             )
             else -> base
         }
     }
 
-    // ---- Requests on your listing --------------------------------------------
+    // ---- Requests & Handover (Strict 2-Step SecureRandom Code) ---------------
 
-    /** "Review requests": pick one, then Accept or Decline. Expired ones are listed but greyed out. */
     fun reviewRequests(view: View) {
         val open = UserState.pending(listing.id)
         val expired = UserState.requests(listing.id).filter { UserState.status(it) == Deals.EXPIRED }
@@ -404,8 +466,8 @@ class ListingDetailActivity : BaseActivity() {
             fun row(request: Request, meta: String): View {
                 val row = LayoutInflater.from(this).inflate(R.layout.item_swap_option, box, false)
                 row.findViewById<TextView>(R.id.optionTitle).text = request.from.name
-                row.findViewById<TextView>(R.id.optionMeta).text =
-                    requestSummary(request) + "\n\u201C" + request.message + "\u201D\n" + meta
+                val quote = if (request.message.isNotBlank()) "\n\u201C${request.message}\u201D" else ""
+                row.findViewById<TextView>(R.id.optionMeta).text = requestSummary(request) + quote + "\n" + meta
                 box.addView(row)
                 return row
             }
@@ -413,7 +475,6 @@ class ListingDetailActivity : BaseActivity() {
                 row(it, getString(R.string.answer_within_format, Rentals.timeLeft(this, it.expiresMillis)))
             }
             Choice.rows(rows, rows.map { it.findViewById(R.id.optionRadio) }, picked) { picked = it }
-            // Requests nobody answered in time: shown so the seller knows, but they can't be accepted.
             expired.forEach {
                 row(it, getString(R.string.request_expired)).apply {
                     alpha = 0.5f
@@ -451,7 +512,6 @@ class ListingDetailActivity : BaseActivity() {
                         dialog.dismiss()
                         return@setOnClickListener
                     }
-                    // One item can't go to two people: accepting withdraws your own offer that uses it.
                     val other = conflicts.first()
                     MaterialAlertDialogBuilder(this@ListingDetailActivity)
                         .setTitle(R.string.withdraw_other_title)
@@ -478,23 +538,27 @@ class ListingDetailActivity : BaseActivity() {
         bindActions()
         notify(
             getString(R.string.toast_accepted, request.from.first, Rentals.whenLabel(this, request.meetMillis)),
-            getString(R.string.action_message)
+            getString(R.string.action_message),
         ) { openChatWith(request.from, listing.id) }
     }
 
-    /** Bottom bar on a promised listing: "Enter code", or "Did it happen?" once the meetup is long past. */
     fun handOver(view: View) {
         val deal = UserState.accepted(listing.id) ?: return
-        if (Deals.meetupMissed(deal.meetMillis)) askMeetupHappened(deal.from, deal.meetMillis, ownerSide = true) else enterCode(deal)
+        if (Deals.meetupMissed(deal.meetMillis)) {
+            askMeetupHappened(deal.from, deal.meetMillis, ownerSide = true)
+        } else {
+            enterCode(deal)
+        }
     }
 
     /**
-     * The giver types in the receiver's code to prove they met. The other
-     * student never acts here, so the sheet says what their code is.
+     * Real production handover code check:
+     * NEVER displays the buyer's secret code on the seller's screen!
+     * Seller must ask the buyer for their 4-digit SecureRandom code at meetup.
      */
     private fun enterCode(deal: Request) {
         val first = deal.from.first
-        val expected = Deals.code(deal.id)
+        val expected = deal.handoverCode
         Sheets.show(this, R.layout.sheet_code) { sheet, dialog ->
             dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             sheet.findViewById<TextView>(R.id.codeTitle).text = getString(R.string.code_title, first)
@@ -504,14 +568,14 @@ class ListingDetailActivity : BaseActivity() {
                     listing.isRent -> R.string.code_sub_lend
                     else -> R.string.code_sub_sell
                 },
-                first
+                first,
             )
-            sheet.findViewById<TextView>(R.id.codeDemo).text = getString(R.string.code_demo, first, expected)
+            sheet.findViewById<View>(R.id.codeDemo).isVisible = false
             val input = sheet.findViewById<EditText>(R.id.codeInput)
             val error = sheet.findViewById<TextView>(R.id.codeError)
             fun check() {
-                val typed = input.text.toString()
-                val wrong = typed != expected
+                val typed = input.text.toString().trim()
+                val wrong = typed != expected || expected.length != 4
                 Motion.setVisiblePop(error, wrong)
                 when {
                     typed.length < 4 -> {
@@ -554,18 +618,22 @@ class ListingDetailActivity : BaseActivity() {
         UserState.handOver(listing, proof)
         bindActions()
         val first = deal.from.first
-        when {
-            listing.isRent -> notify(
-                getString(R.string.toast_lent_until, first, Rentals.dateLabel(UserState.rental(listing.id)?.dueMillis ?: 0))
+        if (listing.isRent) {
+            notify(
+                getString(
+                    R.string.toast_lent_until,
+                    first,
+                    Rentals.dateLabel(UserState.rental(listing.id)?.dueMillis ?: 0L),
+                ),
             )
-            else -> notify(
+        } else {
+            notify(
                 getString(if (listing.isSwap) R.string.toast_swapped_with else R.string.toast_sold_to, first),
-                getString(R.string.action_view)
+                getString(R.string.action_view),
             ) { switchTab(MainActivity.TAB_PROFILE) { putExtra(EXTRA_TAB, ProfileActivity.TAB_COMPLETED) } }
         }
     }
 
-    /** Red X on a promised listing: call the deal off. Late cancels count against on-time. */
     fun cancelDeal(view: View) {
         val deal = UserState.accepted(listing.id) ?: return
         val first = deal.from.first
@@ -584,11 +652,6 @@ class ListingDetailActivity : BaseActivity() {
             .show()
     }
 
-    /**
-     * The meetup was more than two hours ago and nothing was confirmed.
-     * Yes finishes the exchange; "they didn't come" goes to student
-     * support; "I couldn't make it" counts against your on-time rate.
-     */
     private fun askMeetupHappened(partner: Seller, meetMillis: Long, ownerSide: Boolean) {
         val first = partner.first
         var picked = -1
@@ -597,7 +660,12 @@ class ListingDetailActivity : BaseActivity() {
             sheet.findViewById<TextView>(R.id.chooseTitle).setText(R.string.btn_did_meetup_happen)
             sheet.findViewById<TextView>(R.id.chooseSub).apply {
                 isVisible = true
-                text = getString(R.string.meetup_check_sub, first, Rentals.whenLabel(this@ListingDetailActivity, meetMillis), listing.title)
+                text = getString(
+                    R.string.meetup_check_sub,
+                    first,
+                    Rentals.whenLabel(this@ListingDetailActivity, meetMillis),
+                    listing.title,
+                )
             }
             val yes = getString(
                 when {
@@ -605,12 +673,12 @@ class ListingDetailActivity : BaseActivity() {
                     listing.isSwap -> R.string.happened_yes_swap
                     listing.isRent -> R.string.happened_yes_borrow
                     else -> R.string.happened_yes_got
-                }
+                },
             )
             val options = listOf(
                 yes to getString(R.string.happened_yes_hint),
                 getString(R.string.happened_they_missed, first) to getString(R.string.happened_they_missed_hint),
-                getString(R.string.happened_i_missed) to getString(R.string.happened_i_missed_hint)
+                getString(R.string.happened_i_missed) to getString(R.string.happened_i_missed_hint),
             )
             val box = sheet.findViewById<LinearLayout>(R.id.chooseRows)
             val rows = options.map { (label, hint) ->
@@ -636,13 +704,16 @@ class ListingDetailActivity : BaseActivity() {
                                 .setMessage(getString(if (theyMissed) R.string.no_show_message else R.string.i_missed_message, first))
                                 .setNegativeButton(R.string.action_cancel, null)
                                 .setPositiveButton(if (theyMissed) R.string.no_show_confirm else R.string.i_missed_confirm) { _, _ ->
+                                    if (theyMissed) {
+                                        UserState.report(listing.id, R.string.problem_no_show, partner)
+                                    }
                                     if (ownerSide) UserState.reportOwnerNoShow(listing, theyMissed)
                                     else UserState.reportNoShow(listing, theyMissed)
                                     dialog.dismiss()
                                     bindActions()
                                     notify(
                                         if (theyMissed) getString(R.string.toast_no_show, UserState.issue(listing.id)?.ref ?: "")
-                                        else getString(R.string.toast_i_missed)
+                                        else getString(R.string.toast_i_missed),
                                     )
                                 }
                                 .show()
@@ -657,18 +728,17 @@ class ListingDetailActivity : BaseActivity() {
         }
     }
 
-    /** Flag on an overdue loan you lent out: send it to student support. */
     fun reportLoanProblem(view: View) {
         val rental = UserState.rental(listing.id) ?: return
         val reasons = listOf(R.string.problem_not_returned, R.string.problem_damaged, R.string.problem_other)
         reportProblem(listing.id, listing.title, rental.partner, reasons) { bindActions() }
     }
 
-    /** Reservation card: the meetup happened and you have the item. */
     fun markReceived(view: View) {
         val reservation = UserState.reservation(listing.id) ?: return
+        if (!reservation.isAccepted) return
         if (Deals.meetupMissed(reservation.meetMillis)) {
-            askMeetupHappened(listing.seller, reservation.meetMillis!!, ownerSide = false)
+            askMeetupHappened(Listings.sellerOf(listing), reservation.meetMillis!!, ownerSide = false)
             return
         }
         confirmReceived()
@@ -676,8 +746,8 @@ class ListingDetailActivity : BaseActivity() {
 
     private fun confirmReceived() {
         val reservation = UserState.reservation(listing.id) ?: return
-        val first = listing.seller.name.substringBefore(' ')
-        val returnBy = Rentals.dateLabel(System.currentTimeMillis() + reservation.weeks.coerceAtLeast(1) * Rentals.WEEK_MS)
+        val first = Listings.sellerOf(listing).first
+        val returnBy = Rentals.dateLabel(System.currentTimeMillis() + reservation.days.coerceAtLeast(1) * Rentals.DAY_MS)
         val message = when {
             listing.isSwap -> getString(R.string.received_swap_message, first)
             listing.isRent -> getString(R.string.received_rent_message, returnBy)
@@ -688,27 +758,28 @@ class ListingDetailActivity : BaseActivity() {
             .setMessage(message)
             .setNegativeButton(R.string.return_not_yet, null)
             .setPositiveButton(R.string.received_confirm) { _, _ ->
-                UserState.markReceived(listing)
+                UserState.handOver(listing, Exchange.PROOF_RECEIVED)
                 bindActions()
                 notify(if (listing.isRent) getString(R.string.toast_picked_up, returnBy) else getString(R.string.toast_received))
             }
             .show()
     }
 
-    /** On loan: chat with whoever has it, or whoever you borrowed it from. */
     fun messagePartner(view: View) {
-        val partner = UserState.rental(listing.id)?.partner ?: UserState.accepted(listing.id)?.from
-            ?: UserState.incomingOffer(listing.id)?.from ?: listing.seller
+        val partner = UserState.rental(listing.id)?.partner
+            ?: UserState.accepted(listing.id)?.from
+            ?: UserState.incomingOffer(listing.id)?.from
+            ?: Listings.sellerOf(listing)
         openChatWith(partner, listing.id)
     }
 
     /**
-     * On loan. Lender: confirm the item is back (it moves to Completed).
-     * Borrower: report that you gave it back; the lender then confirms.
+     * Lender return confirmation includes post-return prompt:
+     * "Keep listed for other UC students to borrow, or pause it for now?"
      */
     fun markReturned(view: View) {
         val rental = UserState.rental(listing.id) ?: return
-        val first = rental.partner.name.substringBefore(' ')
+        val first = rental.partner.first
         if (!rental.lending) {
             MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.ive_returned_title)
@@ -723,21 +794,25 @@ class ListingDetailActivity : BaseActivity() {
             return
         }
         MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.return_title)
-            .setMessage(getString(R.string.return_lent_message, first, listing.title))
-            .setNegativeButton(R.string.return_not_yet, null)
-            .setPositiveButton(R.string.return_confirm) { _, _ ->
-                UserState.markReturned(listing)
+            .setTitle(R.string.post_return_title)
+            .setMessage(getString(R.string.post_return_message, listing.title))
+            .setNeutralButton(R.string.return_not_yet, null)
+            .setNegativeButton(R.string.btn_pause_listing) { _, _ ->
+                UserState.markReturned(listing, keepOpen = false)
+                bindActions()
+                notify(getString(R.string.toast_listing_paused))
+            }
+            .setPositiveButton(R.string.btn_keep_listed) { _, _ ->
+                UserState.markReturned(listing, keepOpen = true)
                 bindActions()
                 notify(getString(R.string.toast_returned))
             }
             .show()
     }
 
-    /** Lender: the borrower said it was returned, but it was not. */
     fun rejectReturn(view: View) {
         val rental = UserState.rental(listing.id) ?: return
-        val first = rental.partner.name.substringBefore(' ')
+        val first = rental.partner.first
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.not_received_title)
             .setMessage(getString(R.string.not_received_message, first, listing.title))
@@ -752,15 +827,15 @@ class ListingDetailActivity : BaseActivity() {
 
     private fun bindReserveButton() {
         val price = Listings.price(listing.price)
+        val sellerFirst = Listings.sellerOf(listing).first
         findViewById<TextView>(R.id.btnReserve).text = when {
-            UserState.isReserved(listing.id) -> getString(R.string.btn_message_seller, listing.seller.name.substringBefore(' '))
-            listing.type == 1 -> getString(R.string.btn_rent_format, price)
+            UserState.isReserved(listing.id) -> getString(R.string.btn_message_seller, sellerFirst)
+            listing.type == 1 -> getString(R.string.btn_rent_format, Listings.priceLabel(this, listing))
             listing.type == 2 -> getString(R.string.btn_swap)
             else -> getString(R.string.btn_reserve_format, price)
         }
     }
 
-    /** Bookmark button on the photo. */
     fun toggleSave(view: View) {
         val nowSaved = !UserState.isSaved(listing.id)
         UserState.setSaved(listing.id, nowSaved)
@@ -777,10 +852,6 @@ class ListingDetailActivity : BaseActivity() {
         }
     }
 
-    /**
-     * Share button: preview of what will be shared, copyable deep link, and
-     * system share sheet (`Intent.ACTION_SEND`) to Messenger, Viber, SMS, etc.
-     */
     fun shareListing(view: View) {
         Sheets.show(this, R.layout.sheet_share) { sheet, dialog ->
             val link = AppIntents.listingUrl(listing.id)
@@ -802,12 +873,15 @@ class ListingDetailActivity : BaseActivity() {
         }
     }
 
-    /** Own rent listing: pick who is borrowing it and for how long. */
     private fun lendOut() {
-        val people = Listings.SELLERS
-        val weekOptions = Listings.RENT_WEEKS.filter { it <= listing.maxWeeks }.ifEmpty { listOf(1) }
+        val people = Listings.SELLERS.filter { it.uid != UserState.currentUid && !it.suspended }
+        if (people.isEmpty()) {
+            Toast.makeText(this, "Wait for a UC student to send a borrow request.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val dayOptions = Listings.RENT_DAYS.filter { it <= listing.maxDays }.ifEmpty { listOf(1) }
         var person = -1
-        var weeks = weekOptions.first()
+        var days = dayOptions.first()
         Sheets.show(this, R.layout.sheet_lend) { sheet, dialog ->
             sheet.findViewById<TextView>(R.id.lendItem).text = listing.title
             val box = sheet.findViewById<LinearLayout>(R.id.lendPeople)
@@ -822,11 +896,11 @@ class ListingDetailActivity : BaseActivity() {
 
             val dueText = sheet.findViewById<TextView>(R.id.lendDue)
             fun bindDue(roll: Boolean = false) {
-                val text = getString(R.string.lend_due_format, Rentals.dateLabel(System.currentTimeMillis() + weeks * Rentals.WEEK_MS))
+                val text = getString(R.string.lend_due_format, Rentals.dateLabel(System.currentTimeMillis() + days * Rentals.DAY_MS))
                 if (roll) Motion.rollText(dueText, text) else dueText.text = text
             }
-            val chips = addChips(sheet.findViewById(R.id.lendWeeks), weekOptions.map { Listings.weeksLabel(this, it) })
-            Choice.chips(chips, 0) { weeks = weekOptions[it]; bindDue(roll = true) }
+            val chips = addChips(sheet.findViewById(R.id.lendWeeks), dayOptions.map { Listings.daysLabel(this, it) })
+            Choice.chips(chips, 0) { days = dayOptions[it]; bindDue(roll = true) }
             bindDue(roll = false)
 
             sheet.findViewById<View>(R.id.lendStart).setOnClickListener { btn ->
@@ -836,26 +910,47 @@ class ListingDetailActivity : BaseActivity() {
                     return@setOnClickListener
                 }
                 Motion.confirm(btn)
-                UserState.lend(listing, people[person], weeks)
+                UserState.lend(listing, people[person], days)
                 bindActions()
                 dialog.dismiss()
-                notify(getString(R.string.toast_lent, people[person].name.substringBefore(' ')))
+                notify(getString(R.string.toast_lent, people[person].first))
             }
         }
     }
 
-    /** Seller card: opens the seller's profile, or your own on your listing. */
     fun openSellerProfile(view: View) {
-        if (isMine) openProfile(view) else openSeller(listing.seller)
+        if (isMine) openProfile(view) else openSeller(Listings.sellerOf(listing))
     }
 
-    /** Own listing: opens the form filled in with this listing. */
     fun editListing(view: View) {
         startActivity(Intent(this, CreateListingActivity::class.java).putExtra(EXTRA_LISTING, listing.id))
     }
 
-    /** Own listing: confirm, then take it off the market. */
+    fun deleteListing(view: View) {
+        if (!AppRepository.canDeleteListing(listing.id)) {
+            Toast.makeText(this, R.string.toast_cannot_delete_active, Toast.LENGTH_SHORT).show()
+            return
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.delete_listing_title, listing.title))
+            .setMessage(R.string.delete_listing_message)
+            .setNegativeButton(R.string.action_cancel, null)
+            .setPositiveButton(R.string.delete_listing_confirm) { _, _ ->
+                if (Listings.deleteListing(listing.id)) {
+                    Toast.makeText(this, R.string.toast_listing_deleted, Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
+            .show()
+    }
+
     fun markDone(view: View) {
+        if (UserState.isPaused(listing.id)) {
+            UserState.setPaused(listing.id, false)
+            bindActions()
+            notify(getString(R.string.toast_listing_resumed))
+            return
+        }
         if (listing.isRent) {
             lendOut()
             return
@@ -872,27 +967,23 @@ class ListingDetailActivity : BaseActivity() {
             .show()
     }
 
-    /** Opens the report form for this listing. */
     fun openReport(view: View) {
+        if (UserState.issue(listing.id) != null) {
+            Toast.makeText(this, R.string.toast_already_reported, Toast.LENGTH_SHORT).show()
+            return
+        }
         startActivity(Intent(this, ReportListingActivity::class.java).putExtra(EXTRA_LISTING, listing.id))
     }
 
-    /** Safe meetup point card: details and directions. */
+    /** Safe Meetup Point bottom sheet (replaces placeholder campus map). */
     fun openMeetup(view: View) {
-        Sheets.show(this, R.layout.sheet_meetup) { sheet, dialog ->
-            sheet.findViewById<TextView>(R.id.meetupSheetPlace).text = listing.meetup
-            sheet.findViewById<View>(R.id.meetupDone).setOnClickListener { dialog.dismiss() }
-            sheet.findViewById<View>(R.id.meetupDirections).setOnClickListener {
-                dialog.dismiss()
-                startActivity(Intent(this, MapActivity::class.java).putExtra(MapActivity.EXTRA_PLACE, listing.meetup))
-            }
-        }
+        showSafeMeetupSheet(listing.meetup, listing.meetupNote)
     }
 
-    /** Reserve button: pick a meetup point, day and time, then confirm. */
     fun reserve(view: View) {
+        val seller = Listings.sellerOf(listing)
         if (UserState.isReserved(listing.id)) {
-            openChatWith(listing.seller, listing.id)
+            openChatWith(seller, listing.id)
             return
         }
         if (listing.isSwap) {
@@ -900,17 +991,16 @@ class ListingDetailActivity : BaseActivity() {
             return
         }
 
-        // Only the days and times the seller said they are free.
         val days = upcomingDays()
         var place = Listings.MEETUP_POINTS.indexOf(listing.meetup).coerceAtLeast(0)
         var picked: MeetDay? = days.firstOrNull()
         var timeLabel: String? = null
-        val weekOptions = Listings.RENT_WEEKS.filter { it <= listing.maxWeeks }.ifEmpty { listOf(1) }
-        var weeks = weekOptions.first()
+        val dayOptions = Listings.RENT_DAYS.filter { it <= listing.maxDays }.ifEmpty { listOf(1) }
+        var borrowDays = dayOptions.first()
 
         Sheets.show(this, R.layout.sheet_reserve) { sheet, dialog ->
             sheet.findViewById<TextView>(R.id.reserveItemTitle).text = listing.title
-            sheet.findViewById<TextView>(R.id.reserveItemSeller).text = listing.seller.name
+            sheet.findViewById<TextView>(R.id.reserveItemSeller).text = seller.name
             sheet.findViewById<TextView>(R.id.reserveItemPrice).text = Listings.priceLabel(this, listing)
             sheet.findViewById<TextView>(R.id.reserveAvailability).text = freeLabel()
 
@@ -930,7 +1020,6 @@ class ListingDetailActivity : BaseActivity() {
                 }
             }
 
-            // Times depend on the day: each day shows the seller's free slots for it.
             val timeBox = sheet.findViewById<LinearLayout>(R.id.reserveTimes)
             fun bindTimes(animate: Boolean = false) {
                 val day = picked ?: return
@@ -944,7 +1033,7 @@ class ListingDetailActivity : BaseActivity() {
                     if (index < slots.size) {
                         timeLabel = slots[index]
                     } else {
-                        bindTimes() // keep the old choice until a time is confirmed
+                        bindTimes()
                         pickTime(day.weekday) { label ->
                             timeLabel = label
                             bindTimes(animate = true)
@@ -953,18 +1042,19 @@ class ListingDetailActivity : BaseActivity() {
                 }
             }
 
-            // Rent: how long, with the return date and total.
             val returnBy = sheet.findViewById<TextView>(R.id.reserveReturnBy)
             fun bindReturn(roll: Boolean = false) {
                 val start = picked?.millis ?: System.currentTimeMillis()
+                val safeDays = borrowDays.coerceIn(1, listing.maxDays.coerceAtLeast(1))
+                val totalPrice = listing.price * safeDays
                 val text = getString(
                     R.string.rent_return_total_format,
-                    Rentals.dateLabel(start + weeks * Rentals.WEEK_MS),
-                    Listings.price(listing.price * weeks),
+                    Rentals.dateLabel(start + safeDays * Rentals.DAY_MS),
+                    Listings.price(totalPrice),
                 )
                 if (roll) Motion.rollText(returnBy, text) else returnBy.text = text
             }
-            // Quick picks, plus a last chip that opens the full calendar.
+
             val dayChips = addChips(sheet.findViewById(R.id.reserveDays), days.map { it.label } + getString(R.string.chip_pick_date))
             fun bindDays() {
                 val selected = days.indexOf(picked).let { if (it < 0 && picked != null) days.size else it }
@@ -982,23 +1072,38 @@ class ListingDetailActivity : BaseActivity() {
                         }
                         return@chips
                     }
-                    // A time that the new day does not offer is cleared.
                     if (picked?.let { listing.availability.isFreeAt(it.weekday, minutesOf(timeLabel)) } != true) timeLabel = null
                     bindTimes(animate = true)
                     if (listing.isRent) bindReturn(roll = true)
                 }
             }
+
             if (listing.isRent) {
                 sheet.findViewById<View>(R.id.reserveRentSection).isVisible = true
                 sheet.findViewById<TextView>(R.id.reserveRentMax).text = getString(
-                    R.string.rent_max_format, listing.seller.name.substringBefore(' '),
-                    Listings.weeksLabel(this, listing.maxWeeks),
+                    R.string.rent_max_format,
+                    seller.first,
+                    Listings.daysLabel(this, listing.maxDays),
                 )
-                val weekChips = addChips(sheet.findViewById(R.id.reserveWeeks), weekOptions.map { Listings.weeksLabel(this, it) })
-                Choice.chips(weekChips, 0) {
-                    weeks = weekOptions[it]
+                val customDaysInput = sheet.findViewById<EditText>(R.id.reserveCustomDays)
+                customDaysInput.hint = getString(R.string.custom_days_hint, listing.maxDays)
+                val durChips = addChips(sheet.findViewById(R.id.reserveWeeks), dayOptions.map { Listings.daysLabel(this, it) })
+                Choice.chips(durChips, 0) {
+                    borrowDays = dayOptions[it]
+                    if (!customDaysInput.text.isNullOrEmpty()) customDaysInput.setText("")
                     bindReturn(roll = true)
                 }
+                customDaysInput.addTextChangedListener(object : TextWatcher {
+                    override fun afterTextChanged(s: Editable?) {
+                        val typed = s?.toString()?.toIntOrNull()
+                        if (typed != null && typed >= 1) {
+                            borrowDays = typed.coerceAtMost(listing.maxDays.coerceAtLeast(1))
+                            bindReturn(roll = true)
+                        }
+                    }
+                    override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+                    override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+                })
                 bindReturn(roll = false)
             }
 
@@ -1014,52 +1119,32 @@ class ListingDetailActivity : BaseActivity() {
                     return@setOnClickListener
                 }
                 Motion.confirm(btn)
-                val summary = if (listing.isRent) {
-                    getString(
-                        R.string.rent_summary_format, Listings.MEETUP_POINTS[place], pickedDay, pickedTime,
-                        Listings.weeksLabel(this, weeks),
-                    )
-                } else {
-                    getString(R.string.sys_reserved_detail, Listings.MEETUP_POINTS[place], pickedDay, pickedTime)
-                }
                 val scheduledMillis = meetMillis(picked!!, pickedTime)
-                UserState.setReserved(
-                    listing.id, summary, if (listing.isRent) weeks else 0, scheduledMillis,
-                )
-                UserState.appendChatMessage(
-                    listing.seller.name,
-                    UserState.ChatMessage(
-                        systemTitle = getString(R.string.sys_reserved),
-                        systemDetail = summary,
-                        meetupPlace = Listings.MEETUP_POINTS[place],
-                        meetupMillis = scheduledMillis,
-                    ),
+                val finalDays = if (listing.isRent) borrowDays.coerceIn(1, listing.maxDays.coerceAtLeast(1)) else 0
+                UserState.submitRequest(
+                    listing = listing,
+                    meetup = Listings.MEETUP_POINTS[place],
+                    meetupNote = listing.meetupNote,
+                    meetMillis = scheduledMillis,
+                    days = finalDays,
                 )
                 bindActions()
                 dialog.dismiss()
-                Toast.makeText(this, getString(R.string.toast_reserved, listing.seller.name), Toast.LENGTH_SHORT).show()
-                startActivity(
-                    Intent(this, ChatThreadActivity::class.java)
-                        .putExtra(EXTRA_SELLER, listing.seller.name)
-                        .putExtra(EXTRA_LISTING, listing.id)
-                        .putExtra(EXTRA_RESERVED, true)
-                        .putExtra(ChatThreadActivity.EXTRA_RESERVED_DETAIL, summary),
-                )
+                Toast.makeText(this, getString(R.string.toast_reserved, seller.name), Toast.LENGTH_SHORT).show()
+                openChatWith(seller, listing.id, justReserved = true)
             }
         }
     }
 
-    /** Calendar limited to future days the seller is free. */
     private fun pickDate(onPicked: (MeetDay) -> Unit) {
         val picker = MaterialDatePicker.Builder.datePicker()
             .setTitleText(R.string.pick_date_title)
             .setCalendarConstraints(
-                // Days the seller is not free are greyed out.
                 CalendarConstraints.Builder().setValidator(
                     CompositeDateValidator.allOf(
-                        listOf(DateValidatorPointForward.now(), FreeDaysValidator(listing.availability.days.toIntArray()))
-                    )
-                ).build()
+                        listOf(DateValidatorPointForward.now(), FreeDaysValidator(listing.availability.days.toIntArray())),
+                    ),
+                ).build(),
             )
             .build()
         picker.addOnPositiveButtonClickListener { millis ->
@@ -1071,7 +1156,6 @@ class ListingDetailActivity : BaseActivity() {
         picker.show(supportFragmentManager, "date")
     }
 
-    /** Clock picker; times outside the seller's free time that day are refused with a note. */
     private fun pickTime(weekday: Int, onPicked: (String) -> Unit) {
         val start = listing.availability.slots(weekday).firstOrNull() ?: Availability.DEFAULT_START
         val picker = MaterialTimePicker.Builder()
@@ -1083,9 +1167,12 @@ class ListingDetailActivity : BaseActivity() {
         picker.addOnPositiveButtonClickListener {
             val minutes = picker.hour * 60 + picker.minute
             if (!listing.availability.isFreeAt(weekday, minutes)) {
-                val first = listing.seller.name.substringBefore(' ')
+                val first = Listings.sellerOf(listing).first
                 val msg = getString(
-                    R.string.toast_free_that_day, first, Availability.DAY_NAMES[weekday], listing.availability.labelFor(weekday)
+                    R.string.toast_free_that_day,
+                    first,
+                    Availability.DAY_NAMES[weekday],
+                    listing.availability.labelFor(weekday),
                 )
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
             } else {
@@ -1095,19 +1182,17 @@ class ListingDetailActivity : BaseActivity() {
         picker.show(supportFragmentManager, "time")
     }
 
-    /** "1:30 PM" back to minutes after midnight, or -1. */
     private fun minutesOf(label: String?): Int {
         val m = Regex("""(\d+):(\d+) (AM|PM)""").matchEntire(label ?: return -1) ?: return -1
         val (h, min, ampm) = m.destructured
         return (h.toInt() % 12 + if (ampm == "PM") 12 else 0) * 60 + min.toInt()
     }
 
-    /** "Cancel reservation" on the reservation card. */
     fun cancelReservation(view: View) {
-        val first = listing.seller.name.substringBefore(' ')
+        val first = Listings.sellerOf(listing).first
         val swap = listing.isSwap
-        // Under two hours before the meetup (or after it) counts as a late cancel.
-        val late = Deals.isLate(UserState.reservation(listing.id)?.meetMillis)
+        val res = UserState.reservation(listing.id)
+        val late = res?.isAccepted == true && Deals.isLate(res.meetMillis)
         var message = getString(if (swap) R.string.cancel_swap_message else R.string.cancel_reservation_message, first)
         if (late) message += "\n\n" + getString(R.string.late_cancel_note)
         MaterialAlertDialogBuilder(this)
@@ -1122,64 +1207,97 @@ class ListingDetailActivity : BaseActivity() {
                         late -> getString(R.string.toast_cancelled_late)
                         swap -> getString(R.string.toast_swap_withdrawn)
                         else -> getString(R.string.toast_reservation_cancelled)
-                    }
+                    },
                 )
             }
             .show()
     }
 
-    /** "Offer a swap": pick one of your items to trade for this one. */
+    /** Swap Offer sheet with clean empty state CTA ("Post an item to swap") when student has 0 offerable items! */
     private fun offerSwap() {
-        // Items already promised to someone else can't be offered.
         val mine = Listings.offerable()
-        val first = listing.seller.name.substringBefore(' ')
+        val seller = Listings.sellerOf(listing)
+        val first = seller.first
         var picked = -1
         Sheets.show(this, R.layout.sheet_swap) { sheet, dialog ->
             sheet.findViewById<TextView>(R.id.swapTheirTitle).text = listing.title
             sheet.findViewById<TextView>(R.id.swapTheirWants).apply {
                 text = getString(R.string.swap_wants_format, listing.wants ?: "")
-                isVisible = listing.wants != null
+                isVisible = !listing.wants.isNullOrBlank()
             }
             sheet.findViewById<TextView>(R.id.swapNote).text = getString(R.string.swap_note_format, first)
 
             val box = sheet.findViewById<LinearLayout>(R.id.swapOptions)
+            val sendBtn = sheet.findViewById<TextView>(R.id.swapSend)
+            if (mine.isEmpty()) {
+                val emptyView = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setBackgroundResource(R.drawable.bg_input)
+                    setPadding(dp(this@ListingDetailActivity, 16), dp(this@ListingDetailActivity, 16), dp(this@ListingDetailActivity, 16), dp(this@ListingDetailActivity, 16))
+                    addView(
+                        TextView(this@ListingDetailActivity).apply {
+                            setText(R.string.swap_empty_title)
+                            setTextColor(getColor(R.color.text_primary))
+                            textSize = 14f
+                        },
+                    )
+                    addView(
+                        TextView(this@ListingDetailActivity).apply {
+                            text = getString(R.string.swap_empty_sub, first)
+                            setTextColor(getColor(R.color.text_secondary))
+                            textSize = 12f
+                        },
+                    )
+                }
+                box.addView(emptyView)
+                sendBtn.setText(R.string.btn_post_item_to_swap)
+                sendBtn.setOnClickListener {
+                    dialog.dismiss()
+                    startActivity(Intent(this, CreateListingActivity::class.java))
+                }
+                return@show
+            }
+
             val rows = mine.map { item ->
                 val row = LayoutInflater.from(this).inflate(R.layout.item_swap_option, box, false)
                 row.findViewById<TextView>(R.id.optionTitle).text = item.title
-                row.findViewById<TextView>(R.id.optionMeta).text =
-                    getString(R.string.saved_meta_format, item.program, Listings.conditionLabel(this, item.condition))
+                row.findViewById<TextView>(R.id.optionMeta).text = getString(
+                    R.string.saved_meta_format,
+                    Listings.targetProgramsLabel(this, item),
+                    Listings.conditionLabel(this, item.condition),
+                )
                 box.addView(row)
                 row
             }
             Choice.rows(rows, rows.map { it.findViewById(R.id.optionRadio) }, picked) { picked = it }
 
-            sheet.findViewById<View>(R.id.swapSend).setOnClickListener { btn ->
+            sendBtn.setOnClickListener { btn ->
                 if (picked < 0) {
                     Motion.shake(box)
                     Toast.makeText(this, R.string.toast_pick_swap_item, Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
                 Motion.confirm(btn)
-                val summary = getString(R.string.swap_summary_format, mine[picked].title, listing.title)
-                UserState.setReserved(listing.id, summary, offerId = mine[picked].id)
-                UserState.appendChatMessage(
-                    listing.seller.name,
-                    UserState.ChatMessage(
-                        systemTitle = getString(R.string.sys_swap_offered),
-                        systemDetail = summary,
-                        meetupPlace = listing.meetup,
-                    ),
+                val offeredItem = mine[picked]
+                val nextDay = upcomingDays().firstOrNull()
+                val slotMin = nextDay?.let { listing.availability.slots(it.weekday).firstOrNull() } ?: Availability.DEFAULT_START
+                val meetTime = if (nextDay != null) {
+                    meetMillis(nextDay, Availability.time(slotMin))
+                } else {
+                    System.currentTimeMillis() + Rentals.DAY_MS
+                }
+                UserState.submitRequest(
+                    listing = listing,
+                    meetup = listing.meetup,
+                    meetupNote = listing.meetupNote,
+                    meetMillis = meetTime,
+                    offerId = offeredItem.id,
+                    message = getString(R.string.swap_summary_format, offeredItem.title, listing.title),
                 )
                 bindActions()
                 dialog.dismiss()
-                Toast.makeText(this, getString(R.string.toast_swap_sent, listing.seller.name), Toast.LENGTH_SHORT).show()
-                startActivity(
-                    Intent(this, ChatThreadActivity::class.java)
-                        .putExtra(EXTRA_SELLER, listing.seller.name)
-                        .putExtra(EXTRA_LISTING, listing.id)
-                        .putExtra(EXTRA_RESERVED, true)
-                        .putExtra(ChatThreadActivity.EXTRA_RESERVED_DETAIL, summary)
-                )
+                Toast.makeText(this, getString(R.string.toast_swap_sent, seller.name), Toast.LENGTH_SHORT).show()
+                openChatWith(seller, listing.id, justReserved = true)
             }
         }
     }
@@ -1192,11 +1310,8 @@ class ListingDetailActivity : BaseActivity() {
             chip
         }
 
-    /** The next five weekdays, since the meetup points are open Mon–Fri. */
-    /** A day you can pick for a meetup. [millis] is that day, for rental return dates. */
     data class MeetDay(val label: String, val weekday: Int, val millis: Long, val utc: Boolean = false)
 
-    /** The meetup as a point in time: the picked day at the picked time. */
     private fun meetMillis(day: MeetDay, timeLabel: String): Long {
         val minutes = minutesOf(timeLabel).coerceAtLeast(0)
         val src = Calendar.getInstance(if (day.utc) TimeZone.getTimeZone("UTC") else TimeZone.getDefault())
@@ -1207,7 +1322,6 @@ class ListingDetailActivity : BaseActivity() {
         }.timeInMillis
     }
 
-    /** The next five days the seller is free (up to four weeks ahead). */
     private fun upcomingDays(): List<MeetDay> {
         val format = SimpleDateFormat("EEE d", Locale.US)
         val cal = Calendar.getInstance()
@@ -1227,5 +1341,9 @@ class ListingDetailActivity : BaseActivity() {
             offset++
         }
         return out
+    }
+
+    companion object {
+        const val EXTRA_ID = EXTRA_LISTING
     }
 }

@@ -37,7 +37,7 @@ class SavedActivity : BaseActivity() {
                 list,
                 item.title,
                 Listings.priceLabel(this, item),
-                getString(R.string.saved_meta_format, item.program, item.seller.name),
+                getString(R.string.saved_meta_format, Listings.targetProgramsLabel(this, item), Listings.sellerOf(item).name),
                 index < saved.size - 1,
             ) { openListingById(item.id) }
 

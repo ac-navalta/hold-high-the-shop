@@ -32,7 +32,13 @@ class ExchangeDetailActivity : BaseActivity() {
         setContentView(R.layout.activity_exchange_detail)
         BarInsets.apply(this)
 
-        exchange = Listings.exchange(intent.getStringExtra(EXTRA_EXCHANGE))
+        val exId = intent.getStringExtra(EXTRA_ID) ?: intent.getStringExtra(EXTRA_EXCHANGE)
+        val loaded = Listings.exchange(exId)
+        if (loaded == null) {
+            finish()
+            return
+        }
+        exchange = loaded
         bind()
     }
 
@@ -168,10 +174,10 @@ class ExchangeDetailActivity : BaseActivity() {
         Toast.makeText(this, getString(R.string.toast_ref_copied, referenceCode), Toast.LENGTH_SHORT).show()
     }
 
-    /** Opens campus directions to the exchange's meetup point via explicit MapActivity Intent. */
+    /** Opens the Safe Meetup Point bottom sheet (replaces legacy placeholder map). */
     fun openMeetupMap(view: View) {
         Motion.tick(view)
-        startActivity(Intent(this, MapActivity::class.java).putExtra(MapActivity.EXTRA_PLACE, exchange.meetup))
+        showSafeMeetupSheet(exchange.meetup)
     }
 
     /** "With" card: the other student's profile. */
@@ -180,7 +186,7 @@ class ExchangeDetailActivity : BaseActivity() {
     }
 
     fun messagePartner(view: View) {
-        exchange.partner?.let { openChatWith(it) }
+        exchange.partner?.let { openChatWith(it, exchange.listingId) }
     }
 
     /** Rate the other student: stars (required) and a note (optional). */
@@ -274,6 +280,7 @@ class ExchangeDetailActivity : BaseActivity() {
 
     companion object {
         const val EXTRA_EXCHANGE = "exchange"
+        const val EXTRA_ID = EXTRA_EXCHANGE
     }
 }
 

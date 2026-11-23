@@ -246,7 +246,13 @@ internal class ProfileTab(
                             pending.size,
                             Rentals.timeLeft(activity, pending.minOf { it.expiresMillis }),
                         )
-                        else -> activity.getString(R.string.posted_days_format, item.postedDaysAgo + 2)
+                        item.status == com.nevergrowold.holdhightheshop.data.ListingStatus.UNDER_REVIEW ->
+                            activity.getString(R.string.status_under_review_banner)
+                        item.status == com.nevergrowold.holdhightheshop.data.ListingStatus.PAUSED ->
+                            activity.getString(R.string.toast_listing_paused)
+                        item.postedDaysAgo == 0 -> activity.getString(R.string.seller_listing_meta_today)
+                        item.postedDaysAgo == 1 -> activity.getString(R.string.seller_listing_meta_yesterday)
+                        else -> activity.getString(R.string.posted_days_format, item.postedDaysAgo)
                     }
                     val row = activity.addRow(
                         list, item.title, Listings.priceLabel(activity, item), meta,
@@ -263,14 +269,18 @@ internal class ProfileTab(
                 ) {
                     activity.startActivity(
                         Intent(activity, ExchangeDetailActivity::class.java)
-                            .putExtra(ExchangeDetailActivity.EXTRA_EXCHANGE, exchange.id)
+                            .putExtra(ExchangeDetailActivity.EXTRA_EXCHANGE, exchange.id),
                     )
                 }
             }
             ProfileActivity.TAB_SAVED -> saved.forEachIndexed { i, item ->
                 activity.addRow(
                     list, item.title, Listings.priceLabel(activity, item),
-                    activity.getString(R.string.saved_meta_format, item.program, item.seller.name),
+                    activity.getString(
+                        R.string.saved_meta_format,
+                        Listings.targetProgramsLabel(activity, item),
+                        Listings.sellerOf(item).name,
+                    ),
                     i < saved.size - 1,
                 ) { activity.openListingById(item.id) }
             }

@@ -2,7 +2,6 @@ package com.nevergrowold.holdhightheshop
 
 import android.app.Activity
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -11,27 +10,35 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.nevergrowold.holdhightheshop.media.ImagePipeline
+import kotlinx.coroutines.launch
 
-/** Edit profile, opened from the profile "..." menu or Settings. Persists edits to [UserState]. */
+/** Edit profile using zero-permission PickVisualMedia + off-main-thread WebP compression + unsaved changes guard. */
 class EditProfileActivity : BaseActivity() {
 
-    private val years = listOf("1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year")
+    private val years = SignUpActivity.YEARS
     private var program = 0
     private var year = 0
     private var avatarUri: String? = null
+    private var dirty = false
 
-    /** Implicit intent launcher: choose a profile photo from gallery (ACTION_GET_CONTENT). */
-    private val avatarPicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val uri = result.data?.data ?: return@registerForActivityResult
-            avatarUri = uri.toString()
-            bindAvatar()
-            Toast.makeText(this, R.string.toast_avatar_updated, Toast.LENGTH_SHORT).show()
+    private val avatarPicker =
+        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri == null) return@registerForActivityResult
+            lifecycleScope.launch {
+                val ref = ImagePipeline.ingestUri(this@EditProfileActivity, uri) ?: uri.toString()
+                avatarUri = ref
+                dirty = true
+                bindAvatar()
+                Toast.makeText(this@EditProfileActivity, R.string.toast_avatar_updated, Toast.LENGTH_SHORT).show()
+            }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,7 +65,15 @@ class EditProfileActivity : BaseActivity() {
         bindAvatar(current.name)
 
         nameInput.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) = bindAvatar(s?.toString().orEmpty())
+            override fun afterTextChanged(s: Editable?) {
+                dirty = true
+                bindAvatar(s?.toString().orEmpty())
+            }
+            override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+            override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+        })
+        bioInput.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) { dirty = true }
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
         })
@@ -66,15 +81,40 @@ class EditProfileActivity : BaseActivity() {
         findViewById<View>(R.id.rowEditProgram).setOnClickListener { row ->
             Dropdown.show(row, Listings.PROGRAMS, program, rotateChevron = true) {
                 program = it
+                dirty = true
                 programText.text = Listings.PROGRAMS[it]
             }
         }
         findViewById<View>(R.id.rowEditYear).setOnClickListener { row ->
             Dropdown.show(row, years, year, rotateChevron = true) {
                 year = it
+                dirty = true
                 yearText.text = years[it]
             }
         }
+        dirty = false
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() = confirmLeaveIfDirty()
+        })
+    }
+
+    override fun goBack(view: View) {
+        Motion.tick(view)
+        confirmLeaveIfDirty()
+    }
+
+    private fun confirmLeaveIfDirty() {
+        if (!dirty) {
+            finish()
+            return
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.discard_changes_title)
+            .setMessage(R.string.discard_changes_message)
+            .setNegativeButton(R.string.btn_keep_editing, null)
+            .setPositiveButton(R.string.btn_discard) { _, _ -> finish() }
+            .show()
     }
 
     private fun bindAvatar(nameOverride: String? = null) {
@@ -85,17 +125,15 @@ class EditProfileActivity : BaseActivity() {
         AppIntents.bindImageUri(photoView, initialsView, avatarUri)
     }
 
-    /** Tapping the avatar launches an implicit gallery picker intent (ACTION_GET_CONTENT). */
     fun pickAvatar(view: View) {
         Motion.tick(view)
         try {
-            avatarPicker.launch(AppIntents.pickImageIntent())
+            avatarPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         } catch (_: android.content.ActivityNotFoundException) {
             Toast.makeText(this, R.string.toast_no_app_available, Toast.LENGTH_SHORT).show()
         }
     }
 
-    /** "Save changes": validates name, persists profile to [UserState], returns RESULT_OK + Toast. */
     fun saveProfile(view: View) {
         val name = findViewById<EditText>(R.id.inputName)
         val trimmedName = name.text.toString().trim()
@@ -116,6 +154,7 @@ class EditProfileActivity : BaseActivity() {
             bio = bio,
             avatarUri = avatarUri,
         )
+        dirty = false
         hideKeyboard(view)
         Motion.confirm(view)
         setResult(

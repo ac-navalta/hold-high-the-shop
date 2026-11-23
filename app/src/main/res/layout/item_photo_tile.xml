@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="86dp"
+    android:layout_height="86dp"
+    android:layout_marginEnd="8dp"
+    android:background="@drawable/bg_photo_added"
+    android:clipChildren="true"
+    android:clipToOutline="true"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
+
+    <ImageView
+        android:id="@+id/tileImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:contentDescription="@string/cd_item_photo" />
+
+    <ImageView
+        android:id="@+id/tilePlaceholder"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_image"
+        app:tint="@color/uc_green"
+        android:contentDescription="@null" />
+
+    <TextView
+        android:id="@+id/tileCoverBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_margin="5dp"
+        android:background="@drawable/bg_badge_green"
+        android:paddingHorizontal="6dp"
+        android:paddingVertical="2dp"
+        android:fontFamily="@font/poppins_semibold"
+        android:text="@string/photo_cover_badge"
+        android:textColor="@color/white"
+        android:textSize="9sp"
+        android:visibility="gone" />
+
+    <FrameLayout
+        android:id="@+id/tileRemove"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="4dp"
+        android:background="@drawable/bg_pill_dark"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:layout_width="13dp"
+            android:layout_height="13dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_close"
+            app:tint="@color/white"
+            android:contentDescription="@string/photo_option_remove" />
+    </FrameLayout>
+</FrameLayout>

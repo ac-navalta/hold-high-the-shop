@@ -42,7 +42,7 @@
                     android:layout_height="56dp"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_image"
-                    android:tint="#CFC9B4"
+                    app:tint="#CFC9B4"
                     android:contentDescription="@string/cd_item_photo" />
 
                 <ImageView
@@ -82,7 +82,7 @@
                             android:layout_height="22dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_chevron_left"
-                            android:tint="@color/text_primary"
+                            app:tint="@color/text_primary"
                             android:contentDescription="@string/cd_back" />
                     </FrameLayout>
 
@@ -108,7 +108,7 @@
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_share"
-                            android:tint="@color/text_primary"
+                            app:tint="@color/text_primary"
                             android:contentDescription="@string/cd_share" />
                     </FrameLayout>
 
@@ -129,7 +129,7 @@
                             android:layout_height="21dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_bookmark"
-                            android:tint="@color/text_primary"
+                            app:tint="@color/text_primary"
                             android:contentDescription="@string/cd_save" />
                     </FrameLayout>
                 </LinearLayout>
@@ -168,19 +168,54 @@
                 android:paddingBottom="24dp">
 
                 <TextView
-                    android:id="@+id/detailCondition"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/underReviewBanner"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_badge_mint"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp"
-                    android:paddingTop="5dp"
-                    android:paddingBottom="5dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/bg_reminder_overdue"
+                    android:padding="12dp"
                     android:fontFamily="@font/poppins_semibold"
-                    android:text="@string/detail_condition"
-                    android:textColor="@color/uc_green"
-                    android:textSize="10sp"
-                    android:letterSpacing="0.06" />
+                    android:text="@string/status_under_review_banner"
+                    android:textColor="@color/danger"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/detailCondition"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_badge_mint"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="5dp"
+                        android:paddingBottom="5dp"
+                        android:fontFamily="@font/poppins_semibold"
+                        android:text="@string/detail_condition"
+                        android:textColor="@color/uc_green"
+                        android:textSize="10sp"
+                        android:letterSpacing="0.06" />
+
+                    <TextView
+                        android:id="@+id/detailColleges"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_badge_outline"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="5dp"
+                        android:paddingBottom="5dp"
+                        android:fontFamily="@font/poppins_semibold"
+                        android:text="@string/tag_all_colleges"
+                        android:textColor="@color/uc_green"
+                        android:textSize="10sp" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -237,7 +272,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_swap"
-                        android:tint="@color/swap_text"
+                        app:tint="@color/swap_text"
                         android:contentDescription="@null" />
 
                     <LinearLayout
@@ -290,7 +325,7 @@
                             android:layout_width="22dp"
                             android:layout_height="22dp"
                             android:src="@drawable/ic_verified"
-                            android:tint="@color/uc_green"
+                            app:tint="@color/uc_green"
                             android:contentDescription="@null" />
 
                         <LinearLayout
@@ -480,7 +515,7 @@
                                         android:layout_width="12dp"
                                         android:layout_height="12dp"
                                         android:src="@drawable/ic_verified"
-                                        android:tint="@color/white"
+                                        app:tint="@color/white"
                                         android:contentDescription="@null" />
 
                                     <TextView
@@ -509,7 +544,7 @@
                             android:layout_width="22dp"
                             android:layout_height="22dp"
                             android:src="@drawable/ic_chevron_right"
-                            android:tint="@color/text_secondary"
+                            app:tint="@color/text_secondary"
                             android:contentDescription="@null" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -526,7 +561,7 @@
                         android:layout_width="15dp"
                         android:layout_height="15dp"
                         android:src="@drawable/ic_star"
-                        android:tint="@color/alert_dot"
+                        app:tint="@color/alert_dot"
                         android:contentDescription="@null" />
 
                     <TextView
@@ -621,7 +656,7 @@
                                 android:layout_height="22dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_location"
-                                android:tint="@color/uc_green"
+                                app:tint="@color/uc_green"
                                 android:contentDescription="@null" />
                         </FrameLayout>
 
@@ -665,7 +700,7 @@
                             android:layout_width="22dp"
                             android:layout_height="22dp"
                             android:src="@drawable/ic_chevron_right"
-                            android:tint="@color/text_secondary"
+                            app:tint="@color/text_secondary"
                             android:contentDescription="@null" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -709,7 +744,55 @@
                 android:layout_height="20dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_flag"
-                android:tint="@color/text_secondary"
+                app:tint="@color/text_secondary"
+                android:contentDescription="@null" />
+        </FrameLayout>
+
+        <!-- Direct Message button BEFORE reserving on open listings -->
+        <FrameLayout
+            android:id="@+id/btnQuickChat"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_btn_outline"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="messagePartner"
+            android:contentDescription="@string/btn_message_owner"
+            android:tooltipText="@string/btn_message_owner"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_chat"
+                app:tint="@color/uc_green"
+                android:contentDescription="@null" />
+        </FrameLayout>
+
+        <!-- Delete own listing (hidden during active deals/loans) -->
+        <FrameLayout
+            android:id="@+id/btnDeleteListing"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_btn_danger"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="deleteListing"
+            android:contentDescription="@string/btn_delete_listing"
+            android:tooltipText="@string/btn_delete_listing"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_close"
+                app:tint="@color/danger"
                 android:contentDescription="@null" />
         </FrameLayout>
 
@@ -732,7 +815,7 @@
                 android:layout_height="20dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_close"
-                android:tint="@color/danger"
+                app:tint="@color/danger"
                 android:contentDescription="@null" />
         </FrameLayout>
 
@@ -755,7 +838,7 @@
                 android:layout_height="20dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_flag"
-                android:tint="@color/danger"
+                app:tint="@color/danger"
                 android:contentDescription="@null" />
         </FrameLayout>
 

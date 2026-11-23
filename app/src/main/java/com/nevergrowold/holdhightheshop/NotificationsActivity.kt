@@ -1,13 +1,26 @@
 package com.nevergrowold.holdhightheshop
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.isVisible
-import androidx.dynamicanimation.animation.DynamicAnimation
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.nevergrowold.holdhightheshop.data.AppNotification
+import com.nevergrowold.holdhightheshop.data.AppRepository
+import com.nevergrowold.holdhightheshop.data.NotificationTarget
+import com.nevergrowold.holdhightheshop.data.NotificationType
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class NotificationsActivity : BaseActivity() {
 
@@ -17,96 +30,141 @@ class NotificationsActivity : BaseActivity() {
         setContentView(R.layout.activity_notifications)
         BarInsets.apply(this)
 
-        syncReadState(animate = false)
+        render()
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                AppRepository.stateVersion.collect { render() }
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        syncReadState(animate = false)
+        render()
     }
 
-    private fun syncReadState(animate: Boolean) {
-        val pairs = listOf(
-            Triple(1, R.id.notifRow1, R.id.notifDot1),
-            Triple(2, R.id.notifRow2, R.id.notifDot2),
-        )
-        pairs.forEachIndexed { index, (id, rowId, dotId) ->
-            if (UserState.isNotificationRead(id)) {
-                val row = findViewById<View>(rowId)
-                val dot = findViewById<View>(dotId)
-                if (animate) {
-                    Motion.backgroundColor(row, Color.TRANSPARENT, animate = true)
-                    if (!Motion.enabled(this)) {
-                        dot.isVisible = false
-                    } else if (dot.isVisible) {
-                        dot.postDelayed({
-                            if (!dot.isAttachedToWindow) return@postDelayed
-                            Motion.springScale(dot, 0f, Motion.Effects.FAST)
-                            val alpha = Motion.spring(dot, DynamicAnimation.ALPHA, 0f, Motion.Effects.FAST)
-                            alpha?.addEndListener { _, canceled, _, _ ->
-                                if (!canceled) dot.isVisible = false
-                            }
-                        }, index * 55L)
+    private fun render() {
+        val list = findViewById<LinearLayout>(R.id.notificationsList)
+        list.removeAllViews()
+
+        val announcements = UserState.announcements()
+        val notifs = UserState.notifications()
+
+        if (announcements.isNotEmpty()) {
+            addGroupHeader(list, getString(R.string.notif_announcements_section))
+            announcements.forEachIndexed { idx, ann ->
+                val row = LayoutInflater.from(this).inflate(R.layout.item_notification_row, list, false)
+                row.findViewById<ImageView>(R.id.notifIcon).setImageResource(R.drawable.ic_verified)
+                row.findViewById<TextView>(R.id.notifTitle).text = ann.title
+                row.findViewById<TextView>(R.id.notifBody).text = ann.body
+                row.findViewById<TextView>(R.id.notifTime).text = formatTime(ann.createdAt)
+                row.findViewById<View>(R.id.notifDivider).isVisible = idx < announcements.lastIndex
+                row.findViewById<View>(R.id.notifRowBody).setOnClickListener {
+                    Sheets.show(this, R.layout.sheet_info) { sheet, dialog ->
+                        sheet.findViewById<TextView>(R.id.infoTitle).text = ann.title
+                        sheet.findViewById<TextView>(R.id.infoBody).text = ann.body
+                        sheet.findViewById<View>(R.id.infoAction).isVisible = false
+                        sheet.findViewById<View>(R.id.infoDone).setOnClickListener { dialog.dismiss() }
                     }
-                } else {
-                    row.setBackgroundColor(Color.TRANSPARENT)
-                    dot.isVisible = false
+                }
+                list.addView(row)
+            }
+        }
+
+        val today = notifs.filter { Rentals.daysUntil(it.createdAt) == 0 }
+        val earlier = notifs.filter { Rentals.daysUntil(it.createdAt) != 0 }
+
+        if (today.isNotEmpty()) {
+            addGroupHeader(list, getString(R.string.notif_today))
+            today.forEachIndexed { idx, n -> addNotifRow(list, n, showDivider = idx < today.lastIndex) }
+        }
+        if (earlier.isNotEmpty()) {
+            addGroupHeader(list, getString(R.string.notif_earlier))
+            earlier.forEachIndexed { idx, n -> addNotifRow(list, n, showDivider = idx < earlier.lastIndex) }
+        }
+
+        findViewById<View>(R.id.notificationsEmpty).isVisible = announcements.isEmpty() && notifs.isEmpty()
+
+        val hasUnread = UserState.hasUnreadNotifications
+        findViewById<View>(R.id.btnMarkAllRead).apply {
+            isEnabled = hasUnread
+            alpha = if (hasUnread) 1f else 0.45f
+        }
+    }
+
+    private fun addGroupHeader(container: LinearLayout, label: String) {
+        val header = TextView(this).apply {
+            text = label
+            setTextColor(getColor(R.color.text_secondary))
+            textSize = 10f
+            letterSpacing = 0.1f
+            setPadding(dp(this@NotificationsActivity, 20), dp(this@NotificationsActivity, 18), dp(this@NotificationsActivity, 20), dp(this@NotificationsActivity, 6))
+        }
+        container.addView(header)
+    }
+
+    private fun addNotifRow(container: LinearLayout, n: AppNotification, showDivider: Boolean) {
+        val row = LayoutInflater.from(this).inflate(R.layout.item_notification_row, container, false)
+        val body = row.findViewById<View>(R.id.notifRowBody)
+        if (!n.read) body.setBackgroundResource(R.drawable.bg_row_unread)
+        else body.setBackgroundColor(Color.TRANSPARENT)
+
+        val iconRes = when (n.type) {
+            NotificationType.MESSAGE -> R.drawable.ic_chat
+            NotificationType.RATING -> R.drawable.ic_star
+            NotificationType.REPORT, NotificationType.MODERATION -> R.drawable.ic_flag
+            NotificationType.LOAN -> R.drawable.ic_clock
+            else -> R.drawable.ic_bell
+        }
+        row.findViewById<ImageView>(R.id.notifIcon).setImageResource(iconRes)
+        row.findViewById<TextView>(R.id.notifTitle).text = n.title
+        row.findViewById<TextView>(R.id.notifBody).text = n.body
+        row.findViewById<TextView>(R.id.notifTime).text = formatTime(n.createdAt)
+        row.findViewById<View>(R.id.notifUnreadDot).isVisible = !n.read
+        row.findViewById<View>(R.id.notifDivider).isVisible = showDivider
+
+        body.setOnClickListener {
+            UserState.markNotificationRead(n.id)
+            when (n.targetType) {
+                NotificationTarget.LISTING -> if (n.targetId.isNotBlank()) openListingById(n.targetId)
+                NotificationTarget.CHAT -> if (n.targetId.isNotBlank()) openChatThread(n.targetId)
+                NotificationTarget.EXCHANGE -> if (n.targetId.isNotBlank()) {
+                    startActivity(
+                        Intent(this, ExchangeDetailActivity::class.java)
+                            .putExtra(ExchangeDetailActivity.EXTRA_EXCHANGE, n.targetId),
+                    )
+                }
+                NotificationTarget.PROFILE_COMPLETED -> switchTab(MainActivity.TAB_PROFILE) {
+                    putExtra(EXTRA_TAB, ProfileActivity.TAB_COMPLETED)
+                }
+                else -> {
+                    Sheets.show(this, R.layout.sheet_info) { sheet, dialog ->
+                        sheet.findViewById<TextView>(R.id.infoTitle).text = n.title
+                        sheet.findViewById<TextView>(R.id.infoBody).text = n.body
+                        sheet.findViewById<View>(R.id.infoAction).isVisible = false
+                        sheet.findViewById<View>(R.id.infoDone).setOnClickListener { dialog.dismiss() }
+                    }
                 }
             }
         }
-        val markBtn = findViewById<View>(R.id.btnMarkAllRead)
-        if (UserState.notificationsRead) {
-            markBtn.isEnabled = false
-            if (animate) {
-                Motion.spring(markBtn, DynamicAnimation.ALPHA, 0.45f, Motion.Effects.DEFAULT)
-            } else {
-                markBtn.alpha = 0.45f
-            }
+        container.addView(row)
+    }
+
+    private fun formatTime(millis: Long): String {
+        val diff = System.currentTimeMillis() - millis
+        return when {
+            diff < 60_000L -> getString(R.string.msg_sent_now)
+            Rentals.daysUntil(millis) == 0 -> SimpleDateFormat("h:mm a", Locale.US).format(millis)
+            Rentals.daysUntil(millis) == -1 -> getString(R.string.day_yesterday_label)
+            else -> SimpleDateFormat("MMM d", Locale.US).format(millis)
         }
     }
 
-    /** Clears all unread highlights, smoothly collapses the dots, and shows a Toast. */
     fun markAllRead(view: View) {
-        if (UserState.notificationsRead) return
-        UserState.notificationsRead = true
-        syncReadState(animate = true)
+        if (!UserState.hasUnreadNotifications) return
+        UserState.markAllNotificationsRead()
         Motion.confirm(view)
         Toast.makeText(this, R.string.toast_notif_all_read, Toast.LENGTH_SHORT).show()
-    }
-
-    /** "Reservation confirmed": marks read and opens the reserved Casio listing. */
-    fun openReservationNotification(view: View) {
-        UserState.markNotificationRead(1)
-        syncReadState(animate = false)
-        openListing(view)
-    }
-
-    /** "New message from Miguel Santos": marks read and opens that conversation. */
-    fun openMessageNotification(view: View) {
-        UserState.markNotificationRead(2)
-        syncReadState(animate = false)
-        openChatWith(Listings.sellerByName("Miguel Santos"))
-    }
-
-    /** "You received a new rating": opens Profile > Completed. */
-    fun openRatings(view: View) {
-        switchTab(MainActivity.TAB_PROFILE) { putExtra(EXTRA_TAB, ProfileActivity.TAB_COMPLETED) }
-    }
-
-    /** "Report reviewed": opens a summary sheet with a shortcut to view the listing. */
-    fun openReportNotification(view: View) {
-        Sheets.show(this, R.layout.sheet_info) { sheet, dialog ->
-            sheet.findViewById<TextView>(R.id.infoTitle).setText(R.string.notif_report_sheet_title)
-            sheet.findViewById<TextView>(R.id.infoBody).setText(R.string.notif_report_sheet_body)
-            sheet.findViewById<TextView>(R.id.infoAction).apply {
-                isVisible = true
-                setText(R.string.btn_view_reported_item)
-                setOnClickListener {
-                    dialog.dismiss()
-                    openListingById("item4")
-                }
-            }
-            sheet.findViewById<View>(R.id.infoDone).setOnClickListener { dialog.dismiss() }
-        }
+        render()
     }
 }

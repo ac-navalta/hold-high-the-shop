@@ -39,7 +39,7 @@
                 android:layout_height="24dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_chevron_left"
-                android:tint="@color/white"
+                app:tint="@color/white"
                 android:contentDescription="@string/cd_back" />
         </FrameLayout>
 
@@ -57,7 +57,6 @@
             android:id="@+id/btnShareSeller"
             android:layout_width="42dp"
             android:layout_height="42dp"
-            android:layout_marginEnd="-8dp"
             android:clickable="true"
             android:focusable="true"
             android:onClick="shareSeller"
@@ -68,8 +67,27 @@
                 android:layout_height="21dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_share"
-                android:tint="@color/white"
+                app:tint="@color/white"
                 android:contentDescription="@string/cd_share_profile" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/btnBlockSeller"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginEnd="-8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="toggleBlockSeller"
+            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="21dp"
+                android:layout_height="21dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_more"
+                app:tint="@color/white"
+                android:contentDescription="@string/cd_more" />
         </FrameLayout>
     </LinearLayout>
 
@@ -153,7 +171,7 @@
                     android:layout_width="13dp"
                     android:layout_height="13dp"
                     android:src="@drawable/ic_verified"
-                    android:tint="@color/white"
+                    app:tint="@color/white"
                     android:contentDescription="@null" />
 
                 <TextView
@@ -197,7 +215,7 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_verified"
-                            android:tint="@color/uc_green"
+                            app:tint="@color/uc_green"
                             android:contentDescription="@null" />
 
                         <TextView
@@ -243,7 +261,7 @@
                                 android:layout_height="17dp"
                                 android:layout_marginEnd="4dp"
                                 android:src="@drawable/ic_star"
-                                android:tint="@color/alert_dot"
+                                app:tint="@color/alert_dot"
                                 android:contentDescription="@null" />
 
                             <TextView

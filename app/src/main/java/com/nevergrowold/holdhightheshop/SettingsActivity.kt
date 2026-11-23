@@ -2,19 +2,28 @@ package com.nevergrowold.holdhightheshop
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.InputType
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.EditText
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
+import com.nevergrowold.holdhightheshop.data.AppRepository
+import kotlinx.coroutines.launch
 
 /**
- * Settings, opened from the "..." menu on the profile.
- * Persists all toggles and default meetup preferences to SharedPreferences via [UserState],
- * and wires external implicit intents for system notification settings, UC Security dialer,
- * student support email, UC website, and sharing the app.
+ * Settings screen — persists switches & default meetup, manages Blocked Students,
+ * exposes Play-compliant Account Deletion (with password re-auth), and opens
+ * OS notification settings / UC Security / Support.
+ *
+ * Strictly contains ZERO pre-seed or developer demo buttons.
  */
 class SettingsActivity : BaseActivity() {
 
@@ -43,6 +52,11 @@ class SettingsActivity : BaseActivity() {
         findViewById<View>(R.id.rowSystemNotifications).setOnClickListener {
             Motion.tick(it)
             AppIntents.launch(this, AppIntents.appNotificationSettingsIntent(this))
+        }
+
+        findViewById<View>(R.id.rowBlockedUsers).setOnClickListener {
+            Motion.tick(it)
+            openBlockedUsersSheet()
         }
 
         info(
@@ -84,6 +98,7 @@ class SettingsActivity : BaseActivity() {
         )
 
         findViewById<View>(R.id.btnLogout).setOnClickListener { confirmLogout() }
+        findViewById<View>(R.id.btnDeleteAccount).setOnClickListener { confirmDeleteAccount() }
     }
 
     override fun onResume() {
@@ -130,7 +145,74 @@ class SettingsActivity : BaseActivity() {
         }
     }
 
-    /** Opens an info sheet with an optional contextual implicit-intent action button. */
+    private fun openBlockedUsersSheet() {
+        val blocked = UserState.blockedUids().toList()
+        Sheets.show(this, R.layout.sheet_choose) { sheet, dialog ->
+            sheet.findViewById<TextView>(R.id.chooseKicker).setText(R.string.settings_privacy)
+            sheet.findViewById<TextView>(R.id.chooseTitle).setText(R.string.settings_blocked_users)
+            val box = sheet.findViewById<LinearLayout>(R.id.chooseRows)
+            if (blocked.isEmpty()) {
+                sheet.findViewById<TextView>(R.id.chooseSub).apply {
+                    isVisible = true
+                    setText(R.string.blocked_empty)
+                }
+            } else {
+                blocked.forEach { uid ->
+                    val seller = Listings.sellerByUid(uid)
+                    val name = seller?.name ?: uid
+                    val row = LayoutInflater.from(this).inflate(R.layout.item_swap_option, box, false)
+                    row.findViewById<TextView>(R.id.optionTitle).text = name
+                    row.findViewById<TextView>(R.id.optionMeta).text = "Tap to unblock"
+                    row.findViewById<View>(R.id.optionRadio).isVisible = false
+                    row.setOnClickListener {
+                        UserState.unblockUser(uid)
+                        Toast.makeText(this, getString(R.string.toast_user_unblocked, name), Toast.LENGTH_SHORT).show()
+                        dialog.dismiss()
+                    }
+                    box.addView(row)
+                }
+            }
+            sheet.findViewById<TextView>(R.id.choosePrimary).apply {
+                setText(R.string.btn_done)
+                setOnClickListener { dialog.dismiss() }
+            }
+        }
+    }
+
+    private fun confirmDeleteAccount() {
+        val passwordInput = EditText(this).apply {
+            hint = getString(R.string.login_password_hint)
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            setPadding(dp(this@SettingsActivity, 16), dp(this@SettingsActivity, 12), dp(this@SettingsActivity, 16), dp(this@SettingsActivity, 12))
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.delete_account_title)
+            .setMessage(R.string.delete_account_message)
+            .setView(passwordInput)
+            .setNegativeButton(R.string.action_cancel, null)
+            .setPositiveButton(R.string.delete_account_confirm) { _, _ ->
+                val pw = passwordInput.text.toString()
+                lifecycleScope.launch {
+                    val res = AppRepository.deleteAccount(this@SettingsActivity, pw)
+                    if (res.isSuccess) {
+                        Toast.makeText(this@SettingsActivity, R.string.toast_account_deleted, Toast.LENGTH_LONG).show()
+                        val intent = Intent(this@SettingsActivity, LoginActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        }
+                        startActivity(intent)
+                        finish()
+                    } else {
+                        Toast.makeText(
+                            this@SettingsActivity,
+                            res.exceptionOrNull()?.localizedMessage ?: "Could not delete account.",
+                            Toast.LENGTH_LONG,
+                        ).show()
+                    }
+                }
+            }
+            .show()
+    }
+
     private fun info(
         rowId: Int,
         title: Int,

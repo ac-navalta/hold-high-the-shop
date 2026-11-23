@@ -14,7 +14,13 @@ import androidx.core.view.updatePadding
 import androidx.dynamicanimation.animation.DynamicAnimation
 
 /**
- * Campus Market tab page hosted inside [MainActivity].
+ * Campus Market tab hosted inside [MainActivity].
+ *
+ * College chip bar order:
+ * - Index 0: `All` (everything open)
+ * - Index 1: `All colleges` (`Listings.FILTER_ALL_COLLEGES` -> universal untagged items)
+ * - Index 2..12: The 11 UC Colleges (`CITCS`..`COL`). Selecting a college shows items
+ *   explicitly tagged for that college FIRST, followed by `All colleges` items!
  */
 internal class MarketTab(
     private val activity: MainActivity,
@@ -29,15 +35,23 @@ internal class MarketTab(
     private val chipScroll: HorizontalScrollView = root.findViewById(R.id.chipScroll)
     private val chips: List<TextView>
 
-    /** -1 means "All". Otherwise an index into [Listings.PROGRAMS]. */
-    private var program = -1
+    /** Chip filter codes matching [chips] 1:1. `null` = All. */
+    private val chipFilters: List<String?> =
+        listOf(null, Listings.FILTER_ALL_COLLEGES) + Listings.PROGRAMS
+
+    private var selectedChipIndex = 0
     private var sort = 0
     private var filters = MarketActivity.Filters()
-    private var lastOpenIds: List<String> = emptyList()
+    private var lastOpenSig: List<String> = emptyList()
 
     init {
         val chipRow = root.findViewById<LinearLayout>(R.id.chipRow)
-        chips = (listOf(activity.getString(R.string.chip_all)) + Listings.PROGRAMS).map { label ->
+        val labels = listOf(
+            activity.getString(R.string.chip_all),
+            activity.getString(R.string.tag_all_colleges),
+        ) + Listings.PROGRAMS
+
+        chips = labels.map { label ->
             val chip = LayoutInflater.from(activity).inflate(R.layout.item_market_chip, chipRow, false) as TextView
             chip.text = label
             chipRow.addView(chip)
@@ -50,7 +64,6 @@ internal class MarketTab(
                 Motion.setVisiblePop(root.findViewById(R.id.btnClearSearch), !s.isNullOrEmpty())
                 render(animate = false)
             }
-
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
         })
@@ -73,14 +86,17 @@ internal class MarketTab(
         header.updatePadding(top = headerBaseTop + top)
     }
 
-    fun selectProgram(programName: String?) {
-        program = Listings.PROGRAMS.indexOf(programName)
+    fun selectProgram(programCode: String?) {
+        selectedChipIndex = when {
+            programCode.isNullOrBlank() -> 0
+            programCode == Listings.FILTER_ALL_COLLEGES -> 1
+            else -> chipFilters.indexOf(programCode).coerceAtLeast(0)
+        }
         bindChips()
         scrollSelectedChipIntoView(smooth = true)
         render(animate = true)
     }
 
-    /** Populates search from ACTION_SEARCH or a deep link query parameter. */
     fun setSearchQuery(query: String) {
         search.setText(query)
         search.setSelection(search.text.length)
@@ -88,11 +104,11 @@ internal class MarketTab(
     }
 
     private fun openSignature(list: List<Listing>): List<String> =
-        list.map { "${it.id}:${it.title}:${it.price}:${it.condition}:${it.type}:${it.photoUris.firstOrNull()}" }
+        list.map { "${it.id}:${it.title}:${it.price}:${it.condition}:${it.type}:${it.targetPrograms}:${it.photoUris.firstOrNull()}" }
 
     fun refresh() {
         val currentSig = openSignature(Listings.open())
-        if (currentSig != lastOpenIds) render(animate = false)
+        if (currentSig != lastOpenSig) render(animate = false)
     }
 
     fun onHide() {
@@ -103,16 +119,15 @@ internal class MarketTab(
     }
 
     private fun bindChips() {
-        Choice.chips(chips, program + 1) {
-            program = it - 1
+        Choice.chips(chips, selectedChipIndex) {
+            selectedChipIndex = it
             scrollSelectedChipIntoView(smooth = true)
             render(animate = true)
         }
     }
 
-    /** Brings the selected college chip near the centre of the horizontal chip bar. */
     private fun scrollSelectedChipIntoView(smooth: Boolean) {
-        val chip = chips.getOrNull(program + 1) ?: return
+        val chip = chips.getOrNull(selectedChipIndex) ?: return
         chipScroll.post {
             val targetX = (chip.left + chip.width / 2) - (chipScroll.width / 2)
             val clamped = targetX.coerceAtLeast(0)
@@ -121,25 +136,42 @@ internal class MarketTab(
         }
     }
 
-    /** Rebuilds the grid from search, chip, filters and sort. */
     private fun render(animate: Boolean = true) {
         val query = search.text.toString().trim().lowercase()
-        val programName = Listings.PROGRAMS.getOrNull(program)
+        val selectedFilter = chipFilters.getOrNull(selectedChipIndex)
         val openListings = Listings.open()
-        lastOpenIds = openSignature(openListings)
+        lastOpenSig = openSignature(openListings)
 
         var items = openListings.filter { listing ->
-            (programName == null || listing.program == programName) &&
+            listing.matchesProgramFilter(selectedFilter) &&
                 filters.matches(listing) &&
                 (query.isEmpty() ||
                     listing.title.lowercase().contains(query) ||
                     listing.program.lowercase().contains(query) ||
-                    listing.description.lowercase().contains(query))
+                    listing.targetPrograms.any { it.lowercase().contains(query) } ||
+                    listing.description.lowercase().contains(query) ||
+                    listing.meetup.lowercase().contains(query) ||
+                    listing.seller.name.lowercase().contains(query))
         }
+
+        // When filtering by a specific college, rank explicitly tagged listings ahead of "All colleges" items.
+        val isSpecificCollege = !selectedFilter.isNullOrBlank() && selectedFilter != Listings.FILTER_ALL_COLLEGES
         items = when (sort) {
-            1 -> items.sortedBy { it.price }
-            2 -> items.sortedByDescending { it.price }
-            else -> items.sortedBy { it.postedDaysAgo }
+            1 -> if (isSpecificCollege) {
+                items.sortedWith(compareByDescending<Listing> { it.isExplicitlyTaggedFor(selectedFilter) }.thenBy { it.price })
+            } else {
+                items.sortedBy { it.price }
+            }
+            2 -> if (isSpecificCollege) {
+                items.sortedWith(compareByDescending<Listing> { it.isExplicitlyTaggedFor(selectedFilter) }.thenByDescending { it.price })
+            } else {
+                items.sortedByDescending { it.price }
+            }
+            else -> if (isSpecificCollege) {
+                items.sortedWith(compareByDescending<Listing> { it.isExplicitlyTaggedFor(selectedFilter) }.thenByDescending { it.createdAt })
+            } else {
+                items.sortedByDescending { it.createdAt }
+            }
         }
 
         grid.removeAllViews()
@@ -165,11 +197,9 @@ internal class MarketTab(
 
         if (animate) Motion.staggerIn(cards, riseDp = 10f, gapMs = 22L, subtleScale = true)
 
-        val narrowed = query.isNotEmpty() || programName != null || filters.isActive
         Motion.rollText(
             root.findViewById(R.id.itemsCount),
-            if (narrowed) activity.resources.getQuantityString(R.plurals.items_found, items.size, items.size)
-            else activity.getString(R.string.items_near_you),
+            activity.resources.getQuantityString(R.plurals.items_found, items.size, items.size),
         )
 
         val empty = root.findViewById<View>(R.id.emptyState)
@@ -222,7 +252,7 @@ internal class MarketTab(
     fun clearAllFilters(view: View) {
         Motion.tick(view)
         search.setText("")
-        program = -1
+        selectedChipIndex = 0
         filters = MarketActivity.Filters()
         bindChips()
         scrollSelectedChipIntoView(smooth = true)
@@ -231,6 +261,7 @@ internal class MarketTab(
 
     fun openFilters(view: View) {
         var draft = filters
+        val selectedFilter = chipFilters.getOrNull(selectedChipIndex)
         Sheets.show(activity, R.layout.sheet_filters) { sheet, dialog ->
             val conditions = listOf<TextView>(
                 sheet.findViewById(R.id.fCond0),
@@ -255,7 +286,7 @@ internal class MarketTab(
                 Choice.toggles(types, draft.types) { draft = draft.copy(types = it); refreshDraft() }
                 Choice.chips(prices, draft.price) { draft = draft.copy(price = it); refreshDraft() }
                 val count = Listings.open().count {
-                    draft.matches(it) && (program < 0 || it.program == Listings.PROGRAMS[program])
+                    draft.matches(it) && it.matchesProgramFilter(selectedFilter)
                 }
                 Motion.rollText(apply, activity.resources.getQuantityString(R.plurals.filters_show_count, count, count))
             }
