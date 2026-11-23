@@ -45,18 +45,19 @@
    app/google-services.json
    ```
    *(Already listed in `.gitignore` so your team's credentials are never accidentally pushed to GitHub!)*
-4. Rebuild the app in Android Studio or via `./gradlew assembleDebug` — Gradle automatically detects `app/google-services.json` and activates live Firebase Auth + Cloud Firestore sync across all 5 phones!
+4. **Skip the "Add Firebase SDK" Gradle screen in the Firebase Console**—click **Next → Continue to console**. Both the `com.google.gms.google-services` plugin (`4.6.0`) and Firebase Auth + Firestore SDKs are **already pre-configured** in `build.gradle.kts` and `app/build.gradle.kts` (using Firebase BOM `34.12.0` for Kotlin compiler compatibility—do not replace it with `35.2.0`).
+5. Sync/rebuild the app in Android Studio (`Sync Project with Gradle Files`) or via `./gradlew assembleDebug`—Gradle automatically detects `app/google-services.json` and activates live Firebase Auth + Cloud Firestore sync!
 
 ---
 
-## Step 5: Enable the Live Gemini 2.5 Flash Safety Gate (Free Tier)
+## Step 5: Enable the Live Gemini 3.5 Flash-Lite Safety Gate (Free Tier)
 
 1. Visit [https://aistudio.google.com/apikey](https://aistudio.google.com/apikey) and click **Create API key** (free tier).
 2. Open your local `local.properties` file at the root of the repo (already in `.gitignore`) and add:
    ```properties
    GEMINI_API_KEY=your_gemini_api_key_here
    ```
-3. Sync/rebuild the Android app. Now every Create & Edit Listing submission inspects BOTH text AND up to 3 compressed WebP photos via live **Gemini 2.5 Flash**!
+3. Sync/rebuild the Android app. Now every Create & Edit Listing submission inspects BOTH text AND up to 3 compressed WebP photos via live **Gemini 3.5 Flash-Lite** (`gemini-3.5-flash-lite`)!
    - *Offline / key missing fallback*: `LocalSafetyFilter` still blocks prohibited keywords immediately, and safe listings fall back to `aiCheckStatus = "PENDING_REVIEW"` so moderators can verify them in the Admin Web Portal.
 
 ---

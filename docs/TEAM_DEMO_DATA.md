@@ -77,7 +77,7 @@ Each teammate registers on their own phone with their real `@students.uc-bcf.edu
    - Register with `@students.uc-bcf.edu.ph` → open UC Outlook → tap real verification link → return to app → automatically unlocks Campus Market!
 2. **Hybrid Multimodal Prohibited-Item Safety Gate (Headliner API)**
    - Open **Post an item**, attach a photo, try title `"Disposable Vape 5000 Puffs"` or `"Leaked Midterm Exam Answers"` → blocked with **Prohibited Item Notice** dialog naming `UC Marketplace Guidelines §3.x`, AND instantly logged in the Admin Web Portal's **AI Safety Log**!
-   - Try a disguised photo (e.g., photo of a vape/alcohol labeled `"Pencil Case"`) with Gemini API key active → Gemini 2.5 Flash inspects the WebP photo and blocks it too!
+   - Try a disguised photo (e.g., photo of a vape/alcohol labeled `"Pencil Case"`) with Gemini API key active → Gemini 3.5 Flash-Lite inspects the WebP photo and blocks it too!
 3. **1–10 Photos, Multi-Select College Tags & Day-Unit Lending**
    - Post a real item with 3+ photos, tag `CITCS` + `COE` (or leave untagged for `All colleges`), verify the restored dual-ring celebration stamp plays on `ListingPostedActivity`!
    - Switch to **Market** tab on Phone 2: filter `CITCS` (tagged items rank first, `All colleges` items appear cleanly below!), filter `All colleges`, search by keyword.
