@@ -22,21 +22,21 @@ import java.net.URL
  *    even when offline.
  * 2. When online and `BuildConfig.GEMINI_API_KEY` (loaded from local.properties)
  *    is configured, sends an HTTPS POST request on `Dispatchers.IO` to the
- *    Google Gemini 2.5 Flash REST API containing:
+ *    Google Gemini 3.5 Flash-Lite REST API containing:
  *    - The listing's title, description, swap wants, and meetup note
  *    - Up to 3 compressed WebP item photos (catches disguised photos of vapes,
  *      weapons, alcohol, prescription drugs, or exam leaks!)
  * 3. Parses the structured JSON verdict (`allowed`, `category`, `policySection`,
  *    `reason`).
  * 4. Hybrid fallback: If offline, rate-limited, or unconfigured, listings that
- *    passed [LocalSafetyFilter] are returned as [Verdict.AllowedPendingReview]
+ *    passed [LocalSafetyFilter] are returned as [Verdict.PendingAiReview]
  *    so the Admin Web Portal flags them for review without blocking legitimate
  *    campus transactions.
  */
 object CampusSafetyApi {
 
     private const val TAG = "CampusSafetyApi"
-    private const val MODEL = "gemini-2.5-flash"
+    internal const val MODEL = "gemini-3.5-flash-lite"
     private const val ENDPOINT =
         "https://generativelanguage.googleapis.com/v1beta/models/$MODEL:generateContent"
     private const val CONNECT_TIMEOUT_MS = 8_000
@@ -88,7 +88,7 @@ object CampusSafetyApi {
             return@withContext Verdict.PendingAiReview("Gemini API key not configured locally")
         }
 
-        // Stage 2: Live Google Gemini 2.5 Flash multimodal (text + photo) inspection.
+        // Stage 2: Live Google Gemini 3.5 Flash-Lite multimodal (text + photo) inspection.
         try {
             val imageBytesList = photoRefs
                 .take(MAX_IMAGES_TO_INSPECT)
@@ -158,9 +158,8 @@ object CampusSafetyApi {
             .put("contents", JSONArray().put(JSONObject().put("parts", parts)))
             .put(
                 "generationConfig",
-                JSONObject()
-                    .put("temperature", 0.0)
-                    .put("responseMimeType", "application/json"),
+                // Per Gemini 3.x guidelines, rely on default sampling temperature and enforce JSON output.
+                JSONObject().put("responseMimeType", "application/json"),
             )
             .toString()
     }

@@ -41,7 +41,7 @@ import kotlinx.coroutines.launch
  * - Optional indoor floor/room `meetupNote`
  * - Price/Type lock when editing a listing that has active requests/loans
  * - Unsaved changes guard on Back press
- * - Hybrid Multimodal Prohibited-Item Safety Gate (local rules + live Gemini 2.5 Flash)
+ * - Hybrid Multimodal Prohibited-Item Safety Gate (local rules + live Gemini 3.5 Flash-Lite)
  */
 class CreateListingActivity : BaseActivity() {
 
@@ -650,7 +650,7 @@ class CreateListingActivity : BaseActivity() {
     /**
      * Validates every required field (including >=1 photo and ₱50,000 cap),
      * then runs the Hybrid Multimodal Prohibited-Item Safety Gate (Local Filter +
-     * Google Gemini 2.5 Flash REST API) before publishing or saving edits!
+     * Google Gemini 3.5 Flash-Lite REST API) before publishing or saving edits!
      */
     fun postItem(view: View) {
         if (submitting) return

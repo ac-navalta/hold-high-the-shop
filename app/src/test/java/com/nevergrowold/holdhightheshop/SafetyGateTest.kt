@@ -20,7 +20,7 @@ import org.robolectric.annotation.Config
 /**
  * Unit tests for the Hybrid Multimodal Prohibited-Item Safety Gate:
  * - [LocalSafetyFilter] offline rule engine (prohibited categories, evasion resistance, zero false positives on campus items)
- * - [CampusSafetyApi] Gemini 2.5 Flash payload builder, multimodal image encoding, JSON verdict parser, and offline fallback
+ * - [CampusSafetyApi] Gemini 3.5 Flash-Lite payload builder, multimodal image encoding, JSON verdict parser, and offline fallback
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -97,6 +97,7 @@ class SafetyGateTest {
 
     @Test
     fun buildGeminiPayload_includesTextFieldsAndWebpInlineImages() {
+        assertEquals("gemini-3.5-flash-lite", CampusSafetyApi.MODEL)
         val fakeWebp = byteArrayOf(0x52, 0x49, 0x46, 0x46, 0x10, 0x00, 0x00, 0x00)
         val raw = CampusSafetyApi.buildGeminiPayload(
             title = "Casio fx-991EX",
@@ -119,7 +120,7 @@ class SafetyGateTest {
         assertTrue(inlineData.getString("data").isNotBlank())
 
         val genCfg = root.getJSONObject("generationConfig")
-        assertEquals(0.0, genCfg.getDouble("temperature"), 0.001)
+        assertTrue("Gemini 3.x should use default temperature", !genCfg.has("temperature"))
         assertEquals("application/json", genCfg.getString("responseMimeType"))
     }
 

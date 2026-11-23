@@ -560,7 +560,7 @@ export default function App() {
           <section className="bg-white rounded-2xl border border-[#E5E0CE] p-6">
             <h2 className="font-bold text-base mb-1">Hybrid Safety Gate — Blocked Attempts</h2>
             <p className="text-xs text-[#5F6B62] mb-4">
-              Every listing blocked by Local Safety Filter or Google Gemini 2.5 Flash multimodal inspection.
+              Every listing blocked by Local Safety Filter or Google Gemini 3.5 Flash-Lite multimodal inspection.
             </p>
             {modLogs.length === 0 ? (
               <p className="text-xs text-[#5F6B62]">No blocked listing attempts logged yet.</p>
