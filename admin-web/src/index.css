@@ -2,14 +2,297 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --uc-pine-950: #042616;
+  --uc-pine-900: #06351f;
+  --uc-green-700: #07683b;
+  --uc-green-800: #05512e;
+  --uc-mint-100: #e4efea;
+  --uc-mint-200: #c7ded3;
+  --uc-canvas: #f5f3ea;
+  --uc-surface: #ffffff;
+  --uc-surface-subtle: #faf9f3;
+  --uc-border: #e3decb;
+  --uc-border-strong: #d2ccb5;
+  --uc-ink-900: #131a15;
+  --uc-ink-700: #37433b;
+  --uc-ink-500: #606d64;
+  --uc-amber-bg: #fff6e3;
+  --uc-amber-ink: #8a5a00;
+  --uc-danger-bg: #fdecea;
+  --uc-danger-ink: #b91c1c;
+}
+
 @layer base {
+  * {
+    box-sizing: border-box;
+  }
+
   body {
-    background-color: #F9F6E7;
-    color: #1A1A1A;
-    font-family: 'Poppins', system-ui, sans-serif;
+    margin: 0;
+    background-color: var(--uc-canvas);
+    color: var(--uc-ink-900);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: 'Poppins', 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.015em;
   }
 }
 
-.uc-card {
-  @apply bg-white rounded-2xl border border-uc-divider/70 shadow-sm;
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@layer components {
+/* Shell Layout */
+.admin-shell {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--uc-canvas);
+}
+
+.admin-sidebar {
+  width: 264px;
+  background: linear-gradient(180deg, var(--uc-pine-900) 0%, var(--uc-pine-950) 100%);
+  color: #ffffff;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 30;
+}
+
+.admin-nav-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+  transition: background-color 150ms ease, color 150ms ease, transform 120ms ease;
+}
+
+.admin-nav-btn:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+  color: #ffffff;
+}
+
+.admin-nav-btn-active {
+  background-color: rgba(199, 222, 211, 0.16);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(199, 222, 211, 0.22);
+}
+
+/* Surfaces & Cards */
+.admin-card {
+  min-width: 0;
+  background-color: var(--uc-surface);
+  border: 1px solid var(--uc-border);
+  border-radius: 18px;
+  box-shadow: 0 1px 2px rgba(6, 53, 31, 0.03), 0 8px 24px -16px rgba(6, 53, 31, 0.08);
+}
+
+.admin-kpi-card {
+  min-width: 0;
+  background-color: var(--uc-surface);
+  border: 1px solid var(--uc-border);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 2px rgba(6, 53, 31, 0.03);
+  transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.admin-kpi-card:hover {
+  border-color: var(--uc-border-strong);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -12px rgba(6, 53, 31, 0.12);
+}
+
+/* Inputs & Controls */
+.admin-input {
+  width: 100%;
+  background-color: var(--uc-surface-subtle);
+  border: 1px solid var(--uc-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--uc-ink-900);
+  transition: border-color 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+}
+
+.admin-input:focus {
+  outline: none;
+  background-color: #ffffff;
+  border-color: var(--uc-green-700);
+  box-shadow: 0 0 0 3px rgba(7, 104, 59, 0.12);
+}
+
+.admin-pill-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--uc-ink-500);
+  background-color: transparent;
+  border: 1px solid transparent;
+  transition: all 140ms ease;
+  white-space: nowrap;
+}
+
+.admin-pill-tab:hover {
+  color: var(--uc-ink-900);
+  background-color: rgba(7, 104, 59, 0.05);
+}
+
+.admin-pill-tab-active {
+  background-color: var(--uc-green-700);
+  color: #ffffff;
+  border-color: var(--uc-green-700);
+}
+
+.admin-pill-tab-active:hover {
+  background-color: var(--uc-green-800);
+  color: #ffffff;
+}
+
+/* Buttons */
+.btn-uc-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 11px;
+  background-color: var(--uc-green-700);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: background-color 140ms ease, transform 100ms ease;
+}
+
+.btn-uc-primary:hover:not(:disabled) {
+  background-color: var(--uc-green-800);
+}
+
+.btn-uc-primary:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+.btn-uc-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 11px;
+  background-color: #ffffff;
+  border: 1px solid var(--uc-border-strong);
+  color: var(--uc-ink-900);
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.btn-uc-outline:hover:not(:disabled) {
+  background-color: var(--uc-surface-subtle);
+  border-color: #b7b097;
+}
+
+.btn-uc-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border-radius: 11px;
+  background-color: #c62828;
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: background-color 140ms ease, transform 100ms ease;
+}
+
+.btn-uc-danger:hover:not(:disabled) {
+  background-color: #a91e1e;
+}
+
+/* Tables */
+.admin-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: 12px 18px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--uc-ink-500);
+  background-color: var(--uc-surface-subtle);
+  border-bottom: 1px solid var(--uc-border);
+}
+
+.admin-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #efece0;
+  vertical-align: middle;
+}
+
+.admin-table tbody tr {
+  transition: background-color 120ms ease;
+}
+
+.admin-table tbody tr:hover {
+  background-color: #fbfaf5;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+}
+
+/* Modal & Drawer Animations */
+@keyframes fadeInBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes popModal {
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-backdrop {
+  animation: fadeInBackdrop 160ms ease forwards;
+  background-color: rgba(12, 24, 17, 0.48);
+  backdrop-filter: blur(3px);
+}
+
+.modal-panel {
+  animation: popModal 180ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.drawer-panel {
+  animation: slideInRight 220ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
