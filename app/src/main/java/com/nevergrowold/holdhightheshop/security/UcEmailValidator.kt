@@ -46,15 +46,33 @@ object UcEmailValidator {
         val message: String,
     )
 
+    /**
+     * Live per-rule password evaluation for visible checklist indicators beneath password fields.
+     */
+    data class PasswordRules(
+        val minLength: Boolean,
+        val hasLetter: Boolean,
+        val hasDigit: Boolean,
+        val hasUpperOrSymbol: Boolean,
+    ) {
+        val allRequiredMet: Boolean get() = minLength && hasLetter && hasDigit
+    }
+
+    fun evaluatePasswordRules(password: String): PasswordRules = PasswordRules(
+        minLength = password.length >= 8,
+        hasLetter = password.any { it.isLetter() },
+        hasDigit = password.any { it.isDigit() },
+        hasUpperOrSymbol = password.any { it.isUpperCase() || !it.isLetterOrDigit() },
+    )
+
     fun checkPassword(password: String): PasswordCheck {
-        if (password.length < 8) {
+        val rules = evaluatePasswordRules(password)
+        if (!rules.minLength) {
             return PasswordCheck(false, 1, "Use at least 8 characters")
         }
-        val hasLetter = password.any { it.isLetter() }
-        val hasDigit = password.any { it.isDigit() }
         val hasUpper = password.any { it.isUpperCase() }
         val hasSymbol = password.any { !it.isLetterOrDigit() }
-        if (!hasLetter || !hasDigit) {
+        if (!rules.hasLetter || !rules.hasDigit) {
             return PasswordCheck(false, 2, "Include both letters and numbers")
         }
         val score = when {
@@ -68,6 +86,23 @@ object UcEmailValidator {
             else -> "Fair password — add uppercase or a symbol"
         }
         return PasswordCheck(true, score, label)
+    }
+
+    /**
+     * Generates a cryptographically unpredictable 6-digit email verification code (100000..999999).
+     */
+    fun generateVerificationCode(): String =
+        "%06d".format(Locale.US, 100000 + SECURE_RANDOM.nextInt(900000))
+
+    /**
+     * Computes a deterministic SHA-256 hex digest of `uid:code` so raw verification codes
+     * never need to be stored in plaintext in Cloud Firestore.
+     */
+    fun hashVerificationCode(uid: String, code: String): String {
+        val normalizedCode = code.filter { it.isDigit() }
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+            .digest("${uid.trim()}:$normalizedCode".toByteArray(Charsets.UTF_8))
+        return digest.joinToString("") { "%02x".format(Locale.US, it) }
     }
 
     /**

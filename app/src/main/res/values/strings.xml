@@ -74,7 +74,7 @@
     <string name="create_title">Create listing</string>
     <string name="create_cancel">Cancel</string>
 
-    <string name="lbl_add_photos">Add photos</string>
+    <string name="lbl_add_photos">Add photos *</string>
     <string name="photo_counter">0 / 4</string>
     <string name="add_cover">Add cover</string>
 
@@ -176,7 +176,7 @@
     <string name="report_listed_by">Listed by Paolo Mendoza</string>
     <string name="report_listed_by_format">Listed by %1$s</string>
 
-    <string name="report_question">What\u2019s the issue?</string>
+    <string name="report_question">What\u2019s the issue? *</string>
     <string name="report_question_sub">Select the reason that best describes your concern.</string>
     <string name="reason1">Misleading or incorrect details</string>
     <string name="reason2">Prohibited or unsafe item</string>
@@ -186,7 +186,6 @@
     <string name="reason6">Other concern</string>
 
     <string name="report_details">Additional details</string>
-    <string name="report_optional">Optional</string>
     <string name="hint_report_details">Share anything that can help us review this report\u2026</string>
 
     <string name="report_private_title">Your report is private</string>
@@ -503,9 +502,9 @@
     <string name="info_safety_body">\u2022 Meet only at a Safe Meetup Point during office hours.\n\u2022 Check the item before you pay.\n\u2022 Pay in person; never send money ahead.\n\u2022 Bring a friend if you feel unsure.\n\u2022 Report anything suspicious from the listing or chat.</string>
     <string name="info_help_body">How do I reserve an item?\nOpen the listing and tap Reserve, then pick a meetup point, day and time.\n\nCan I cancel a reservation?\nYes. Open the listing and tap Cancel reservation on the reservation card.\n\nHow do I mark my item as sold?\nOpen your listing from Profile and tap Mark as sold.</string>
     <string name="info_about_body">Hold High The Shop is the campus marketplace for University of the Cordilleras students. Sell, lend or swap what you no longer need and give it a second life.\n\nVersion 1.0</string>
-    <string name="edit_name">Full name</string>
-    <string name="edit_program">Program</string>
-    <string name="edit_year">Year level</string>
+    <string name="edit_name">Full name *</string>
+    <string name="edit_program">Program *</string>
+    <string name="edit_year">Year level *</string>
     <string name="edit_bio">Bio</string>
     <string name="edit_email_hint">Your UC email can\u2019t be changed.</string>
     <string name="hint_bio">Tell other students a bit about yourself\u2026</string>
@@ -800,7 +799,7 @@
     <string name="problem_not_as_described">Item not as described</string>
     <string name="problem_payment">Payment problem</string>
     <string name="problem_other">Something else</string>
-    <string name="problem_details_hint">Anything that helps student support (optional)</string>
+    <string name="problem_details_hint">Anything that helps student support</string>
     <string name="problem_note">Student support will look into it and may contact you and %1$s. %1$s won’t see what you wrote.</string>
     <string name="problem_note_nobody">the other student</string>
     <string name="btn_send_report">Send report</string>
@@ -856,7 +855,7 @@
         <item>Excellent</item>
     </string-array>
     <string name="rate_note_label">Add a note</string>
-    <string name="rate_note_hint">On time? Item as described? (optional)</string>
+    <string name="rate_note_hint">On time? Item as described?</string>
     <string name="rate_blind">%1$s won’t see your rating until they rate you too, or the week is up. Ratings can’t be changed.</string>
     <string name="btn_submit_rating">Submit rating</string>
     <string name="toast_pick_stars">Pick how many stars first</string>
@@ -940,8 +939,14 @@
     <string name="signup_desc">Use your official University of the Cordilleras student Outlook email.</string>
     <string name="signup_name_label">Full name *</string>
     <string name="signup_name_hint">e.g. Juan Dela Cruz</string>
+    <string name="signup_email_label">UC student email *</string>
     <string name="signup_email_hint">name@students.uc-bcf.edu.ph</string>
-    <string name="signup_password_hint">At least 8 characters (letters + numbers)</string>
+    <string name="signup_password_label">Password *</string>
+    <string name="signup_password_hint">Create a password</string>
+    <string name="pw_rule_length">At least 8 characters</string>
+    <string name="pw_rule_letter">Contains a letter (A–Z, a–z)</string>
+    <string name="pw_rule_number">Contains a number (0–9)</string>
+    <string name="pw_rule_match">Passwords match</string>
     <string name="signup_confirm_password_label">Confirm password *</string>
     <string name="signup_confirm_password_hint">Re-enter your password</string>
     <string name="signup_program_label">College / Program *</string>
@@ -950,17 +955,18 @@
     <string name="signup_password_mismatch">Passwords do not match</string>
     <string name="signup_domain_error">Only @students.uc-bcf.edu.ph student emails are allowed</string>
     <string name="verify_kicker">VERIFY YOUR UC EMAIL</string>
-    <string name="verify_title">Check your UC Outlook</string>
-    <string name="verify_body">We sent a verification link to %1$s. Open your UC Outlook inbox and tap the link, then come back here.</string>
-    <string name="verify_local_note">Firebase is not connected yet in this local build. Tap “Continue (Local Preview)” below or add google-services.json to send real UC Outlook emails.</string>
+    <string name="verify_title">Enter verification code</string>
+    <string name="verify_body">We sent a 6-digit verification code to %1$s. Enter it below to activate your verified UC student account.</string>
+    <string name="verify_local_note">Preview code: %1$s (tap to auto-fill). Add EMAIL_WEBHOOK_URL in local.properties to send live HTML emails to UC Outlook.</string>
+    <string name="btn_verify_code">Verify code</string>
     <string name="btn_open_email_app">Open Mail app</string>
-    <string name="btn_ive_verified">I\u2019ve verified my email</string>
+    <string name="btn_ive_verified">Verify code</string>
     <string name="btn_continue_local_preview">Continue (Local Preview)</string>
-    <string name="btn_resend_verification">Resend verification email</string>
-    <string name="btn_resend_countdown">Resend in %1$ds</string>
+    <string name="btn_resend_verification">Resend verification code</string>
+    <string name="btn_resend_countdown">Resend code in %1$ds</string>
     <string name="btn_use_different_email">Use a different email</string>
-    <string name="toast_verification_sent">Verification email sent! Check your UC Outlook inbox.</string>
-    <string name="toast_not_verified_yet">Email not verified yet. Tap the link in your UC Outlook first.</string>
+    <string name="toast_verification_sent">6-digit verification code sent! Check your UC Outlook inbox.</string>
+    <string name="toast_not_verified_yet">Enter the 6-digit code sent to your UC Outlook inbox.</string>
     <string name="toast_no_email_app">No email app installed on this device</string>
     <string name="forgot_kicker">RESET PASSWORD</string>
     <string name="forgot_title">Reset your password</string>
@@ -974,8 +980,8 @@
 
     <!-- Multi-Select College Tags, Free & Day-Unit Lending -->
     <string name="tag_all_colleges">All colleges</string>
-    <string name="lbl_target_colleges">Applicable colleges (optional)</string>
-    <string name="hint_target_colleges">Tap colleges this item is for. Leave unselected for All colleges.</string>
+    <string name="lbl_target_colleges">Applicable colleges</string>
+    <string name="hint_target_colleges">Default is All colleges. Tap specific colleges to narrow who this item is for.</string>
     <string name="price_free">FREE</string>
     <string name="price_rent_day_format">%1$s / day</string>
     <string name="lbl_price_per_day">Fee per day (0 for Free) *</string>
@@ -988,7 +994,7 @@
     </plurals>
     <string name="custom_days_hint">Custom days (1\u2013%1$d)</string>
     <string name="toast_price_too_high">Maximum price on campus is \u20B150,000</string>
-    <string name="lbl_meetup_note">Exact spot / floor note (optional)</string>
+    <string name="lbl_meetup_note">Exact spot / floor note</string>
     <string name="hint_meetup_note">e.g. 3rd floor lobby near M304</string>
     <string name="edit_locked_price_type">Price and listing type are locked while a request or loan is active.</string>
 
@@ -1001,7 +1007,9 @@
     <string name="toast_no_gallery_app">No compatible photo viewer installed</string>
 
     <!-- Hybrid Gemini Safety Gate -->
-    <string name="safety_checking_title">Checking UC Campus Guidelines\u2026</string>
+    <string name="safety_checking_short">Checking\u2026</string>
+    <string name="safety_checking_title">Checking UC Guidelines</string>
+    <string name="safety_checking_subtitle">Verifying your photos and item details for campus safety\u2026</string>
     <string name="safety_blocked_title">Prohibited Item Notice</string>
     <string name="safety_blocked_message">%1$s\n\nPolicy: %2$s\n\nPlease edit or remove prohibited content before posting on Hold High The Shop.</string>
     <string name="btn_edit_listing_short">Edit listing</string>
@@ -1058,7 +1066,7 @@
     <string name="proposal_waiting_other">Waiting for the other student to confirm\u2026</string>
     <string name="proposal_meetup_title">Propose a new meetup</string>
     <string name="proposal_extension_title">Propose return extension</string>
-    <string name="proposal_note_hint">Short reason (optional, e.g. class ran late)</string>
+    <string name="proposal_note_hint">Short reason (e.g. class ran late)</string>
     <string name="btn_send_proposal">Send proposal</string>
     <string name="toast_proposal_sent">Proposal sent \u2022 waiting for confirmation</string>
     <string name="toast_proposal_accepted">Schedule updated and reminders rescheduled!</string>

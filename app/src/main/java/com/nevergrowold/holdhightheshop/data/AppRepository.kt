@@ -24,6 +24,7 @@ import com.nevergrowold.holdhightheshop.Request
 import com.nevergrowold.holdhightheshop.Seller
 import com.nevergrowold.holdhightheshop.UserState
 import com.nevergrowold.holdhightheshop.media.ImagePipeline
+import com.nevergrowold.holdhightheshop.security.CampusEmailService
 import com.nevergrowold.holdhightheshop.security.SecureSessionStore
 import com.nevergrowold.holdhightheshop.security.UcEmailValidator
 import com.nevergrowold.holdhightheshop.system.MarketplaceBroadcasts
@@ -50,7 +51,7 @@ import java.util.concurrent.CopyOnWriteArrayList
  *
  * Dual-mode architecture (strictly ₱0 / Firebase Spark compatible):
  * 1. **Live Cloud Mode (when `app/google-services.json` is configured)**:
- *    - Firebase Auth (Email + Password + real UC Outlook email verification)
+ *    - Firebase Auth + 6-digit HTML email verification codes via [CampusEmailService]
  *    - Cloud Firestore real-time `addSnapshotListener` streams across all devices
  *      (`users`, `listings`, `requests`, `rentals`, `exchanges`, `chats`, `messages`,
  *      `notifications`, `announcements`, `reports`, `moderation_logs`)
@@ -67,8 +68,14 @@ object AppRepository {
     private const val SNAPSHOT_KEY = "marketplace_state_v1"
     private const val KEY_ACTIVE_UID = "active_uid"
     private const val KEY_ACTIVE_EMAIL = "active_email"
+    private const val KEY_EMAIL_VERIFIED = "active_email_verified"
+    private const val KEY_VERIFICATION_HASH = "pending_verify_hash"
+    private const val KEY_VERIFICATION_EXPIRES = "pending_verify_expires"
+    private const val KEY_VERIFICATION_ATTEMPTS = "pending_verify_attempts"
     private const val KEY_SETTINGS_JSON = "settings_json"
     private const val KEY_DEFAULT_MEETUP = "default_meetup"
+    private const val VERIFICATION_TTL_MS = 15 * 60_000L
+    private const val MAX_VERIFICATION_ATTEMPTS = 5
 
     private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -77,6 +84,9 @@ object AppRepository {
 
     @Volatile
     private var initialized = false
+
+    @Volatile
+    private var localPreviewVerificationCode: String = ""
 
     private val _stateVersion = MutableStateFlow(0L)
     val stateVersion: StateFlow<Long> = _stateVersion.asStateFlow()
@@ -211,6 +221,53 @@ object AppRepository {
         return@withContext signUpLocal(context, email, password, fullName, validProgram, validYear)
     }
 
+    /**
+     * Exposed strictly when no external email webhook is configured yet (local dev / Robolectric preview)
+     * so developers can view the generated 6-digit code in the setup banner before adding EMAIL_WEBHOOK_URL.
+     */
+    fun localPreviewVerificationCode(): String =
+        if (CampusEmailService.isWebhookConfigured()) "" else localPreviewVerificationCode
+
+    private suspend fun issueVerificationCode(
+        context: Context,
+        uid: String,
+        email: String,
+        studentName: String,
+    ): CampusEmailService.DeliveryResult {
+        val ctx = context.applicationContext
+        val code = UcEmailValidator.generateVerificationCode()
+        val codeHash = UcEmailValidator.hashVerificationCode(uid, code)
+        val now = System.currentTimeMillis()
+        val expiresAt = now + VERIFICATION_TTL_MS
+
+        SecureSessionStore.putEncrypted(ctx, KEY_VERIFICATION_HASH, codeHash)
+        SecureSessionStore.putEncrypted(ctx, KEY_VERIFICATION_EXPIRES, expiresAt.toString())
+        SecureSessionStore.putEncrypted(ctx, KEY_VERIFICATION_ATTEMPTS, "0")
+
+        if (isFirebaseConfigured(ctx)) {
+            runCatching {
+                FirebaseFirestore.getInstance().collection("email_verifications").document(uid).set(
+                    hashMapOf(
+                        "uid" to uid,
+                        "email" to email,
+                        "codeHash" to codeHash,
+                        "expiresAt" to expiresAt,
+                        "attempts" to 0,
+                        "sentAt" to now,
+                    ),
+                ).await()
+            }.onFailure { Log.w(TAG, "Failed writing email_verifications challenge", it) }
+        }
+
+        val delivery = CampusEmailService.sendVerificationCode(
+            recipientEmail = email,
+            studentName = studentName,
+            code = code,
+        )
+        localPreviewVerificationCode = if (delivery is CampusEmailService.DeliveryResult.Sent) "" else code
+        return delivery
+    }
+
     private suspend fun signUpFirebase(
         context: Context,
         email: String,
@@ -225,7 +282,7 @@ object AppRepository {
             val user = result.user ?: return AuthResult.Error("Could not create account. Please try again.")
             val uid = user.uid
 
-            // Write initial Firestore student profile (allowed before email verification by firestore.rules).
+            // Write initial Firestore student profile (allowed before 6-digit code verification by firestore.rules).
             val now = System.currentTimeMillis()
             val userDoc = hashMapOf(
                 "uid" to uid,
@@ -235,6 +292,7 @@ object AppRepository {
                 "year" to year,
                 "bio" to "",
                 "avatarUri" to "",
+                "emailVerified" to false,
                 "showProgram" to true,
                 "showActiveStatus" to true,
                 "defaultMeetup" to 0,
@@ -247,7 +305,6 @@ object AppRepository {
                 "createdAt" to now,
             )
             FirebaseFirestore.getInstance().collection("users").document(uid).set(userDoc).await()
-            user.sendEmailVerification().await()
 
             activateSession(
                 context,
@@ -260,6 +317,7 @@ object AppRepository {
                     emailVerified = false,
                 ),
             )
+            issueVerificationCode(context, uid, email, fullName)
             AuthResult.NeedsVerification(uid, email)
         } catch (e: FirebaseAuthException) {
             AuthResult.Error(friendlyAuthError(e))
@@ -294,6 +352,7 @@ object AppRepository {
         dao.upsert(entity)
         registerSellerFromEntity(entity)
         activateSession(context, entityToProfile(entity))
+        issueVerificationCode(context, uid, email, fullName)
         return AuthResult.NeedsVerification(uid, email)
     }
 
@@ -322,7 +381,6 @@ object AppRepository {
             val result = auth.signInWithEmailAndPassword(email, password).await()
             val user = result.user ?: return AuthResult.Error("Invalid email or password.")
             user.reload().await()
-            val verified = user.isEmailVerified
             val uid = user.uid
 
             val snap = try {
@@ -330,6 +388,7 @@ object AppRepository {
             } catch (_: Exception) {
                 null
             }
+            val verified = user.isEmailVerified || (snap?.getBoolean("emailVerified") == true)
             val loadedProfile = if (snap != null && snap.exists()) {
                 UserState.UserProfile(
                     uid = uid,
@@ -353,7 +412,10 @@ object AppRepository {
                 loadedProfile.suspended -> AuthResult.Suspended(
                     loadedProfile.suspendedReason.ifBlank { "Your account has been suspended by campus moderators." },
                 )
-                !verified -> AuthResult.NeedsVerification(uid, email)
+                !verified -> {
+                    issueVerificationCode(context, uid, email, loadedProfile.name)
+                    AuthResult.NeedsVerification(uid, email)
+                }
                 else -> {
                     startFirestoreListeners(context)
                     AuthResult.VerifiedSuccess(uid, email)
@@ -381,9 +443,98 @@ object AppRepository {
             loaded.suspended -> AuthResult.Suspended(
                 loaded.suspendedReason.ifBlank { "Your account has been suspended by campus moderators." },
             )
-            !loaded.emailVerified -> AuthResult.NeedsVerification(loaded.uid, loaded.email)
+            !loaded.emailVerified -> {
+                issueVerificationCode(context, loaded.uid, loaded.email, loaded.name)
+                AuthResult.NeedsVerification(loaded.uid, loaded.email)
+            }
             else -> AuthResult.VerifiedSuccess(loaded.uid, loaded.email)
         }
+    }
+
+    /**
+     * Validates a student-entered 6-digit verification code against the issued SHA-256 challenge,
+     * enforcing 15-minute expiration and a 5-attempt anti-brute-force cap.
+     */
+    suspend fun verifyEmailCode(context: Context, rawCode: String): AuthResult = withContext(Dispatchers.IO) {
+        ensureInitialized(context)
+        val ctx = context.applicationContext
+        val digits = rawCode.filter { it.isDigit() }
+        if (digits.length != 6) {
+            return@withContext AuthResult.Error("Enter all 6 digits of your verification code.")
+        }
+        val uid = activeUid.ifEmpty {
+            return@withContext AuthResult.Error("Session expired. Please sign in again.")
+        }
+
+        val now = System.currentTimeMillis()
+        var expectedHash = SecureSessionStore.getEncrypted(ctx, KEY_VERIFICATION_HASH).orEmpty()
+        var expiresAt = SecureSessionStore.getEncrypted(ctx, KEY_VERIFICATION_EXPIRES)?.toLongOrNull() ?: 0L
+        var attempts = SecureSessionStore.getEncrypted(ctx, KEY_VERIFICATION_ATTEMPTS)?.toIntOrNull() ?: 0
+
+        if (isFirebaseConfigured(ctx)) {
+            val snap = runCatching {
+                FirebaseFirestore.getInstance().collection("email_verifications").document(uid).get().await()
+            }.getOrNull()
+            if (snap != null && snap.exists()) {
+                expectedHash = snap.getString("codeHash").orEmpty().ifBlank { expectedHash }
+                expiresAt = snap.getLong("expiresAt") ?: expiresAt
+                attempts = (snap.getLong("attempts") ?: attempts.toLong()).toInt()
+            }
+        }
+
+        if (expectedHash.isBlank() || expiresAt <= 0L) {
+            return@withContext AuthResult.Error("No active verification code found. Tap Resend code.")
+        }
+        if (now > expiresAt) {
+            return@withContext AuthResult.Error("This verification code has expired. Tap Resend code for a new one.")
+        }
+        if (attempts >= MAX_VERIFICATION_ATTEMPTS) {
+            return@withContext AuthResult.Error("Too many incorrect attempts. Tap Resend code for a fresh 6-digit code.")
+        }
+
+        val submittedHash = UcEmailValidator.hashVerificationCode(uid, digits)
+        if (submittedHash != expectedHash) {
+            val nextAttempts = attempts + 1
+            SecureSessionStore.putEncrypted(ctx, KEY_VERIFICATION_ATTEMPTS, nextAttempts.toString())
+            if (isFirebaseConfigured(ctx)) {
+                runCatching {
+                    FirebaseFirestore.getInstance().collection("email_verifications").document(uid)
+                        .update("attempts", nextAttempts).await()
+                }
+            }
+            return@withContext AuthResult.Error("Incorrect verification code. Please check your UC Outlook email.")
+        }
+
+        // Valid 6-digit code! Mark profile verified in Firestore / Room.
+        if (isFirebaseConfigured(ctx)) {
+            try {
+                val db = FirebaseFirestore.getInstance()
+                db.collection("users").document(uid).update(
+                    mapOf(
+                        "emailVerified" to true,
+                        "verifiedAt" to now,
+                    ),
+                ).await()
+                runCatching { db.collection("email_verifications").document(uid).delete().await() }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed marking Firestore profile verified", e)
+                return@withContext AuthResult.Error("Could not complete verification. Check your connection.")
+            }
+        } else {
+            AppDatabase.get(ctx).localAccountDao().setVerified(uid, true)
+        }
+
+        localPreviewVerificationCode = ""
+        SecureSessionStore.putEncrypted(ctx, KEY_VERIFICATION_HASH, "")
+        SecureSessionStore.putEncrypted(ctx, KEY_VERIFICATION_EXPIRES, "0")
+        SecureSessionStore.putEncrypted(ctx, KEY_VERIFICATION_ATTEMPTS, "0")
+
+        val updated = profile.copy(emailVerified = true)
+        activateSession(ctx, updated)
+        if (isFirebaseConfigured(ctx)) {
+            startFirestoreListeners(ctx)
+        }
+        AuthResult.VerifiedSuccess(updated.uid, updated.email)
     }
 
     suspend fun checkEmailVerified(context: Context): AuthResult = withContext(Dispatchers.IO) {
@@ -393,7 +544,11 @@ object AppRepository {
                 val user = FirebaseAuth.getInstance().currentUser
                     ?: return@withContext AuthResult.Error("Session expired. Please sign in again.")
                 user.reload().await()
-                if (user.isEmailVerified) {
+                val snap = runCatching {
+                    FirebaseFirestore.getInstance().collection("users").document(user.uid).get().await()
+                }.getOrNull()
+                val verified = user.isEmailVerified || (snap?.getBoolean("emailVerified") == true)
+                if (verified) {
                     val updated = profile.copy(emailVerified = true)
                     activateSession(context, updated)
                     startFirestoreListeners(context)
@@ -406,7 +561,6 @@ object AppRepository {
                 AuthResult.Error("Could not check verification right now. Check your connection.")
             }
         }
-        // Local mode (when google-services.json isn't added yet): check Room account flag.
         val uid = activeUid.ifEmpty { return@withContext AuthResult.Error("Not signed in.") }
         val dao = AppDatabase.get(context).localAccountDao()
         val entity = dao.findByUid(uid) ?: return@withContext AuthResult.Error("Account not found.")
@@ -430,21 +584,23 @@ object AppRepository {
         val uid = activeUid.ifEmpty { return@withContext AuthResult.Error("Not signed in.") }
         val dao = AppDatabase.get(context).localAccountDao()
         dao.setVerified(uid, true)
+        localPreviewVerificationCode = ""
         val updated = profile.copy(emailVerified = true)
         activateSession(context, updated)
         AuthResult.VerifiedSuccess(updated.uid, updated.email)
     }
 
     suspend fun resendVerificationEmail(context: Context): Result<Unit> = withContext(Dispatchers.IO) {
-        if (isFirebaseConfigured(context)) {
-            return@withContext try {
-                val user = FirebaseAuth.getInstance().currentUser
-                    ?: return@withContext Result.failure(IllegalStateException("Not signed in"))
-                user.sendEmailVerification().await()
-                Result.success(Unit)
-            } catch (e: Exception) {
-                Result.failure(e)
-            }
+        ensureInitialized(context)
+        val uid = activeUid.ifEmpty {
+            return@withContext Result.failure(IllegalStateException("Session expired. Please sign in again."))
+        }
+        val email = profile.email.ifBlank {
+            return@withContext Result.failure(IllegalStateException("Missing student email."))
+        }
+        val delivery = issueVerificationCode(context, uid, email, profile.name)
+        if (delivery is CampusEmailService.DeliveryResult.Failed) {
+            return@withContext Result.failure(IllegalStateException(delivery.message))
         }
         Result.success(Unit)
     }
@@ -490,6 +646,7 @@ object AppRepository {
         activeUid = ""
         profile = UserState.UserProfile()
         draft = null
+        localPreviewVerificationCode = ""
         notifiedIds.clear()
         initialNotifSnapshotDone = false
         initialAnnounceSnapshotDone = false
@@ -529,6 +686,7 @@ object AppRepository {
                                 .update("status", ListingStatus.CLOSED).await()
                         }
                     }
+                runCatching { db.collection("email_verifications").document(uid).delete().await() }
                 runCatching { db.collection("users").document(uid).delete().await() }
                 user.delete().await()
             } catch (e: FirebaseAuthException) {
@@ -582,6 +740,7 @@ object AppRepository {
         )
         SecureSessionStore.putEncrypted(ctx, KEY_ACTIVE_UID, userProfile.uid)
         SecureSessionStore.putEncrypted(ctx, KEY_ACTIVE_EMAIL, userProfile.email)
+        SecureSessionStore.putEncrypted(ctx, KEY_EMAIL_VERIFIED, userProfile.emailVerified.toString())
         ioScope.launch {
             try {
                 AppDatabase.get(ctx).draftDao().getDraft(userProfile.uid)?.let {
@@ -2314,6 +2473,7 @@ object AppRepository {
                 year = snap.getString("year").orEmpty().ifBlank { profile.year },
                 bio = snap.getString("bio").orEmpty(),
                 avatarUri = snap.getString("avatarUri")?.takeIf { it.isNotBlank() },
+                emailVerified = profile.emailVerified || (snap.getBoolean("emailVerified") == true),
                 suspended = snap.getBoolean("suspended") == true,
                 suspendedReason = snap.getString("suspendedReason").orEmpty(),
                 warningCount = (snap.getLong("warningCount") ?: 0L).toInt(),
@@ -2991,6 +3151,7 @@ object AppRepository {
             if (fbUser != null) {
                 activeUid = fbUser.uid
                 val cachedSeller = users[fbUser.uid]
+                val cachedVerified = SecureSessionStore.getEncrypted(context, KEY_EMAIL_VERIFIED) == "true"
                 profile = UserState.UserProfile(
                     uid = fbUser.uid,
                     name = cachedSeller?.name ?: fbUser.email?.substringBefore('@') ?: "UC Student",
@@ -2999,7 +3160,7 @@ object AppRepository {
                     year = cachedSeller?.year ?: "1st Year",
                     bio = cachedSeller?.bio.orEmpty(),
                     avatarUri = cachedSeller?.avatarUri,
-                    emailVerified = fbUser.isEmailVerified,
+                    emailVerified = fbUser.isEmailVerified || cachedVerified,
                     suspended = cachedSeller?.suspended == true,
                     suspendedReason = cachedSeller?.suspendedReason.orEmpty(),
                     warningCount = cachedSeller?.warningCount ?: 0,
@@ -3544,6 +3705,7 @@ object AppRepository {
         detachAllFirestoreListeners()
         initialized = false
         activeUid = ""
+        localPreviewVerificationCode = ""
         profile = UserState.UserProfile()
         settings = UserState.SettingsState()
         defaultMeetupIndex = 0

@@ -111,7 +111,8 @@
             android:name=".VerifyEmailActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.HoldHighTheShop.Onboarding" />
+            android:theme="@style/Theme.HoldHighTheShop.Onboarding"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".ForgotPasswordActivity"

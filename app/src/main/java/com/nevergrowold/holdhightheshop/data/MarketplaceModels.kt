@@ -18,6 +18,7 @@ object ListingStatus {
 object AiCheckStatus {
     const val APPROVED = "APPROVED"
     const val PENDING_REVIEW = "PENDING_REVIEW"
+    const val REJECTED = "REJECTED"
 }
 
 object ProposalType {

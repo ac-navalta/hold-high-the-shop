@@ -15,7 +15,11 @@ service cloud.firestore {
     }
 
     function isEmailVerified() {
-      return isSignedIn() && request.auth.token.email_verified == true;
+      return isSignedIn() && (
+        request.auth.token.email_verified == true
+        || (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.emailVerified == true)
+      );
     }
 
     function isUcStudentEmail() {
@@ -29,7 +33,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isEmailVerified()
+      return isSignedIn()
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
@@ -52,28 +56,42 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ---- 6-Digit Email Verification Challenges ----
+    match /email_verifications/{uid} {
+      allow read, create, update, delete: if isAdmin()
+        || (isUcStudentEmail() && request.auth.uid == uid);
+    }
+
     // ---- Users (Student Profiles) ----
     match /users/{uid} {
       // Newly registered (pre-verification) or suspended users can read their own profile
       allow read: if isActiveStudentOrAdmin() || (isSignedIn() && request.auth.uid == uid);
 
-      // Initial profile creation during SignUp (before UC Outlook verification link is clicked)
+      // Initial profile creation during SignUp (before 6-digit UC Outlook code is verified)
       allow create: if isUcStudentEmail()
         && request.auth.uid == uid
         && request.resource.data.uid == uid
         && request.resource.data.email.lower() == request.auth.token.email.lower()
         && request.resource.data.suspended == false
         && request.resource.data.warningCount == 0
+        && (!('emailVerified' in request.resource.data) || request.resource.data.emailVerified == false)
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 60;
 
-      // Students cannot tamper with their own suspension/warning flags, UID, or verified email
+      // Students can complete 1-time 6-digit code verification, and verified students can update
+      // profile fields without tampering with suspension, warningCount, UID, or email.
       allow update: if isAdmin()
+        || (isUcStudentEmail()
+            && request.auth.uid == uid
+            && resource.data.suspended == false
+            && exists(/databases/$(database)/documents/email_verifications/$(uid))
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['emailVerified', 'verifiedAt'])
+            && request.resource.data.emailVerified == true)
         || (isActiveStudent()
             && request.auth.uid == uid
             && !request.resource.data.diff(resource.data).affectedKeys()
-                .hasAny(['uid', 'email', 'suspended', 'suspendedReason', 'warningCount', 'createdAt']));
+                .hasAny(['uid', 'email', 'emailVerified', 'suspended', 'suspendedReason', 'warningCount', 'createdAt']));
 
       allow delete: if isAdmin() || (isActiveStudent() && request.auth.uid == uid);
     }
