@@ -18,8 +18,8 @@
         android:gravity="center_vertical"
         android:background="@color/uc_green"
         android:elevation="4dp"
-        android:paddingStart="12dp"
-        android:paddingEnd="20dp"
+        android:paddingStart="@dimen/screen_margin"
+        android:paddingEnd="@dimen/screen_margin"
         android:paddingTop="16dp"
         android:paddingBottom="16dp"
         app:layout_constraintTop_toTopOf="parent"
@@ -27,8 +27,9 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <FrameLayout
-            android:layout_width="42dp"
-            android:layout_height="42dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="-8dp"
             android:clickable="true"
             android:focusable="true"
             android:onClick="goBack"
@@ -47,7 +48,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="4dp"
+            android:layout_marginStart="6dp"
             android:fontFamily="@font/poppins_bold"
             android:text="@string/settings_edit_profile"
             android:textColor="@color/white"
@@ -70,8 +71,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:focusableInTouchMode="true"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
+            android:paddingStart="@dimen/screen_margin"
+            android:paddingEnd="@dimen/screen_margin"
             android:paddingTop="20dp"
             android:paddingBottom="24dp">
 
@@ -117,11 +118,11 @@
             <EditText
                 android:id="@+id/inputName"
                 android:layout_width="match_parent"
-                android:layout_height="54dp"
+                android:layout_height="52dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_input"
-                android:paddingStart="18dp"
-                android:paddingEnd="18dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
                 android:fontFamily="@font/poppins_regular"
                 android:text="@string/me_name"
                 android:inputType="textPersonName|textCapWords"
@@ -139,12 +140,12 @@
             <TextView
                 android:id="@+id/editEmailValue"
                 android:layout_width="match_parent"
-                android:layout_height="54dp"
+                android:layout_height="52dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_note_strip"
                 android:gravity="center_vertical"
-                android:paddingStart="18dp"
-                android:paddingEnd="18dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
                 android:fontFamily="@font/poppins_regular"
                 android:text="@string/login_email_value"
                 android:textColor="@color/text_secondary"
@@ -162,13 +163,13 @@
             <LinearLayout
                 android:id="@+id/rowEditProgram"
                 android:layout_width="match_parent"
-                android:layout_height="54dp"
+                android:layout_height="52dp"
                 android:layout_marginTop="8dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@drawable/bg_input"
-                android:paddingStart="18dp"
-                android:paddingEnd="16dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="14dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground">
@@ -184,8 +185,8 @@
                     android:textSize="14sp" />
 
                 <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/ic_chevron_down"
                     app:tint="@color/text_secondary"
                     android:contentDescription="@null" />
@@ -198,13 +199,13 @@
             <LinearLayout
                 android:id="@+id/rowEditYear"
                 android:layout_width="match_parent"
-                android:layout_height="54dp"
+                android:layout_height="52dp"
                 android:layout_marginTop="8dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@drawable/bg_input"
-                android:paddingStart="18dp"
-                android:paddingEnd="16dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="14dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground">
@@ -220,8 +221,8 @@
                     android:textSize="14sp" />
 
                 <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/ic_chevron_down"
                     app:tint="@color/text_secondary"
                     android:contentDescription="@null" />
@@ -234,11 +235,11 @@
             <EditText
                 android:id="@+id/inputBio"
                 android:layout_width="match_parent"
-                android:layout_height="100dp"
+                android:layout_height="104dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_input"
                 android:gravity="top|start"
-                android:padding="18dp"
+                android:padding="16dp"
                 android:fontFamily="@font/poppins_regular"
                 android:hint="@string/hint_bio"
                 android:inputType="textMultiLine|textCapSentences"
@@ -270,6 +271,7 @@
             style="@style/OutlineButton"
             android:layout_width="0dp"
             android:layout_weight="1"
+            android:layout_marginEnd="@dimen/half_gap"
             android:onClick="goBack"
             android:text="@string/action_cancel" />
 
@@ -277,7 +279,7 @@
             style="@style/PrimaryButton"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_marginStart="10dp"
+            android:layout_marginStart="@dimen/half_gap"
             android:onClick="saveProfile"
             android:text="@string/btn_save_changes" />
     </LinearLayout>
