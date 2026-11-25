@@ -29,11 +29,12 @@
             android:clipToPadding="false"
             android:clipChildren="false">
 
-            <!-- PHOTO -->
+            <!-- PHOTO CAROUSEL -->
             <FrameLayout
                 android:id="@+id/detailHero"
                 android:layout_width="match_parent"
                 android:layout_height="320dp"
+                android:clipChildren="true"
                 android:background="@color/photo_placeholder">
 
                 <ImageView
@@ -45,26 +46,48 @@
                     app:tint="#CFC9B4"
                     android:contentDescription="@string/cd_item_photo" />
 
-                <ImageView
-                    android:id="@+id/detailHeroPhoto"
+                <FrameLayout
+                    android:id="@+id/detailPhotoStage"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:scaleType="centerCrop"
-                    android:visibility="gone"
+                    android:clipChildren="true"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:onClick="cycleHeroPhoto"
-                    android:contentDescription="@string/cd_item_photo" />
+                    android:focusable="true">
 
-                <!-- top buttons, padded down past the status bar -->
+                    <ImageView
+                        android:id="@+id/detailHeroPhotoPrev"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:visibility="gone"
+                        android:contentDescription="@null" />
+
+                    <ImageView
+                        android:id="@+id/detailHeroPhoto"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:visibility="gone"
+                        android:contentDescription="@string/cd_item_photo" />
+
+                    <ImageView
+                        android:id="@+id/detailHeroPhotoNext"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:visibility="gone"
+                        android:contentDescription="@null" />
+                </FrameLayout>
+
+                <!-- top buttons, aligned on the 20dp screen grid -->
                 <LinearLayout
                     android:id="@+id/headerArea"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
+                    android:paddingStart="@dimen/screen_margin"
+                    android:paddingEnd="@dimen/screen_margin"
                     android:paddingTop="16dp">
 
                     <FrameLayout
@@ -134,12 +157,26 @@
                     </FrameLayout>
                 </LinearLayout>
 
+                <!-- Pagination dots for multi-photo listings -->
+                <LinearLayout
+                    android:id="@+id/detailPhotoDots"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:layout_marginBottom="40dp"
+                    android:background="@drawable/bg_pill_dark"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="5dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:visibility="gone" />
+
                 <TextView
                     android:id="@+id/detailPhotoCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom|end"
-                    android:layout_marginEnd="16dp"
+                    android:layout_marginEnd="@dimen/screen_margin"
                     android:layout_marginBottom="36dp"
                     android:background="@drawable/bg_pill_dark"
                     android:paddingStart="10dp"

@@ -17,9 +17,8 @@ import androidx.dynamicanimation.animation.DynamicAnimation
  * Campus Market tab hosted inside [MainActivity].
  *
  * College chip bar order:
- * - Index 0: `All` (everything open)
- * - Index 1: `All colleges` (`Listings.FILTER_ALL_COLLEGES` -> universal untagged items)
- * - Index 2..12: The 11 UC Colleges (`CITCS`..`COL`). Selecting a college shows items
+ * - Index 0: `All colleges` (everything open across campus)
+ * - Index 1..11: The 11 UC Colleges (`CITCS`..`COL`). Selecting a college shows items
  *   explicitly tagged for that college FIRST, followed by `All colleges` items!
  */
 internal class MarketTab(
@@ -35,9 +34,9 @@ internal class MarketTab(
     private val chipScroll: HorizontalScrollView = root.findViewById(R.id.chipScroll)
     private val chips: List<TextView>
 
-    /** Chip filter codes matching [chips] 1:1. `null` = All. */
+    /** Chip filter codes matching [chips] 1:1. `null` = All colleges. */
     private val chipFilters: List<String?> =
-        listOf(null, Listings.FILTER_ALL_COLLEGES) + Listings.PROGRAMS
+        listOf(null) + Listings.PROGRAMS
 
     private var selectedChipIndex = 0
     private var sort = 0
@@ -46,10 +45,7 @@ internal class MarketTab(
 
     init {
         val chipRow = root.findViewById<LinearLayout>(R.id.chipRow)
-        val labels = listOf(
-            activity.getString(R.string.chip_all),
-            activity.getString(R.string.tag_all_colleges),
-        ) + Listings.PROGRAMS
+        val labels = listOf(activity.getString(R.string.tag_all_colleges)) + Listings.PROGRAMS
 
         chips = labels.map { label ->
             val chip = LayoutInflater.from(activity).inflate(R.layout.item_market_chip, chipRow, false) as TextView
@@ -88,8 +84,7 @@ internal class MarketTab(
 
     fun selectProgram(programCode: String?) {
         selectedChipIndex = when {
-            programCode.isNullOrBlank() -> 0
-            programCode == Listings.FILTER_ALL_COLLEGES -> 1
+            programCode.isNullOrBlank() || programCode == Listings.FILTER_ALL_COLLEGES -> 0
             else -> chipFilters.indexOf(programCode).coerceAtLeast(0)
         }
         bindChips()

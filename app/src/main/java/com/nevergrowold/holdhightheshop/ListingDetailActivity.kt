@@ -40,7 +40,7 @@ import java.util.TimeZone
 class ListingDetailActivity : BaseActivity() {
 
     private lateinit var listing: Listing
-    private var photoIndex = 0
+    private lateinit var photoCarousel: SpringPhotoCarousel
 
     private val eventReceiver = MarketplaceEventReceiver { _, _ ->
         reloadAndBind(animate = true)
@@ -52,14 +52,20 @@ class ListingDetailActivity : BaseActivity() {
         setContentView(R.layout.activity_listing_detail)
         BarInsets.apply(this)
 
+        photoCarousel = SpringPhotoCarousel(
+            stage = findViewById(R.id.detailPhotoStage),
+            prevPhoto = findViewById(R.id.detailHeroPhotoPrev),
+            currentPhoto = findViewById(R.id.detailHeroPhoto),
+            nextPhoto = findViewById(R.id.detailHeroPhotoNext),
+            placeholderIcon = findViewById(R.id.detailHeroIcon),
+            countPill = findViewById(R.id.detailPhotoCount),
+            dotsContainer = findViewById(R.id.detailPhotoDots),
+            onViewSinglePhoto = { ref -> AppIntents.viewMediaRef(this, ref) },
+        )
+
         val listingId = intent.getStringExtra(EXTRA_ID) ?: intent.getStringExtra(EXTRA_LISTING)
         listing = Listings.byId(listingId)
         bind()
-
-        findViewById<View>(R.id.detailHeroPhoto).setOnLongClickListener {
-            val current = listing.photoUris.getOrNull(photoIndex)
-            if (current != null) AppIntents.viewMediaRef(this, current) else false
-        }
 
         val scroll = findViewById<android.widget.ScrollView>(R.id.detailScroll)
         val hero = findViewById<View>(R.id.detailHero)
@@ -148,32 +154,12 @@ class ListingDetailActivity : BaseActivity() {
     }
 
     private fun bindHeroPhoto() {
-        val photos = listing.photoUris
-        val photoView = findViewById<ImageView>(R.id.detailHeroPhoto)
-        val placeholderIcon = findViewById<View>(R.id.detailHeroIcon)
-        val countPill = findViewById<TextView>(R.id.detailPhotoCount)
-        if (photos.isEmpty()) {
-            photoView.isVisible = false
-            placeholderIcon.isVisible = true
-            countPill.isVisible = false
-            return
-        }
-        countPill.isVisible = true
-        photoIndex = photoIndex.coerceIn(0, photos.lastIndex)
-        AppIntents.bindImageUri(photoView, placeholderIcon, photos[photoIndex])
-        countPill.text = getString(R.string.photo_count_format, photoIndex + 1, photos.size)
+        photoCarousel.setPhotos(listing.photoUris, keepIndex = true)
     }
 
     fun cycleHeroPhoto(view: View) {
-        val photos = listing.photoUris
-        if (photos.isEmpty()) return
-        if (photos.size > 1) {
-            photoIndex = (photoIndex + 1) % photos.size
-            Motion.tick(view)
-            bindHeroPhoto()
-        } else {
-            AppIntents.viewMediaRef(this, photos.first())
-        }
+        Motion.tick(view)
+        photoCarousel.cycleNext()
     }
 
     private fun freeLabel(): String = if (isMine) {
