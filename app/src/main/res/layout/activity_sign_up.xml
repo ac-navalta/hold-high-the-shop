@@ -24,7 +24,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:paddingStart="@dimen/screen_margin"
+            android:paddingEnd="@dimen/screen_margin"
+            android:paddingTop="16dp"
+            android:paddingBottom="24dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -36,6 +39,7 @@
                     android:id="@+id/btnBack"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
+                    android:layout_marginStart="-8dp"
                     android:padding="8dp"
                     android:src="@drawable/ic_chevron_left"
                     app:tint="@color/uc_green"
@@ -48,7 +52,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
+                    android:layout_marginStart="4dp"
                     android:fontFamily="@font/poppins_semibold"
                     android:text="@string/brand_kicker"
                     android:textColor="@color/uc_green"
@@ -60,17 +64,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:layout_marginBottom="24dp"
                 app:cardCornerRadius="24dp"
                 app:cardElevation="2dp"
+                android:outlineSpotShadowColor="@color/shadow_green"
+                android:outlineAmbientShadowColor="@color/shadow_green"
                 app:cardBackgroundColor="@color/white"
+                app:cardUseCompatPadding="false"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="22dp">
+                    android:padding="24dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -84,7 +90,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
+                        android:layout_marginTop="6dp"
                         android:fontFamily="@font/poppins_bold"
                         android:text="@string/signup_title"
                         android:textColor="@color/text_primary"
@@ -104,7 +110,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="18dp"
                         android:fontFamily="@font/poppins_semibold"
                         android:text="@string/signup_name_label"
                         android:textColor="@color/text_primary"
@@ -113,13 +119,15 @@
                     <EditText
                         android:id="@+id/inputFullName"
                         android:layout_width="match_parent"
-                        android:layout_height="50dp"
+                        android:layout_height="52dp"
                         android:layout_marginTop="6dp"
                         android:background="@drawable/bg_input"
-                        android:paddingHorizontal="14dp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
                         android:fontFamily="@font/poppins_regular"
                         android:hint="@string/signup_name_hint"
                         android:inputType="textPersonName|textCapWords"
+                        android:imeOptions="actionNext"
                         android:maxLines="1"
                         android:textColor="@color/text_primary"
                         android:textColorHint="@color/text_secondary"
@@ -131,18 +139,18 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="14dp"
                         android:fontFamily="@font/poppins_semibold"
-                        android:text="@string/login_email_label"
+                        android:text="@string/signup_email_label"
                         android:textColor="@color/text_primary"
                         android:textSize="12sp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="50dp"
+                        android:layout_height="52dp"
                         android:layout_marginTop="6dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
                         android:background="@drawable/bg_input"
-                        android:paddingStart="14dp"
+                        android:paddingStart="16dp"
                         android:paddingEnd="14dp">
 
                         <EditText
@@ -154,6 +162,7 @@
                             android:fontFamily="@font/poppins_regular"
                             android:hint="@string/signup_email_hint"
                             android:inputType="textEmailAddress"
+                            android:imeOptions="actionNext"
                             android:maxLines="1"
                             android:textColor="@color/text_primary"
                             android:textColorHint="@color/text_secondary"
@@ -163,13 +172,14 @@
                             android:id="@+id/emailCheck"
                             android:layout_width="20dp"
                             android:layout_height="20dp"
+                            android:layout_marginStart="8dp"
                             android:src="@drawable/ic_check"
                             app:tint="@color/uc_green"
                             android:visibility="gone"
                             android:contentDescription="@null" />
                     </LinearLayout>
 
-                    <!-- College & Year row -->
+                    <!-- College & Year row (12dp grid_gap) -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -180,7 +190,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginEnd="8dp"
+                            android:layout_marginEnd="@dimen/half_gap"
                             android:orientation="vertical">
 
                             <TextView
@@ -191,28 +201,44 @@
                                 android:textColor="@color/text_primary"
                                 android:textSize="12sp" />
 
-                            <TextView
-                                android:id="@+id/pickProgram"
+                            <LinearLayout
+                                android:id="@+id/pickProgramBox"
                                 android:layout_width="match_parent"
-                                android:layout_height="48dp"
+                                android:layout_height="52dp"
                                 android:layout_marginTop="6dp"
-                                android:background="@drawable/bg_input"
+                                android:orientation="horizontal"
                                 android:gravity="center_vertical"
-                                android:paddingHorizontal="14dp"
-                                android:fontFamily="@font/poppins_medium"
-                                android:text="CITCS"
-                                android:textColor="@color/text_primary"
-                                android:textSize="13sp"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:foreground="?attr/selectableItemBackground" />
+                                android:background="@drawable/bg_input"
+                                android:paddingStart="16dp"
+                                android:paddingEnd="12dp">
+
+                                <TextView
+                                    android:id="@+id/pickProgram"
+                                    android:layout_width="0dp"
+                                    android:layout_height="match_parent"
+                                    android:layout_weight="1"
+                                    android:gravity="center_vertical"
+                                    android:fontFamily="@font/poppins_medium"
+                                    android:text="CITCS"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="13sp"
+                                    android:clickable="true"
+                                    android:focusable="true" />
+
+                                <ImageView
+                                    android:layout_width="18dp"
+                                    android:layout_height="18dp"
+                                    android:src="@drawable/ic_chevron_down"
+                                    app:tint="@color/text_secondary"
+                                    android:contentDescription="@null" />
+                            </LinearLayout>
                         </LinearLayout>
 
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="8dp"
+                            android:layout_marginStart="@dimen/half_gap"
                             android:orientation="vertical">
 
                             <TextView
@@ -223,21 +249,37 @@
                                 android:textColor="@color/text_primary"
                                 android:textSize="12sp" />
 
-                            <TextView
-                                android:id="@+id/pickYear"
+                            <LinearLayout
+                                android:id="@+id/pickYearBox"
                                 android:layout_width="match_parent"
-                                android:layout_height="48dp"
+                                android:layout_height="52dp"
                                 android:layout_marginTop="6dp"
-                                android:background="@drawable/bg_input"
+                                android:orientation="horizontal"
                                 android:gravity="center_vertical"
-                                android:paddingHorizontal="14dp"
-                                android:fontFamily="@font/poppins_medium"
-                                android:text="1st Year"
-                                android:textColor="@color/text_primary"
-                                android:textSize="13sp"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:foreground="?attr/selectableItemBackground" />
+                                android:background="@drawable/bg_input"
+                                android:paddingStart="16dp"
+                                android:paddingEnd="12dp">
+
+                                <TextView
+                                    android:id="@+id/pickYear"
+                                    android:layout_width="0dp"
+                                    android:layout_height="match_parent"
+                                    android:layout_weight="1"
+                                    android:gravity="center_vertical"
+                                    android:fontFamily="@font/poppins_medium"
+                                    android:text="1st Year"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="13sp"
+                                    android:clickable="true"
+                                    android:focusable="true" />
+
+                                <ImageView
+                                    android:layout_width="18dp"
+                                    android:layout_height="18dp"
+                                    android:src="@drawable/ic_chevron_down"
+                                    app:tint="@color/text_secondary"
+                                    android:contentDescription="@null" />
+                            </LinearLayout>
                         </LinearLayout>
                     </LinearLayout>
 
@@ -247,18 +289,18 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="14dp"
                         android:fontFamily="@font/poppins_semibold"
-                        android:text="@string/login_password_label"
+                        android:text="@string/signup_password_label"
                         android:textColor="@color/text_primary"
                         android:textSize="12sp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="50dp"
+                        android:layout_height="52dp"
                         android:layout_marginTop="6dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
                         android:background="@drawable/bg_input"
-                        android:paddingStart="14dp"
+                        android:paddingStart="16dp"
                         android:paddingEnd="10dp">
 
                         <EditText
@@ -270,6 +312,7 @@
                             android:fontFamily="@font/poppins_regular"
                             android:hint="@string/signup_password_hint"
                             android:inputType="textPassword"
+                            android:imeOptions="actionNext"
                             android:maxLines="1"
                             android:textColor="@color/text_primary"
                             android:textColorHint="@color/text_secondary"
@@ -280,15 +323,108 @@
                             android:layout_width="wrap_content"
                             android:layout_height="36dp"
                             android:gravity="center"
-                            android:paddingHorizontal="8dp"
+                            android:paddingHorizontal="10dp"
                             android:fontFamily="@font/poppins_semibold"
                             android:text="Show"
                             android:textColor="@color/uc_green"
                             android:textSize="12sp"
                             android:clickable="true"
-                            android:focusable="true" />
+                            android:focusable="true"
+                            android:foreground="?attr/selectableItemBackgroundBorderless" />
                     </LinearLayout>
 
+                    <!-- Always-visible live password requirements checklist under Password field -->
+                    <LinearLayout
+                        android:id="@+id/passwordRulesContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_note_strip"
+                        android:orientation="vertical"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingTop="10dp"
+                        android:paddingBottom="10dp">
+
+                        <LinearLayout
+                            android:id="@+id/ruleMinLength"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:id="@+id/ruleMinLengthIcon"
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:src="@drawable/ic_rule_unmet"
+                                android:contentDescription="@null" />
+
+                            <TextView
+                                android:id="@+id/ruleMinLengthText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:fontFamily="@font/poppins_regular"
+                                android:text="@string/pw_rule_length"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/ruleHasLetter"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:id="@+id/ruleHasLetterIcon"
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:src="@drawable/ic_rule_unmet"
+                                android:contentDescription="@null" />
+
+                            <TextView
+                                android:id="@+id/ruleHasLetterText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:fontFamily="@font/poppins_regular"
+                                android:text="@string/pw_rule_letter"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/ruleHasNumber"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:id="@+id/ruleHasNumberIcon"
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:src="@drawable/ic_rule_unmet"
+                                android:contentDescription="@null" />
+
+                            <TextView
+                                android:id="@+id/ruleHasNumberText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:fontFamily="@font/poppins_regular"
+                                android:text="@string/pw_rule_number"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Kept hidden/compatible if referenced, replaced visually by live checklist -->
                     <TextView
                         android:id="@+id/passwordStrength"
                         android:layout_width="match_parent"
@@ -303,7 +439,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="14dp"
                         android:fontFamily="@font/poppins_semibold"
                         android:text="@string/signup_confirm_password_label"
                         android:textColor="@color/text_primary"
@@ -312,10 +448,11 @@
                     <EditText
                         android:id="@+id/inputConfirmPassword"
                         android:layout_width="match_parent"
-                        android:layout_height="50dp"
+                        android:layout_height="52dp"
                         android:layout_marginTop="6dp"
                         android:background="@drawable/bg_input"
-                        android:paddingHorizontal="14dp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
                         android:fontFamily="@font/poppins_regular"
                         android:hint="@string/signup_confirm_password_hint"
                         android:inputType="textPassword"
@@ -324,6 +461,33 @@
                         android:textColor="@color/text_primary"
                         android:textColorHint="@color/text_secondary"
                         android:textSize="13sp" />
+
+                    <LinearLayout
+                        android:id="@+id/ruleConfirmMatch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:id="@+id/ruleConfirmMatchIcon"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_rule_unmet"
+                            android:contentDescription="@null" />
+
+                        <TextView
+                            android:id="@+id/ruleConfirmMatchText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:fontFamily="@font/poppins_medium"
+                            android:text="@string/pw_rule_match"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/signUpError"
@@ -376,7 +540,8 @@
                         android:textColor="@color/uc_green"
                         android:textSize="13sp"
                         android:clickable="true"
-                        android:focusable="true" />
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
