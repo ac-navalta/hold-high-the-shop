@@ -394,6 +394,12 @@ class CreateListingActivity : BaseActivity() {
     private fun buildCollegeTagChips() {
         val box = findViewById<LinearLayout>(R.id.collegeTagChips)
         box.removeAllViews()
+
+        // Index 0: Default "All colleges" pill (auto-unselects when any specific college is picked)
+        val allChip = LayoutInflater.from(this).inflate(R.layout.item_chip, box, false) as TextView
+        allChip.text = getString(R.string.tag_all_colleges)
+        box.addView(allChip)
+
         Listings.PROGRAMS.forEach { code ->
             val chip = LayoutInflater.from(this).inflate(R.layout.item_chip, box, false) as TextView
             chip.text = code
@@ -403,18 +409,52 @@ class CreateListingActivity : BaseActivity() {
 
     private fun renderCollegeTags() {
         val box = findViewById<LinearLayout>(R.id.collegeTagChips)
+        if (box.childCount == 0) return
         val chips = (0 until box.childCount).map { box.getChildAt(it) as TextView }
-        Choice.toggles(chips, selectedProgramIndices) { updated ->
-            selectedProgramIndices.clear()
-            selectedProgramIndices.addAll(updated)
-            formDirty = true
-            renderCollegeTags()
+
+        // Index 0 is "All colleges" (active iff selectedProgramIndices is empty).
+        // Indices 1..N map to Listings.PROGRAMS[0..N-1].
+        val activeUiIndices = if (selectedProgramIndices.isEmpty()) {
+            setOf(0)
+        } else {
+            selectedProgramIndices.map { it + 1 }.toSet()
         }
-        val selectedCodes = selectedProgramIndices.sorted().map { Listings.PROGRAMS[it] }
-        findViewById<TextView>(R.id.selectedCollegesSummary).text = when {
-            selectedCodes.isEmpty() -> getString(R.string.tag_all_colleges)
-            selectedCodes.size <= 2 -> selectedCodes.joinToString(" \u00B7 ")
-            else -> "${selectedCodes[0]} \u00B7 ${selectedCodes[1]} +${selectedCodes.size - 2}"
+
+        chips.forEachIndexed { uiIdx, chip ->
+            val isOn = uiIdx in activeUiIndices
+            val wasOn = chip.getTag(R.id.choice_on) as? Boolean
+            val shouldAnimate = wasOn != null && wasOn != isOn
+            chip.setTag(R.id.choice_on, isOn)
+
+            if (wasOn == null || wasOn != isOn) {
+                Motion.background(chip, if (isOn) R.drawable.bg_chip_active else R.drawable.bg_chip, shouldAnimate)
+                Motion.textColor(
+                    chip,
+                    getColor(if (isOn) R.color.white else R.color.text_primary),
+                    shouldAnimate,
+                )
+                if (shouldAnimate) Motion.nudge(chip, velocity = if (isOn) 1.65f else 0.7f)
+            }
+
+            chip.setOnClickListener {
+                Motion.tick(chip)
+                if (uiIdx == 0) {
+                    if (selectedProgramIndices.isNotEmpty()) {
+                        selectedProgramIndices.clear()
+                        formDirty = true
+                        renderCollegeTags()
+                    }
+                } else {
+                    val progIdx = uiIdx - 1
+                    if (progIdx in selectedProgramIndices) {
+                        selectedProgramIndices.remove(progIdx)
+                    } else {
+                        selectedProgramIndices.add(progIdx)
+                    }
+                    formDirty = true
+                    renderCollegeTags()
+                }
+            }
         }
     }
 
@@ -699,9 +739,23 @@ class CreateListingActivity : BaseActivity() {
         hideKeyboard(button)
         submitting = true
         val postBtn = findViewById<TextView>(R.id.btnPostItem)
+        val saveBtn = findViewById<View>(R.id.btnSaveDraft)
+        val overlay = findViewById<View>(R.id.safetyLoadingOverlay)
+        val overlayCard = findViewById<View>(R.id.safetyLoadingCard)
+
         val originalBtnText = postBtn.text
         postBtn.isEnabled = false
-        postBtn.text = getString(R.string.safety_checking_title)
+        saveBtn.isEnabled = false
+        postBtn.setText(R.string.safety_checking_short)
+
+        overlay.isVisible = true
+        if (Motion.enabled(this)) {
+            overlay.alpha = 0f
+            overlayCard.scaleX = 0.92f
+            overlayCard.scaleY = 0.92f
+            Motion.spring(overlay, DynamicAnimation.ALPHA, 1f, Motion.Effects.FAST)
+            Motion.springScale(overlayCard, 1f, Motion.Spatial.RESPONSIVE)
+        }
 
         lifecycleScope.launch {
             val verdict = CampusSafetyApi.evaluateListing(
@@ -714,7 +768,9 @@ class CreateListingActivity : BaseActivity() {
             )
 
             submitting = false
+            overlay.isVisible = false
             postBtn.isEnabled = true
+            saveBtn.isEnabled = true
             postBtn.text = originalBtnText
 
             when (verdict) {
