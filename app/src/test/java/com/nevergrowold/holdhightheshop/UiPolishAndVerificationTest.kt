@@ -31,7 +31,7 @@ import org.robolectric.shadows.ShadowLooper
 
 /**
  * Regression & UX verification tests covering:
- * 1. 6-digit HTML email verification code flow (CampusEmailService + VerifyEmailActivity)
+ * 1. Branded HTML "Verify My UC Email" button email & `/auth/action` link verification flow
  * 2. Visible live password rule checklist beneath SignUp password field
  * 3. CreateListing 'All colleges' default pill auto-unselect / reselect + Safety Gate loading overlay
  * 4. MarketTab merged 'All colleges' filter pill (single pill + 11 UC colleges = 12 chips)
@@ -60,7 +60,7 @@ class UiPolishAndVerificationTest {
     }
 
     @Test
-    fun htmlEmailBuilder_andSixDigitVerificationFlow_verifyStudentEndToEnd() {
+    fun htmlEmailBuilder_andVerifyButtonLinkFlow_verifyStudentEndToEnd() {
         var capturedPayload: CampusEmailService.EmailPayload? = null
         CampusEmailService.testSender = { payload ->
             capturedPayload = payload
@@ -102,42 +102,54 @@ class UiPolishAndVerificationTest {
             signUp.findViewById<TextView>(R.id.ruleHasNumberText).currentTextColor,
         )
 
-        // Submit Sign-Up -> sends HTML email with 6-digit code and opens VerifyEmailActivity
+        // Submit Sign-Up -> sends branded HTML email with Verify My UC Email button & opens VerifyEmailActivity
         signUp.findViewById<EditText>(R.id.inputFullName).setText("Mika Dela Cruz")
         signUp.findViewById<EditText>(R.id.inputEmail).setText("mika.delacruz@students.uc-bcf.edu.ph")
         signUp.findViewById<View>(R.id.btnCreateAccount).performClick()
-        drainMainLooper()
+        waitUntil { capturedPayload != null && shadowOf(signUp).peekNextStartedActivity() != null }
 
         assertNotNull("Expected branded HTML verification email to be dispatched", capturedPayload)
         val html = capturedPayload!!.html
         assertTrue("Email must be a full HTML document", html.contains("<!DOCTYPE html>") && html.contains("<table"))
         assertTrue("Email must feature Hold High The Shop UC header", html.contains("Hold High The Shop"))
-        val codeMatch = Regex("\\b(\\d{6})\\b").find(capturedPayload!!.subject)
-        assertNotNull("Subject must contain a 6-digit verification code", codeMatch)
-        val sixDigitCode = codeMatch!!.groupValues[1]
-        assertTrue("HTML body must display the 6-digit code", html.contains(sixDigitCode))
+        assertTrue("HTML body must render the Verify My UC Email button", html.contains("Verify My UC Email"))
+
+        val linkMatch = Regex("https://[^\\s\"<>]+/auth/action\\?mode=verifyLink&token=([a-f0-9]{48})")
+            .find(capturedPayload!!.text)
+        assertNotNull("Email must contain a 192-bit token verification link to /auth/action", linkMatch)
+        val issuedToken = linkMatch!!.groupValues[1]
+        assertTrue("HTML body must link the Verify button to the custom /auth/action endpoint", html.contains(issuedToken))
 
         val toVerify = shadowOf(signUp).nextStartedActivity
         assertNotNull(toVerify)
         assertEquals(VerifyEmailActivity::class.java.name, toVerify.component?.className)
 
-        // 2. VerifyEmailActivity rejects wrong 6-digit code, then accepts the issued 6-digit code
+        // 2. VerifyEmailActivity blocks entry before the verification link is redeemed
         val verify = Robolectric.buildActivity(VerifyEmailActivity::class.java, toVerify).setup().get()
-        val wrongCode = if (sixDigitCode == "111111") "222222" else "111111"
-        verify.fillCodeAcrossBoxes(wrongCode)
+        assertEquals(0, verify.resources.getIdentifier("otpContainer", "id", verify.packageName))
         verify.findViewById<View>(R.id.btnCheckVerified).performClick()
-        drainMainLooper()
+        waitUntil { verify.findViewById<View>(R.id.verifyError).isVisible }
 
         assertTrue(verify.findViewById<View>(R.id.verifyError).isVisible)
-        assertNull("Wrong code must not enter MainActivity", shadowOf(verify).nextStartedActivity)
+        assertNull("Unverified student must not enter MainActivity", shadowOf(verify).peekNextStartedActivity())
 
-        // Enter exact 6-digit code -> verified & enters MainActivity!
-        verify.fillCodeAcrossBoxes(sixDigitCode)
+        // Wrong token is rejected; real issued token verifies the student and unlocks MainActivity
+        val wrongRes = kotlinx.coroutines.runBlocking {
+            AppRepository.verifyEmailTokenLocalOnly(app, "0".repeat(48))
+        }
+        assertTrue(wrongRes is com.nevergrowold.holdhightheshop.data.AuthResult.Error)
+        assertFalse(AppRepository.isVerifiedSignedIn())
+
+        val okRes = kotlinx.coroutines.runBlocking {
+            AppRepository.verifyEmailTokenLocalOnly(app, issuedToken)
+        }
+        assertTrue(okRes is com.nevergrowold.holdhightheshop.data.AuthResult.VerifiedSuccess)
+
         verify.findViewById<View>(R.id.btnCheckVerified).performClick()
-        drainMainLooper()
+        waitUntil { shadowOf(verify).peekNextStartedActivity() != null }
 
         val toMain = shadowOf(verify).nextStartedActivity
-        assertNotNull("Correct 6-digit code must launch MainActivity", toMain)
+        assertNotNull("Verified student must launch MainActivity", toMain)
         assertEquals(MainActivity::class.java.name, toMain.component?.className)
         assertTrue(AppRepository.isVerifiedSignedIn())
     }
@@ -253,6 +265,15 @@ class UiPolishAndVerificationTest {
         detail.cycleHeroPhoto(detail.findViewById(R.id.detailPhotoStage))
         ShadowLooper.idleMainLooper(300, java.util.concurrent.TimeUnit.MILLISECONDS)
         assertEquals("3 / 3", countPill.text.toString())
+    }
+
+    private fun waitUntil(timeoutMs: Long = 5_000L, condition: () -> Boolean) {
+        val deadline = System.currentTimeMillis() + timeoutMs
+        while (!condition() && System.currentTimeMillis() < deadline) {
+            ShadowLooper.idleMainLooper(50, java.util.concurrent.TimeUnit.MILLISECONDS)
+            Thread.sleep(20)
+        }
+        ShadowLooper.idleMainLooper(50, java.util.concurrent.TimeUnit.MILLISECONDS)
     }
 
     private fun drainMainLooper() {
