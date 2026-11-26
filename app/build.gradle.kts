@@ -38,6 +38,13 @@ val emailWebhookSecret: String = (
         ?: ""
     ).trim()
 
+val verifyWebUrl: String = (
+    localProps.getProperty("VERIFY_WEB_URL")
+        ?: localProps.getProperty("verifyWebUrl")
+        ?: System.getenv("VERIFY_WEB_URL")
+        ?: ""
+    ).trim()
+
 android {
     namespace = "com.nevergrowold.holdhightheshop"
     compileSdk {
@@ -55,6 +62,7 @@ android {
         buildConfigField("String", "GEMINI_API_KEY", "\"${geminiApiKey.replace("\"", "\\\"")}\"")
         buildConfigField("String", "EMAIL_WEBHOOK_URL", "\"${emailWebhookUrl.replace("\"", "\\\"")}\"")
         buildConfigField("String", "EMAIL_WEBHOOK_SECRET", "\"${emailWebhookSecret.replace("\"", "\\\"")}\"")
+        buildConfigField("String", "VERIFY_WEB_URL", "\"${verifyWebUrl.replace("\"", "\\\"")}\"")
     }
 
     buildFeatures {

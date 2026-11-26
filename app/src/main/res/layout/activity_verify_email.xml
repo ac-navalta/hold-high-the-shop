@@ -48,13 +48,13 @@
                     android:padding="24dp">
 
                     <FrameLayout
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
+                        android:layout_width="68dp"
+                        android:layout_height="68dp"
                         android:background="@drawable/bg_circle_mint">
 
                         <ImageView
-                            android:layout_width="30dp"
-                            android:layout_height="30dp"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_verified"
                             app:tint="@color/uc_green"
@@ -85,128 +85,26 @@
                         android:id="@+id/verifyBody"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
+                        android:layout_marginTop="8dp"
                         android:fontFamily="@font/poppins_regular"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp"
-                        android:lineSpacingExtra="3dp"
+                        android:lineSpacingExtra="4dp"
                         android:gravity="center" />
 
-                    <!-- 6-Digit Verification Code Boxes -->
-                    <LinearLayout
-                        android:id="@+id/otpContainer"
+                    <TextView
+                        android:id="@+id/verifyHintBanner"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
-                        android:orientation="horizontal"
-                        android:gravity="center">
-
-                        <EditText
-                            android:id="@+id/otpDigit1"
-                            android:layout_width="0dp"
-                            android:layout_height="54dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/bg_input"
-                            android:gravity="center"
-                            android:fontFamily="@font/poppins_bold"
-                            android:inputType="number"
-                            android:imeOptions="actionNext"
-                            android:maxLines="1"
-                            android:selectAllOnFocus="true"
-                            android:textColor="@color/text_primary"
-                            android:textSize="20sp"
-                            android:importantForAutofill="yes" />
-
-                        <EditText
-                            android:id="@+id/otpDigit2"
-                            android:layout_width="0dp"
-                            android:layout_height="54dp"
-                            android:layout_weight="1"
-                            android:layout_marginStart="4dp"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/bg_input"
-                            android:gravity="center"
-                            android:fontFamily="@font/poppins_bold"
-                            android:inputType="number"
-                            android:imeOptions="actionNext"
-                            android:maxLines="1"
-                            android:selectAllOnFocus="true"
-                            android:textColor="@color/text_primary"
-                            android:textSize="20sp"
-                            android:importantForAutofill="no" />
-
-                        <EditText
-                            android:id="@+id/otpDigit3"
-                            android:layout_width="0dp"
-                            android:layout_height="54dp"
-                            android:layout_weight="1"
-                            android:layout_marginStart="4dp"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/bg_input"
-                            android:gravity="center"
-                            android:fontFamily="@font/poppins_bold"
-                            android:inputType="number"
-                            android:imeOptions="actionNext"
-                            android:maxLines="1"
-                            android:selectAllOnFocus="true"
-                            android:textColor="@color/text_primary"
-                            android:textSize="20sp"
-                            android:importantForAutofill="no" />
-
-                        <EditText
-                            android:id="@+id/otpDigit4"
-                            android:layout_width="0dp"
-                            android:layout_height="54dp"
-                            android:layout_weight="1"
-                            android:layout_marginStart="4dp"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/bg_input"
-                            android:gravity="center"
-                            android:fontFamily="@font/poppins_bold"
-                            android:inputType="number"
-                            android:imeOptions="actionNext"
-                            android:maxLines="1"
-                            android:selectAllOnFocus="true"
-                            android:textColor="@color/text_primary"
-                            android:textSize="20sp"
-                            android:importantForAutofill="no" />
-
-                        <EditText
-                            android:id="@+id/otpDigit5"
-                            android:layout_width="0dp"
-                            android:layout_height="54dp"
-                            android:layout_weight="1"
-                            android:layout_marginStart="4dp"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/bg_input"
-                            android:gravity="center"
-                            android:fontFamily="@font/poppins_bold"
-                            android:inputType="number"
-                            android:imeOptions="actionNext"
-                            android:maxLines="1"
-                            android:selectAllOnFocus="true"
-                            android:textColor="@color/text_primary"
-                            android:textSize="20sp"
-                            android:importantForAutofill="no" />
-
-                        <EditText
-                            android:id="@+id/otpDigit6"
-                            android:layout_width="0dp"
-                            android:layout_height="54dp"
-                            android:layout_weight="1"
-                            android:layout_marginStart="4dp"
-                            android:background="@drawable/bg_input"
-                            android:gravity="center"
-                            android:fontFamily="@font/poppins_bold"
-                            android:inputType="number"
-                            android:imeOptions="actionDone"
-                            android:maxLines="1"
-                            android:selectAllOnFocus="true"
-                            android:textColor="@color/text_primary"
-                            android:textSize="20sp"
-                            android:importantForAutofill="no" />
-                    </LinearLayout>
+                        android:layout_marginTop="16dp"
+                        android:background="@drawable/bg_banner_mint"
+                        android:padding="12dp"
+                        android:fontFamily="@font/poppins_regular"
+                        android:text="@string/verify_hint_note"
+                        android:textColor="@color/uc_green"
+                        android:textSize="12sp"
+                        android:lineSpacingExtra="2dp"
+                        android:gravity="center" />
 
                     <TextView
                         android:id="@+id/verifyError"
@@ -219,29 +117,43 @@
                         android:textSize="12sp"
                         android:visibility="gone" />
 
-                    <!-- Shown only when EMAIL_WEBHOOK_URL is not configured yet in local.properties -->
+                    <!-- Shown only in offline classroom preview when neither Firebase nor EMAIL_WEBHOOK_URL is configured -->
                     <TextView
                         android:id="@+id/verifyLocalBanner"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="10dp"
                         android:background="@drawable/bg_banner_mint"
                         android:padding="12dp"
                         android:fontFamily="@font/poppins_medium"
+                        android:text="@string/verify_local_note"
                         android:textColor="@color/uc_green"
                         android:textSize="11sp"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/btnOpenMailApp"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:layout_marginTop="20dp"
+                        android:background="@drawable/bg_btn_green"
+                        android:gravity="center"
+                        android:fontFamily="@font/poppins_semibold"
+                        android:text="@string/btn_open_email_app"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
                         android:clickable="true"
                         android:focusable="true"
-                        android:visibility="gone" />
+                        android:foreground="?attr/selectableItemBackground" />
 
                     <LinearLayout
                         android:id="@+id/btnCheckVerified"
                         android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        android:layout_marginTop="18dp"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="10dp"
                         android:orientation="horizontal"
                         android:gravity="center"
-                        android:background="@drawable/bg_btn_green"
+                        android:background="@drawable/bg_btn_outline"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground">
@@ -251,32 +163,17 @@
                             android:layout_width="18dp"
                             android:layout_height="18dp"
                             android:layout_marginEnd="10dp"
-                            android:indeterminateTint="@color/white"
+                            android:indeterminateTint="@color/uc_green"
                             android:visibility="gone" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/poppins_semibold"
-                            android:text="@string/btn_verify_code"
-                            android:textColor="@color/white"
+                            android:text="@string/btn_ive_verified"
+                            android:textColor="@color/uc_green"
                             android:textSize="14sp" />
                     </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/btnOpenMailApp"
-                        android:layout_width="match_parent"
-                        android:layout_height="50dp"
-                        android:layout_marginTop="10dp"
-                        android:background="@drawable/bg_btn_outline"
-                        android:gravity="center"
-                        android:fontFamily="@font/poppins_semibold"
-                        android:text="@string/btn_open_email_app"
-                        android:textColor="@color/uc_green"
-                        android:textSize="14sp"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground" />
 
                     <TextView
                         android:id="@+id/btnLocalPreviewContinue"

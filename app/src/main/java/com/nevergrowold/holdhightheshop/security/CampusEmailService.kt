@@ -52,6 +52,9 @@ object CampusEmailService {
         title: String,
         greeting: String,
         paragraphs: List<String>,
+        actionButtonLabel: String? = null,
+        actionButtonUrl: String? = null,
+        actionButtonCaption: String = "Expires in 24 hours • One-time verification link",
         verificationCode: String? = null,
         codeCaption: String = "Expires in 15 minutes • One-time use",
         calloutLabel: String? = null,
@@ -60,6 +63,39 @@ object CampusEmailService {
     ): String {
         val bodyHtml = paragraphs.joinToString("\n") { p ->
             """<p style="margin:0 0 14px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:24px;color:#2C352E;">${escapeHtml(p)}</p>"""
+        }
+
+        val actionButtonHtml = if (!actionButtonLabel.isNullOrBlank() && !actionButtonUrl.isNullOrBlank()) {
+            val safeUrl = escapeHtml(actionButtonUrl.trim())
+            val safeLabel = escapeHtml(actionButtonLabel.trim())
+            """
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:24px 0 18px 0;">
+              <tr>
+                <td align="center" style="background-color:#E4EFEA;border:1px solid #C7DED3;border-radius:16px;padding:24px 20px;">
+                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;">
+                    <tr>
+                      <td align="center" bgcolor="#07683B" style="border-radius:12px;">
+                        <a href="$safeUrl" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:15px 30px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:12px;background-color:#07683B;border:1px solid #07683B;">
+                          $safeLabel
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                  <div style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;color:#4B5950;margin-top:12px;">
+                    ${escapeHtml(actionButtonCaption)}
+                  </div>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:0 0 6px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#5F6B62;">
+              Button not opening? Copy and paste this secure link into your browser:
+            </p>
+            <p style="margin:0 0 14px 0;font-family:'Consolas','Courier New',monospace;font-size:11px;line-height:17px;color:#07683B;word-break:break-all;">
+              <a href="$safeUrl" target="_blank" rel="noopener noreferrer" style="color:#07683B;text-decoration:underline;">$safeUrl</a>
+            </p>
+            """.trimIndent()
+        } else {
+            ""
         }
 
         val codeBoxHtml = if (!verificationCode.isNullOrBlank()) {
@@ -153,6 +189,7 @@ object CampusEmailService {
                             ${escapeHtml(greeting)}
                           </p>
                           $bodyHtml
+                          $actionButtonHtml
                           $codeBoxHtml
                           $calloutHtml
                         </td>
@@ -174,6 +211,51 @@ object CampusEmailService {
             </body>
             </html>
         """.trimIndent()
+    }
+
+    fun buildVerificationButtonEmail(
+        recipientEmail: String,
+        studentName: String,
+        verificationUrl: String,
+    ): EmailPayload {
+        val first = studentName.trim().substringBefore(' ').ifBlank { "UCian" }
+        val subject = "Verify your UC email — Hold High The Shop"
+        val html = buildBrandedHtmlLayout(
+            preheader = "Tap Verify My UC Email to activate your Hold High The Shop student account.",
+            kicker = "VERIFY YOUR UC EMAIL",
+            title = "Confirm your student account",
+            greeting = "Kumusta, $first!",
+            paragraphs = listOf(
+                "Welcome to Hold High The Shop, the University of the Cordilleras campus marketplace! Tap the green button below to verify your official UC student email and unlock buying, selling, lending, and swapping on campus.",
+                "If you didn't create a Hold High The Shop account, you can safely ignore this email.",
+            ),
+            actionButtonLabel = "Verify My UC Email",
+            actionButtonUrl = verificationUrl,
+            actionButtonCaption = "Expires in 24 hours • One-time verification link",
+        )
+        val text = buildString {
+            appendLine("Kumusta, $first!")
+            appendLine()
+            appendLine("Verify your University of the Cordilleras student account for Hold High The Shop by opening this link:")
+            appendLine(verificationUrl)
+            appendLine()
+            appendLine("This single-use link expires in 24 hours. If you did not sign up, you can safely ignore this message.")
+        }
+        return EmailPayload(
+            to = UcEmailValidator.normalize(recipientEmail),
+            subject = subject,
+            html = html,
+            text = text,
+        )
+    }
+
+    suspend fun sendVerificationLink(
+        recipientEmail: String,
+        studentName: String,
+        verificationUrl: String,
+    ): DeliveryResult {
+        val payload = buildVerificationButtonEmail(recipientEmail, studentName, verificationUrl)
+        return sendEmail(payload)
     }
 
     fun buildVerificationCodeEmail(

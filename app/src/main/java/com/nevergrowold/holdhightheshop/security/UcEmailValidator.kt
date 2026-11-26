@@ -89,6 +89,16 @@ object UcEmailValidator {
     }
 
     /**
+     * Generates a cryptographically unpredictable 192-bit (48 hex char) single-use
+     * email verification token for branded verification button links.
+     */
+    fun generateVerificationToken(): String {
+        val bytes = ByteArray(24)
+        SECURE_RANDOM.nextBytes(bytes)
+        return bytes.joinToString("") { "%02x".format(Locale.US, it) }
+    }
+
+    /**
      * Generates a cryptographically unpredictable 6-digit email verification code (100000..999999).
      */
     fun generateVerificationCode(): String =

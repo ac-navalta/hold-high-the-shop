@@ -56,10 +56,31 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // ---- 6-Digit Email Verification Challenges ----
-    match /email_verifications/{uid} {
-      allow read, create, update, delete: if isAdmin()
-        || (isUcStudentEmail() && request.auth.uid == uid);
+    // ---- Single-Use Email Verification Links (192-bit random token doc IDs) ----
+    // Tokens are unguessable (48 hex chars), non-enumerable (list denied to clients),
+    // server-time expiry checked, and atomically marked used == true upon verification.
+    match /email_verifications/{token} {
+      allow list: if isAdmin();
+      allow get: if token.size() >= 32;
+
+      allow create: if isUcStudentEmail()
+        && token.size() >= 32
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email is string
+        && request.resource.data.email.lower() == request.auth.token.email.lower()
+        && request.resource.data.used == false
+        && request.resource.data.expiresAt is int
+        && request.resource.data.sentAt is int;
+
+      allow update: if resource.data.used == false
+        && resource.data.expiresAt is int
+        && request.time.toMillis() < resource.data.expiresAt
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used', 'verifiedAt'])
+        && request.resource.data.used == true
+        && request.resource.data.verifiedAt is int;
+
+      allow delete: if isAdmin()
+        || (isUcStudentEmail() && resource.data.uid == request.auth.uid);
     }
 
     // ---- Users (Student Profiles) ----
@@ -67,7 +88,7 @@ service cloud.firestore {
       // Newly registered (pre-verification) or suspended users can read their own profile
       allow read: if isActiveStudentOrAdmin() || (isSignedIn() && request.auth.uid == uid);
 
-      // Initial profile creation during SignUp (before 6-digit UC Outlook code is verified)
+      // Initial profile creation during SignUp (before email verification button is tapped)
       allow create: if isUcStudentEmail()
         && request.auth.uid == uid
         && request.resource.data.uid == uid
@@ -79,19 +100,32 @@ service cloud.firestore {
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 60;
 
-      // Students can complete 1-time 6-digit code verification, and verified students can update
-      // profile fields without tampering with suspension, warningCount, UID, or email.
+      // Students can complete verification via:
+      // 1) Atomic single-use link redemption from our branded /auth/action web handler, OR
+      // 2) Native Firebase Auth email_verified token sync, OR
+      // 3) Verified students editing allowed profile fields (never suspension/role/email).
       allow update: if isAdmin()
+        || ((!('suspended' in resource.data) || resource.data.suspended == false)
+            && (!('emailVerified' in resource.data) || resource.data.emailVerified == false)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['emailVerified', 'verifiedAt', 'verifiedToken'])
+            && request.resource.data.emailVerified == true
+            && request.resource.data.verifiedToken is string
+            && request.resource.data.verifiedToken.size() >= 32
+            && exists(/databases/$(database)/documents/email_verifications/$(request.resource.data.verifiedToken))
+            && get(/databases/$(database)/documents/email_verifications/$(request.resource.data.verifiedToken)).data.uid == uid
+            && get(/databases/$(database)/documents/email_verifications/$(request.resource.data.verifiedToken)).data.used == false
+            && request.time.toMillis() < get(/databases/$(database)/documents/email_verifications/$(request.resource.data.verifiedToken)).data.expiresAt
+            && getAfter(/databases/$(database)/documents/email_verifications/$(request.resource.data.verifiedToken)).data.used == true)
         || (isUcStudentEmail()
             && request.auth.uid == uid
-            && resource.data.suspended == false
-            && exists(/databases/$(database)/documents/email_verifications/$(uid))
+            && request.auth.token.email_verified == true
+            && (!('suspended' in resource.data) || resource.data.suspended == false)
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['emailVerified', 'verifiedAt'])
             && request.resource.data.emailVerified == true)
         || (isActiveStudent()
             && request.auth.uid == uid
             && !request.resource.data.diff(resource.data).affectedKeys()
-                .hasAny(['uid', 'email', 'emailVerified', 'suspended', 'suspendedReason', 'warningCount', 'createdAt']));
+                .hasAny(['uid', 'email', 'emailVerified', 'verifiedToken', 'suspended', 'suspendedReason', 'warningCount', 'createdAt']));
 
       allow delete: if isAdmin() || (isActiveStudent() && request.auth.uid == uid);
     }
