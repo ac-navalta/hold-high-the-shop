@@ -46,7 +46,7 @@ import {
   buildAccountSuspendedEmail,
   buildListingRemovedEmail,
   buildOfficialWarningEmail,
-  buildVerificationCodeEmail,
+  buildVerificationButtonEmail,
   isEmailWebhookConfigured,
   sendCampusHtmlEmail,
 } from './emailService'
@@ -909,7 +909,10 @@ export default function App() {
       case 'reinstated':
         return buildAccountReinstatedEmail({ studentName: 'Juan Dela Cruz' })
       default:
-        return buildVerificationCodeEmail({ studentName: 'Juan Dela Cruz', code: '482915' })
+        return buildVerificationButtonEmail({
+          studentName: 'Juan Dela Cruz',
+          verificationUrl: `${window.location.origin}/auth/action`,
+        })
     }
   }, [emailPreviewType])
 
@@ -2357,11 +2360,11 @@ export default function App() {
                 <section className="admin-card p-5 space-y-3">
                   <h2 className="text-sm font-bold text-[#131A15]">Email Template Selector</h2>
                   <p className="text-xs text-[#606D64]">
-                    Every verification code and moderation notice uses responsive, UC Outlook-compatible HTML tables.
+                    Every verification button and moderation notice uses responsive, UC Outlook-compatible HTML tables.
                   </p>
                   <div className="space-y-1.5">
                     {[
-                      { id: 'verification', label: '6-Digit Verification Code' },
+                      { id: 'verification', label: 'Verify UC Email (HTML Button)' },
                       { id: 'removed', label: 'Listing Removed Notice' },
                       { id: 'warning', label: 'Official Student Warning' },
                       { id: 'suspended', label: 'Account Suspension Notice' },
@@ -2381,6 +2384,17 @@ export default function App() {
                         <ChevronRight className="w-3.5 h-3.5 opacity-75" />
                       </button>
                     ))}
+                  </div>
+                  <div className="pt-2 border-t border-[#E3DECB]">
+                    <a
+                      href="/auth/action"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#07683B]/30 bg-[#E4EFEA]/60 text-[#07683B] hover:bg-[#E4EFEA] text-xs font-semibold transition"
+                    >
+                      <span>Preview Custom Verify Page (/auth/action)</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </a>
                   </div>
                 </section>
 

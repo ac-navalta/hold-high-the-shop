@@ -22,6 +22,7 @@ export function buildBrandedHtmlEmail({
   title = 'Hold High The Shop Notice',
   greeting = 'Kumusta, UCian!',
   paragraphs = [],
+  actionButton = null,
   codeBlock = null,
   callout = null,
   accent = 'green', // 'green' | 'amber' | 'danger'
@@ -39,6 +40,37 @@ export function buildBrandedHtmlEmail({
         `<p style="margin:0 0 14px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:24px;color:#2C352E;">${escapeHtml(p)}</p>`
     )
     .join('')
+
+  const actionButtonHtml =
+    actionButton && actionButton.label && actionButton.url
+      ? `
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:24px 0 18px 0;">
+        <tr>
+          <td align="center" style="background-color:#E4EFEA;border:1px solid #C7DED3;border-radius:16px;padding:24px 20px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;">
+              <tr>
+                <td align="center" bgcolor="#07683B" style="border-radius:12px;">
+                  <a href="${escapeHtml(actionButton.url)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:15px 30px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:12px;background-color:#07683B;border:1px solid #07683B;">
+                    ${escapeHtml(actionButton.label)}
+                  </a>
+                </td>
+              </tr>
+            </table>
+            ${
+              actionButton.caption
+                ? `<div style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;color:#4B5950;margin-top:12px;">${escapeHtml(actionButton.caption)}</div>`
+                : ''
+            }
+          </td>
+        </tr>
+      </table>
+      <p style="margin:0 0 6px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#5F6B62;">
+        Button not opening? Copy and paste this secure link into your browser:
+      </p>
+      <p style="margin:0 0 14px 0;font-family:'Consolas','Courier New',monospace;font-size:11px;line-height:17px;color:#07683B;word-break:break-all;">
+        <a href="${escapeHtml(actionButton.url)}" target="_blank" rel="noopener noreferrer" style="color:#07683B;text-decoration:underline;">${escapeHtml(actionButton.url)}</a>
+      </p>`
+      : ''
 
   const codeHtml = codeBlock
     ? `
@@ -127,6 +159,7 @@ export function buildBrandedHtmlEmail({
                 ${escapeHtml(greeting)}
               </p>
               ${bodyParagraphsHtml}
+              ${actionButtonHtml}
               ${codeHtml}
               ${calloutHtml}
             </td>
@@ -148,6 +181,32 @@ export function buildBrandedHtmlEmail({
   </table>
 </body>
 </html>`
+}
+
+export function buildVerificationButtonEmail({
+  studentName = 'UCian',
+  verificationUrl = 'https://hold-high-the-shop.web.app/auth/action',
+}) {
+  const first = studentName.trim().split(/\s+/)[0] || 'UCian'
+  const subject = 'Verify your UC email — Hold High The Shop'
+  const html = buildBrandedHtmlEmail({
+    preheader: 'Tap Verify My UC Email to activate your Hold High The Shop student account.',
+    kicker: 'VERIFY YOUR UC EMAIL',
+    title: 'Confirm your student account',
+    greeting: `Kumusta, ${first}!`,
+    paragraphs: [
+      'Welcome to Hold High The Shop, the University of the Cordilleras campus marketplace! Tap the green button below to verify your official UC student email and unlock buying, selling, lending, and swapping on campus.',
+      "If you didn't create a Hold High The Shop account, you can safely ignore this email.",
+    ],
+    actionButton: {
+      label: 'Verify My UC Email',
+      url: verificationUrl,
+      caption: 'Expires in 24 hours • One-time verification link',
+    },
+    accent: 'green',
+  })
+  const text = `Kumusta, ${first}!\n\nVerify your University of the Cordilleras student account for Hold High The Shop by opening this link:\n${verificationUrl}\n\nThis single-use link expires in 24 hours.`
+  return { subject, html, text }
 }
 
 export function buildVerificationCodeEmail({ studentName = 'UCian', code = '482915' }) {
